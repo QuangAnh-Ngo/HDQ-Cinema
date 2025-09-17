@@ -1,0 +1,15 @@
+server:
+  servlet:
+    context-path: /cinemas
+  port: 8081
+
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+    username: ${SPRING_DATASOURCE_USERNAME}
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true

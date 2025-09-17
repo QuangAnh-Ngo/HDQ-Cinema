@@ -1,0 +1,32 @@
+services:
+  springboot-app:
+    build: .
+    container_name: my-spring-app-cinema
+    restart: unless-stopped
+    ports:
+      - "8081:8080"
+    environment:
+      # Truyền các biến môi trường vào cho ứng dụng Spring Boot
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-db:3306/${MYSQL_DATABASE}?useSSL=false&allowPublicKeyRetrieval=true
+      - SPRING_DATASOURCE_USERNAME=${MYSQL_USER}
+      - SPRING_DATASOURCE_PASSWORD=${MYSQL_PASSWORD}
+    depends_on:
+      - mysql-db
+
+  mysql-db:
+    image: mysql:8.4.0
+    container_name: my-mysql-db-cinema
+    restart: unless-stopped
+    environment:
+      # Sử dụng các biến từ file .env để cấu hình MySQL
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    ports:
+      - "3309:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+volumes:
+  mysql_data:
