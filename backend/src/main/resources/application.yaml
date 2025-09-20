@@ -1,13 +1,13 @@
 server:
   servlet:
     context-path: /cinemas
-  port: 8080
+  port: 8081
 
 spring:
   datasource:
-    url: "jdbc:mysql://localhost:3308/bkfilm"
-    password: 123
-    username: root
+    url: ${SPRING_DATASOURCE_URL}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+    username: ${SPRING_DATASOURCE_USERNAME}
 
   jpa:
     hibernate:
