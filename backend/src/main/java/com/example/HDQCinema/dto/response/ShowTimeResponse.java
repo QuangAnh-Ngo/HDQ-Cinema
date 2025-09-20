@@ -15,6 +15,5 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Builder
 public class ShowTimeResponse {
-    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss") // format ISO 8601
-    List<ShowTime> startTime;
+    String message;
 }

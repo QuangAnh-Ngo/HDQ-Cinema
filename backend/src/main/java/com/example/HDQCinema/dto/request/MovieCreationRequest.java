@@ -18,7 +18,4 @@ public class MovieCreationRequest {
     String name, poster;
     Integer duration;
     Integer limitAge;
-
-    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss") // format ISO 8601
-    List<LocalDateTime> showTimes;
 }

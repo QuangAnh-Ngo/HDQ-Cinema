@@ -4,6 +4,7 @@ import com.example.HDQCinema.entity.Room;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.util.List;
 import java.util.Set;
 
 @Getter
@@ -12,9 +13,10 @@ import java.util.Set;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class CinemaResponse {
+    String id;
     String name;
     String city;
     String district;
     String address;
-    Set<Room> rooms;
+    List<RoomResponse> rooms;
 }

@@ -14,6 +14,6 @@ import java.util.List;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ShowTimeRequest {
-    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss") // format ISO 8601
-    List<LocalDateTime> startTime;
+    List<ShowTimeAndRoom> showTimeRooms;
+    String movieId;
 }

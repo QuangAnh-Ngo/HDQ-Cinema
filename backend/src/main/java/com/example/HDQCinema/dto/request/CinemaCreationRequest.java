@@ -15,5 +15,5 @@ public class CinemaCreationRequest {
     String city;
     String district;
     String address;
-    List<String> rooms;
+//    List<String> rooms;
 }

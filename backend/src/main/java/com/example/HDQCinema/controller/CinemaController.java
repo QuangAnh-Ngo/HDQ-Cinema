@@ -6,9 +6,7 @@ import com.example.HDQCinema.dto.response.CinemaResponse;
 import com.example.HDQCinema.entity.Cinema;
 import com.example.HDQCinema.service.CinemaService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/theaters")
@@ -17,8 +15,17 @@ public class CinemaController {
     private CinemaService cinemaService;
 
     @PostMapping
-    ApiResponse<CinemaResponse> createCinema(CinemaCreationRequest request){
+    ApiResponse<CinemaResponse> createCinema(@RequestBody CinemaCreationRequest request){
         var cinema = cinemaService.create(request);
+
+        return ApiResponse.<CinemaResponse>builder()
+                .result(cinema)
+                .build();
+    }
+
+    @GetMapping("/{cinemaId}")
+    ApiResponse<CinemaResponse> getCinema(@PathVariable("cinemaId") String id){
+        var cinema = cinemaService.get(id);
 
         return ApiResponse.<CinemaResponse>builder()
                 .result(cinema)

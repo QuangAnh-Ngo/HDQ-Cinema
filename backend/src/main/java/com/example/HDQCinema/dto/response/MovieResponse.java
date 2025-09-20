@@ -1,9 +1,11 @@
 package com.example.HDQCinema.dto.response;
 
+import com.example.HDQCinema.dto.request.ShowTimeAndRoom;
 import com.example.HDQCinema.entity.ShowTime;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.util.List;
 import java.util.Set;
 
 @Getter
@@ -17,5 +19,5 @@ public class MovieResponse {
     String name, poster;
     Integer duration;
     Integer limitAge;
-    Set<ShowTime> showtimes;
+    List<ShowTimeAndRoom> showtimes;
 }

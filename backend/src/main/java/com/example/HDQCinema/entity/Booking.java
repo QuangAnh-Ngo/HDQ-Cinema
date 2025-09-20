@@ -26,6 +26,7 @@ public class Booking {
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     User user;
+
     @ManyToOne
     @JoinColumn(name = "showtime_id", nullable = false)
     ShowTime showTime;

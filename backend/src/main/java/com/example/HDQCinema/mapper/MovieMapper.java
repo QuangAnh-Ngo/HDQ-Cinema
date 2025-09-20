@@ -15,6 +15,7 @@ import java.util.Set;
 public interface MovieMapper {
     @Mapping(target = "showtimes", ignore = true)
     Movie toMovie(MovieCreationRequest request);
+    @Mapping(target = "showtimes", ignore = true)
     MovieResponse toMovieResponse(Movie movie);
 
 }

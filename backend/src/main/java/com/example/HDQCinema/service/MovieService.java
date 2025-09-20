@@ -6,6 +6,7 @@ import com.example.HDQCinema.dto.response.ShowTimeResponse;
 import com.example.HDQCinema.entity.Movie;
 import com.example.HDQCinema.entity.ShowTime;
 import com.example.HDQCinema.mapper.MovieMapper;
+import com.example.HDQCinema.mapper.ShowTimeAndRoomMapper;
 import com.example.HDQCinema.mapper.ShowTimeMapper;
 import com.example.HDQCinema.repository.MovieRepository;
 import com.example.HDQCinema.repository.ShowTimeRepository;
@@ -26,17 +27,27 @@ public class MovieService {
 
     MovieRepository movieRepository;
     MovieMapper movieMapper;
-    ShowTimeRepository showTimeRepository;
+    ShowTimeAndRoomMapper showTimeAndRoomMapper;
 
     public MovieResponse create(MovieCreationRequest request){
         Movie movie = movieMapper.toMovie(request);
 
-        var showTimes = showTimeRepository.findByStartTimeIn(request.getShowTimes());
-        movie.setShowtimes(new HashSet<>(showTimes));
         movie = movieRepository.save(movie); // sau lệnh này thì id mới đc tạo
 
         return movieMapper.toMovieResponse(movie);
     }
 
+    public MovieResponse get(String id){
+        Movie movie = movieRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("movie not exist"));
+
+        var showTimes = movie.getShowtimes();
+
+        var response = movieMapper.toMovieResponse(movie);
+
+        response.setShowtimes(showTimeAndRoomMapper.toShowTimeAndRooms(showTimes));
+
+        return response;
+    }
 
 }

@@ -12,6 +12,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
 
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -31,6 +35,9 @@ public class RoomService {
 
         room = roomRepository.save(room);
 
-        return roomMapper.toResponse(room);
+        RoomResponse response = roomMapper.toResponse(room);
+        response.setCinemaName(cinema.getName());
+        cinema.setRooms(new HashSet<>(List.of(room)));
+        return response;
     }
 }

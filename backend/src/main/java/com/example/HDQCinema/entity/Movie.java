@@ -5,6 +5,7 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -29,5 +30,5 @@ public class Movie {
             orphanRemoval = true) //Nếu bạn bỏ một Showtime ra khỏi danh sách, nó sẽ bị xóa luôn trong DB.
     //Một Movie có nhiều Showtime.
 
-    Set<ShowTime> showtimes;
+    List<ShowTime> showtimes;
 }

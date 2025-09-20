@@ -18,12 +18,12 @@ public class ShowTimeController {
     @Autowired
     ShowTimeService showTimeService;
 
-//    @PostMapping
-//    ApiResponse<List<ShowTimeResponse>> createShowTime(@RequestBody ShowTimeRequest request){
-//        var showTime = showTimeService.create(request);
-//
-//        return ApiResponse.<List<ShowTimeResponse>>builder()
-//                .result(showTime)
-//                .build();
-//    }
+    @PostMapping
+    ApiResponse<ShowTimeResponse> createShowTime(@RequestBody ShowTimeRequest request){
+        var showTime = showTimeService.create(request);
+
+        return ApiResponse.<ShowTimeResponse>builder()
+                .result(showTime)
+                .build();
+    }
 }

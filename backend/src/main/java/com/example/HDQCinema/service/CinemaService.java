@@ -9,12 +9,14 @@ import com.example.HDQCinema.repository.RoomRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class CinemaService {
     CinemaRepository cinemaRepository;
@@ -22,13 +24,22 @@ public class CinemaService {
     RoomRepository roomRepository;
 
     public CinemaResponse create(CinemaCreationRequest request){
+        log.info("{}", request.getName());
+
         Cinema cinema = cinemaMapper.toCinema(request);
 
-        var rooms = roomRepository.findByRoomNameIn(request.getRooms());
-        cinema.setRooms(new HashSet<>(rooms));
-
-        cinemaRepository.save(cinema);
+        cinema= cinemaRepository.save(cinema);
 
         return cinemaMapper.toResponse(cinema);
+    }
+
+    public CinemaResponse get(String id){
+        Cinema cinema = cinemaRepository.findById(id)
+                .orElseThrow(()-> new RuntimeException("cinema not exist"));
+
+        var response = cinemaMapper.toResponse(cinema);
+        response.getRooms().forEach(roomResponse -> roomResponse.setCinemaName(cinema.getName()));
+
+        return response;
     }
 }
