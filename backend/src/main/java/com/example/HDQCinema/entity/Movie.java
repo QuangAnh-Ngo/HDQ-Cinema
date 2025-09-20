@@ -1,9 +1,6 @@
 package com.example.HDQCinema.entity;
 
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
+import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -19,14 +16,18 @@ import java.util.Set;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class Movie {
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "movie_id")
     String id;
 
     String name, poster;
     Integer duration;
     Integer limitAge;
-    LocalDate startDay, endDay;
 
-    @OneToMany(mappedBy = "movie", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<ShowTime> showtimes;
+    @OneToMany(mappedBy = "movie",//Bên Showtime giữ khóa ngoại movie_id.
+            cascade = CascadeType.ALL,//Mọi thao tác (lưu, xóa, update) trên Movie sẽ tự động lan xuống Showtimes.
+            orphanRemoval = true) //Nếu bạn bỏ một Showtime ra khỏi danh sách, nó sẽ bị xóa luôn trong DB.
+    //Một Movie có nhiều Showtime.
 
+    Set<ShowTime> showtimes;
 }
