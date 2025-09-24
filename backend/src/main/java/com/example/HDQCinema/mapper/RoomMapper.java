@@ -13,4 +13,5 @@ public interface RoomMapper {
     Room toRoom(RoomRequest request);
     @Mapping(ignore = true, target = "cinemaName")
     RoomResponse toResponse(Room room);
+    List<RoomResponse> toResponses(List<Room> rooms);
 }

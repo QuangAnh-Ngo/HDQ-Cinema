@@ -31,17 +31,13 @@ public class ShowTimeService {
     public ShowTimeResponse create(ShowTimeRequest request){
         Movie movie = movieRepository.findById(request.getMovieId())
                 .orElseThrow(()-> new RuntimeException("movie not exist"));
-        List<ShowTime> showTimes = new ArrayList<>();
 
         for(var showTimeRoom : request.getShowTimeRooms()){
             Room room = roomRepository.findById(showTimeRoom.getRoomId())
                     .orElseThrow(()-> new RuntimeException("room not exist"));
             ShowTime showTime = showTimeMapper.toShowTime(movie, room, showTimeRoom.getShowTime());
             showTimeRepository.save(showTime);
-            showTimes.add(showTime);
         }
-
-        movie.setShowtimes(showTimes);
 
         return ShowTimeResponse.builder()
                 .message("success")

@@ -28,6 +28,7 @@ public class MovieService {
     MovieRepository movieRepository;
     MovieMapper movieMapper;
     ShowTimeAndRoomMapper showTimeAndRoomMapper;
+    ShowTimeRepository showTimeRepository;
 
     public MovieResponse create(MovieCreationRequest request){
         Movie movie = movieMapper.toMovie(request);
@@ -41,7 +42,7 @@ public class MovieService {
         Movie movie = movieRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("movie not exist"));
 
-        var showTimes = movie.getShowtimes();
+        var showTimes = showTimeRepository.toShowTimes(id);
 
         var response = movieMapper.toMovieResponse(movie);
 

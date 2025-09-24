@@ -37,7 +37,6 @@ public class RoomService {
 
         RoomResponse response = roomMapper.toResponse(room);
         response.setCinemaName(cinema.getName());
-        cinema.setRooms(new HashSet<>(List.of(room)));
         return response;
     }
 }

@@ -32,5 +32,5 @@ public class Booking {
     ShowTime showTime;
 
     @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL, orphanRemoval = true)
-    Set<Seat> seats;
+    Set<BookingSeat> bookingSeats;
 }

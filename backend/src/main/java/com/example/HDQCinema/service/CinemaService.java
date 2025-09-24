@@ -4,6 +4,7 @@ import com.example.HDQCinema.dto.request.CinemaCreationRequest;
 import com.example.HDQCinema.dto.response.CinemaResponse;
 import com.example.HDQCinema.entity.Cinema;
 import com.example.HDQCinema.mapper.CinemaMapper;
+import com.example.HDQCinema.mapper.RoomMapper;
 import com.example.HDQCinema.repository.CinemaRepository;
 import com.example.HDQCinema.repository.RoomRepository;
 import lombok.AccessLevel;
@@ -22,6 +23,7 @@ public class CinemaService {
     CinemaRepository cinemaRepository;
     CinemaMapper cinemaMapper;
     RoomRepository roomRepository;
+    RoomMapper roomMapper;
 
     public CinemaResponse create(CinemaCreationRequest request){
         log.info("{}", request.getName());
@@ -38,7 +40,8 @@ public class CinemaService {
                 .orElseThrow(()-> new RuntimeException("cinema not exist"));
 
         var response = cinemaMapper.toResponse(cinema);
-        response.getRooms().forEach(roomResponse -> roomResponse.setCinemaName(cinema.getName()));
+        var roomResponse = roomMapper.toResponses(roomRepository.findRoomsByCinemaId(id));
+        response.setRooms(roomResponse);
 
         return response;
     }
