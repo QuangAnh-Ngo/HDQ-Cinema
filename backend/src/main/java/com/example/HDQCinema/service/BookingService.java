@@ -26,7 +26,7 @@ public class BookingService {
     UserRepository userRepository;
     ShowTimeRepository showTimeRepository;
     SeatRepository seatRepository;
-    BookingDeatailRepository deatailReppository;
+    BookingDetailRepository detailReppository;
     BookingMapper bookingMapper;
 
     @Transactional
@@ -62,7 +62,7 @@ public class BookingService {
                     .booking(booking)
                     .build();
             totalPrice += bookingDetailRequest.getPrice();
-            deatailReppository.save(bookingDetail);
+            detailReppository.save(bookingDetail);
             seats.add(""+ seat.getSeatRow()+seat.getSeatNumber());
         }
         booking.setTotalPrice(totalPrice);

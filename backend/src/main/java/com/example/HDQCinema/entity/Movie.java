@@ -23,6 +23,8 @@ public class Movie {
 
     String name, poster;
     Integer duration;
+
+
     Integer limitAge;
 
     @OneToMany(mappedBy = "movie",//Movie “nhìn ngược lại” thông qua mappedBy = "movie" (chính là tên field " private Movie movie; " ở ShowTime).
