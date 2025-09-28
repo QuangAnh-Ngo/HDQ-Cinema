@@ -1,5 +1,6 @@
 package com.example.HDQCinema.entity;
 
+import com.example.HDQCinema.enums.SeatStatus;
 import com.example.HDQCinema.enums.SeatType;
 import jakarta.persistence.*;
 import lombok.*;
@@ -26,6 +27,9 @@ public class Seat {
     @Enumerated(EnumType.STRING) // JPA sẽ lưu tên enum dưới dạng string (VD: "VIP", "NORMAL") thay vì số thứ tự (0, 1, 2)
     SeatType seatType;
 
+    @Enumerated(EnumType.STRING) // JPA sẽ lưu tên enum dưới dạng string (VD: "VIP", "NORMAL") thay vì số thứ tự (0, 1, 2)
+    SeatStatus seatStatus;
+
     @ManyToOne
     @JoinColumn(name = "room_id", nullable = false)
     Room room;
@@ -34,5 +38,5 @@ public class Seat {
 //    @JoinColumn(name = "booking_id", nullable = false)
 //    Booking booking;
     @OneToMany(mappedBy = "seat", cascade = CascadeType.ALL, orphanRemoval = true)
-    Set<BookingSeat> bookingSeats;
+    Set<BookingDetail> bookingDetails;
 }
