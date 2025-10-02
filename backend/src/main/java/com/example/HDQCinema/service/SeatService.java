@@ -5,6 +5,7 @@ import com.example.HDQCinema.dto.response.SeatCreationResponse;
 import com.example.HDQCinema.entity.Room;
 import com.example.HDQCinema.entity.Seat;
 import com.example.HDQCinema.enums.SeatStatus;
+import com.example.HDQCinema.enums.SeatType;
 import com.example.HDQCinema.repository.RoomRepository;
 import com.example.HDQCinema.repository.SeatRepository;
 import lombok.AccessLevel;
@@ -29,7 +30,7 @@ public class SeatService {
                         .seatRow(character)
                         .seatNumber(column)
                         .room(room)
-                        .seatType(request.getType())
+                        .seatType(SeatType.valueOf(request.getType()))
                         .seatStatus(SeatStatus.AVAILABLE)
                         .build();
                 seatRepository.save(seat);

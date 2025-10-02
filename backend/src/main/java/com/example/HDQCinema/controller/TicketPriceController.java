@@ -1,9 +1,9 @@
 package com.example.HDQCinema.controller;
 
-import com.example.HDQCinema.dto.request.BookingRequest;
+import com.example.HDQCinema.dto.request.TicketPriceRequest;
 import com.example.HDQCinema.dto.response.ApiResponse;
-import com.example.HDQCinema.dto.response.BookingResponse;
-import com.example.HDQCinema.service.BookingService;
+import com.example.HDQCinema.dto.response.TicketPriceResponse;
+import com.example.HDQCinema.service.TicketPriceService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -11,16 +11,16 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/bookings")
-public class BookingController {
+@RequestMapping("/tickets")
+public class TicketPriceController {
+
     @Autowired
-    BookingService bookingService;
+    TicketPriceService ticketPriceService;
 
     @PostMapping
-    ApiResponse<BookingResponse> bookSeats(@RequestBody BookingRequest request){
-        var response = bookingService.book(request);
-
-        return ApiResponse.<BookingResponse>builder()
+    ApiResponse<TicketPriceResponse> createTicket(@RequestBody TicketPriceRequest request) {
+        var response = ticketPriceService.create(request);
+        return ApiResponse.<TicketPriceResponse>builder()
                 .result(response)
                 .build();
     }

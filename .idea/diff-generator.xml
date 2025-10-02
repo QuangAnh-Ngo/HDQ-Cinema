@@ -3,5 +3,6 @@
   <component name="DiffGenerationConfig" isInitGenerateDdl="true">
     <option name="initGenerateDdl" value="true" />
     <option name="sourceModelValue" value="HDQCinema:HDQCinema" />
+    <option name="targetDbValue" value="bade2e4e-8a97-45c7-9649-89712327e471" />
   </component>
 </project>

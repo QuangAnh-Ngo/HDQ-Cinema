@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 @Service
@@ -28,8 +29,12 @@ public class BookingService {
     SeatRepository seatRepository;
     BookingDetailRepository detailReppository;
     BookingMapper bookingMapper;
+    TicketPriceRepository ticketPriceRepository;
 
     @Transactional
+    // tạo và quản lý transaction (giao dịch) khi làm việc với DB.
+    // để tránh khi Một user giữ ghế, nhưng trước khi lưu booking, transaction đã commit → user khác vẫn có thể đặt cùng ghế.
+    // nghĩa la khi transaction chưa commit hoặc rollback thì row đó vẫn khóa
     public BookingResponse book(BookingRequest request){
         User user = userRepository.findById(request.getUserId())
                 .orElseThrow(()-> new RuntimeException("user not exist"));
@@ -49,19 +54,24 @@ public class BookingService {
 
         for(BookingDetailRequest bookingDetailRequest : request.getBookingDetailRequests()){
             Seat seat = seatRepository.findSeatForUpdate(bookingDetailRequest.getSeatId());
+            // SELECT ... FOR UPDATE
             // sẽ chặn các user khác với những ghế đang đc thanh toán
 
             if(seat.getSeatStatus() != SeatStatus.AVAILABLE){
-                throw new RuntimeException("the seat"+seat.getSeatRow()+seat.getSeatNumber()+" is not available");
+                throw new RuntimeException("the seat "+seat.getSeatRow()+seat.getSeatNumber()+" is not available");
             }
-            seat.setSeatStatus(SeatStatus.HOLD);
+            seat.setSeatStatus(SeatStatus.BOOKED);
+
+            double price = ticketPriceRepository.toPrice(new Date(), seat.getSeatType(), showTime.getId());
 
             BookingDetail bookingDetail = BookingDetail.builder()
                     .seat(seat)
-                    .price(bookingDetailRequest.getPrice())
+                    .price(price)
                     .booking(booking)
                     .build();
-            totalPrice += bookingDetailRequest.getPrice();
+
+
+            totalPrice += price;
             detailReppository.save(bookingDetail);
             seats.add(""+ seat.getSeatRow()+seat.getSeatNumber());
         }

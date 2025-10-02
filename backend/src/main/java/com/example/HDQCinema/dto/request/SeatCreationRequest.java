@@ -16,5 +16,5 @@ public class SeatCreationRequest {
     Character firstSeatRow;
     Character lastSeatRow;
     String roomId;
-    SeatType type;
+    String type;
 }
