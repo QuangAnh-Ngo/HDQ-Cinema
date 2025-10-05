@@ -15,6 +15,9 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.time.chrono.ChronoLocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -42,5 +45,10 @@ public class ShowTimeService {
         return ShowTimeResponse.builder()
                 .message("success")
                 .build();
+    }
+
+    public void selectionDelete(){
+        showTimeRepository.findAll().forEach(showTime ->
+                showTimeRepository.deleteShowTimeByStartTimeIsLessThan(LocalDateTime.now()));
     }
 }

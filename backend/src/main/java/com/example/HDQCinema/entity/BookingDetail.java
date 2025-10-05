@@ -1,5 +1,6 @@
 package com.example.HDQCinema.entity;
 
+import com.example.HDQCinema.enums.SeatStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -21,6 +22,9 @@ public class BookingDetail {
     String id;
 
     double price;
+
+    @Enumerated(EnumType.STRING) // JPA sẽ lưu tên enum dưới dạng string (VD: "VIP", "NORMAL") thay vì số thứ tự (0, 1, 2)
+    SeatStatus seatStatus;
 
     @ManyToOne
     @JoinColumn(name = "seat_id", nullable = false, unique = true)

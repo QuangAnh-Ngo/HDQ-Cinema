@@ -27,9 +27,6 @@ public class Seat {
     @Enumerated(EnumType.STRING) // JPA sẽ lưu tên enum dưới dạng string (VD: "VIP", "NORMAL") thay vì số thứ tự (0, 1, 2)
     SeatType seatType;
 
-    @Enumerated(EnumType.STRING) // JPA sẽ lưu tên enum dưới dạng string (VD: "VIP", "NORMAL") thay vì số thứ tự (0, 1, 2)
-    SeatStatus seatStatus;
-
     @ManyToOne
     @JoinColumn(name = "room_id", nullable = false)
     Room room;

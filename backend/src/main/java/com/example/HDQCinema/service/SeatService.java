@@ -31,7 +31,7 @@ public class SeatService {
                         .seatNumber(column)
                         .room(room)
                         .seatType(SeatType.valueOf(request.getType()))
-                        .seatStatus(SeatStatus.AVAILABLE)
+                        //.seatStatus(SeatStatus.AVAILABLE)
                         .build();
                 seatRepository.save(seat);
             }

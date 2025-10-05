@@ -5,10 +5,7 @@ import com.example.HDQCinema.dto.response.ApiResponse;
 import com.example.HDQCinema.dto.response.ShowTimeResponse;
 import com.example.HDQCinema.service.ShowTimeService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -24,6 +21,15 @@ public class ShowTimeController {
 
         return ApiResponse.<ShowTimeResponse>builder()
                 .result(showTime)
+                .build();
+    }
+
+    @DeleteMapping
+    ApiResponse<String> autoDeleteShowTime(){
+        showTimeService.selectionDelete();
+
+        return ApiResponse.<String>builder()
+                .result("success")
                 .build();
     }
 }

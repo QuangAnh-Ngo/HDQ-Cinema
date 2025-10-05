@@ -14,22 +14,24 @@ public interface TicketPriceRepository extends JpaRepository<TicketPrice, String
     @Query(value = """
             SELECT tp.price
             FROM ticket_price tp
-            WHERE day_type =
-            (SELECT dt.day_type
-            FROM day_type dt
-            INNER JOIN show_time st
-            ON (
-            st.showtime_id = :showtimeId  AND (
-            (dt.day_start IS NULL AND st.start_time >= dt.day_start AND st.start_time < dt.day_end + INTERVAL '1' DAY) 
-            OR 
-            (day_type = UPPER(DAYNAME(:day)))
-            )
-            )
+            WHERE tp.day_type = COALESCE(
+              (
+                SELECT dt.day_type
+                FROM day_type dt
+                JOIN show_time st
+                  ON st.showtime_id = :showtimeId
+                 AND dt.day_start IS NOT NULL
+                 AND st.start_time BETWEEN dt.day_start AND dt.day_end + INTERVAL 1 DAY
+              ),
+              (
+                SELECT UPPER(DAYNAME(st.start_time))
+                FROM show_time st
+                WHERE st.showtime_id = :showtimeId
+              )
             )
             AND tp.seat_type = :seatType;
             """,
-    nativeQuery = true) // Không cần DATE(st.start_time) → giữ index.
-    double toPrice(@Param("day") Date day,
-                   @Param("seatType") SeatType seatType,
+    nativeQuery = true) // COALESCE là hàm SQL trả về giá trị đầu tiên không NULL trong danh sách các giá trị được đưa vào.
+    double toPrice(@Param("seatType") String seatType,
                    @Param("showtimeId") String showtimeId);
 }

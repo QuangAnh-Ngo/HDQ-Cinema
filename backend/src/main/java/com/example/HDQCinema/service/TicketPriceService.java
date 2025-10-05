@@ -24,7 +24,7 @@ public class TicketPriceService {
         var ticket = ticketPriceMapper.toTicketPrice(request);
 
         var dayType = dayTypeRepository.findDayTypeByDayType(request.getDayType())
-                .orElseThrow(() -> new RuntimeException("not valid"));
+                .orElseThrow(() -> new RuntimeException("have to create day type first"));
         ticket.setDayType((DayType) dayType);
 
         ticketPriceRepository.save(ticket);

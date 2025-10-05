@@ -19,8 +19,8 @@ public class User {
     String username, password, email, phoneNumber;
     LocalDate dob;
 
-    @ManyToMany
-    Set<Role> roles;
+//    @ManyToMany
+//    Set<Role> roles;
 
     @OneToMany(mappedBy = "user" ,orphanRemoval = true, cascade = CascadeType.ALL)
     Set<Booking> bookings;
