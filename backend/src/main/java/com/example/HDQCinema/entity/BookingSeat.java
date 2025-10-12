@@ -1,39 +1,36 @@
 package com.example.HDQCinema.entity;
 
-import com.example.HDQCinema.enums.BookingStatus;
+import com.example.HDQCinema.enums.SeatStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDateTime;
-import java.util.Set;
 
 @Entity
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class Booking {
+@Builder
+public class BookingSeat {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "booking_id")
+    @Column(name = "bookingseat_id")
     String id;
-    double totalPrice;
-    LocalDateTime createTime;
 
     @Enumerated(EnumType.STRING)
-    BookingStatus bookingStatus;
+    SeatStatus seatStatus;
+
+    LocalDateTime holdTime;
 
     @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
-    User user;
+    @JoinColumn(name = "seat_id", nullable = false)
+    Seat seat;
 
     @ManyToOne
     @JoinColumn(name = "showtime_id", nullable = false)
     ShowTime showTime;
 
-    @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL, orphanRemoval = true)
-    Set<BookingDetail> bookingDetails;
 }

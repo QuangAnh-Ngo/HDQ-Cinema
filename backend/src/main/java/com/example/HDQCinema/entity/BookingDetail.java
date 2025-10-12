@@ -12,6 +12,10 @@ import lombok.experimental.FieldDefaults;
 @Setter
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@Table(
+        name = "booking_detail",
+        uniqueConstraints = @UniqueConstraint(columnNames = {"seat_id", "booking_id"})
+)
 public class BookingDetail {
     // để seat ko cần bắt buộc phải có booking nữa
     //Seat chỉ biết nó thuộc về Room
@@ -23,15 +27,15 @@ public class BookingDetail {
 
     double price;
 
-    @Enumerated(EnumType.STRING) // JPA sẽ lưu tên enum dưới dạng string (VD: "VIP", "NORMAL") thay vì số thứ tự (0, 1, 2)
-    SeatStatus seatStatus;
+//    @Enumerated(EnumType.STRING) // JPA sẽ lưu tên enum dưới dạng string (VD: "VIP", "NORMAL") thay vì số thứ tự (0, 1, 2)
+//    SeatStatus seatStatus;
 
     @ManyToOne
-    @JoinColumn(name = "seat_id", nullable = false, unique = true)
+    @JoinColumn(name = "seat_id", nullable = false)
     private Seat seat;
 
     @ManyToOne
-    @JoinColumn(name = "booking_id", nullable = false, unique = true)
+    @JoinColumn(name = "booking_id", nullable = false)
     private Booking booking;
 
 }

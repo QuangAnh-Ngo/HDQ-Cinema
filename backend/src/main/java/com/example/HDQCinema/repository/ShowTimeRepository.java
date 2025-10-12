@@ -25,9 +25,8 @@ public interface ShowTimeRepository extends JpaRepository<ShowTime, String> {
 
     List<ShowTime> toShowTimes(@Param("movie_id") String movieId);
 
-
     @Transactional
     @Modifying
     @Query("delete from ShowTime s where s.startTime < ?1")
-    void deleteShowTimeByStartTimeIsLessThan(LocalDateTime startTimeIsLessThan);
+    void deleteAllByStartTimeIsLessThan(LocalDateTime startTimeIsLessThan);
 }

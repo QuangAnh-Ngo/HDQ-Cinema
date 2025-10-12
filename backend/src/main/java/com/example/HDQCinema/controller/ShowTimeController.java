@@ -23,13 +23,4 @@ public class ShowTimeController {
                 .result(showTime)
                 .build();
     }
-
-    @DeleteMapping
-    ApiResponse<String> autoDeleteShowTime(){
-        showTimeService.selectionDelete();
-
-        return ApiResponse.<String>builder()
-                .result("success")
-                .build();
-    }
 }

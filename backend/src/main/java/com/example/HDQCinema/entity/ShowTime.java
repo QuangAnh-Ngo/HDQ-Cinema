@@ -33,8 +33,10 @@ public class ShowTime {
 
     @OneToMany(mappedBy = "showTime", cascade = CascadeType.ALL, orphanRemoval = true)
     Set<Booking> booking;
+    @OneToMany(mappedBy = "showTime", cascade = CascadeType.ALL, orphanRemoval = true)
+    Set<BookingSeat> bookingSeats;
 
-    public ShowTime(LocalDateTime startTime) {
-        this.startTime = startTime;
-    }
+//    public ShowTime(LocalDateTime startTime) {
+//        this.startTime = startTime;
+//    }
 }

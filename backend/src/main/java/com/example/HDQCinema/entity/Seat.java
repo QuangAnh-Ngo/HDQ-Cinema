@@ -36,4 +36,7 @@ public class Seat {
 //    Booking booking;
     @OneToMany(mappedBy = "seat", cascade = CascadeType.ALL, orphanRemoval = true)
     Set<BookingDetail> bookingDetails;
+
+    @OneToMany(mappedBy = "seat", cascade = CascadeType.ALL, orphanRemoval = true)
+    Set<BookingSeat> bookingSeats;
 }

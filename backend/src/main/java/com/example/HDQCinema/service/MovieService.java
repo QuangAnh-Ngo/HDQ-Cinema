@@ -39,6 +39,8 @@ public class MovieService {
     }
 
     public MovieResponse get(String id){
+        validInput(id);
+
         Movie movie = movieRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("movie not exist"));
 
@@ -51,4 +53,9 @@ public class MovieService {
         return response;
     }
 
+    private void validInput(String s){
+        if(s == null || s.contains("--")){
+            throw new RuntimeException("invalid input");
+        }
+    }
 }

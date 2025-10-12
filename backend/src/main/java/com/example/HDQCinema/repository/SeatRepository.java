@@ -6,12 +6,14 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+
 @Repository
 public interface SeatRepository extends JpaRepository<Seat, String> {
     @Query(value = "SELECT s.* " +
             "FROM seat s " +
             "WHERE s.seat_id = :seatId " +
-            "FOR UPDATE;"
+            "FOR UPDATE NOWAIT;"
     , nativeQuery = true)
-    Seat findSeatForUpdate(@Param("seatId") String id);
+    Optional<Seat> findSeatForUpdate(@Param("seatId") String id);
 }

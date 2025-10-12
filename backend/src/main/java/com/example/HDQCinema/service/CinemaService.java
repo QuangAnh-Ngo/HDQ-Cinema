@@ -36,6 +36,8 @@ public class CinemaService {
     }
 
     public CinemaResponse get(String id){
+        validInput(id);
+
         Cinema cinema = cinemaRepository.findById(id)
                 .orElseThrow(()-> new RuntimeException("cinema not exist"));
 
@@ -44,5 +46,11 @@ public class CinemaService {
         response.setRooms(roomResponse);
 
         return response;
+    }
+
+    private void validInput(String s){
+        if(s == null || s.contains("--")){
+            throw new RuntimeException("invalid input");
+        }
     }
 }
