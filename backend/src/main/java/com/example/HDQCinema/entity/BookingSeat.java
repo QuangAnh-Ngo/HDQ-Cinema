@@ -24,6 +24,7 @@ public class BookingSeat {
     SeatStatus seatStatus;
 
     LocalDateTime holdTime;
+    double price;
 
     @ManyToOne
     @JoinColumn(name = "seat_id", nullable = false)

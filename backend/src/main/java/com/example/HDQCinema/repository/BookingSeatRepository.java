@@ -11,6 +11,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 public interface BookingSeatRepository extends JpaRepository<BookingSeat, String> {
@@ -55,4 +56,6 @@ public interface BookingSeatRepository extends JpaRepository<BookingSeat, String
            WHERE seat_status = 'HOLD' AND hold_time < :now; 
 """, nativeQuery = true)
     void releaseHold(@Param("now") LocalDateTime now);
+
+    List<BookingSeat> findAllByShowTime(ShowTime showTime);
 }

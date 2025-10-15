@@ -31,7 +31,7 @@ public class ShowTimeService {
     ShowTimeMapper showTimeMapper;
     RoomRepository roomRepository;
     MovieRepository movieRepository;
-    BookingSeatRepository bookingSeatRepository;
+    BookingSeatService bookingSeatService;
 
     public ShowTimeResponse create(ShowTimeRequest request){
         Movie movie = movieRepository.findById(request.getMovieId())
@@ -41,23 +41,18 @@ public class ShowTimeService {
             Room room = roomRepository.findById(showTimeRoom.getRoomId())
                     .orElseThrow(()-> new RuntimeException("room not exist"));
             ShowTime showTime = showTimeMapper.toShowTime(movie, room, showTimeRoom.getShowTime());
-
-            List<BookingSeat> bookingSeats = new ArrayList<>();
-            for(Seat seat:room.getSeats()){
-                BookingSeat bookingSeat = BookingSeat.builder()
-                        .seat(seat)
-                        .showTime(showTime)
-                        .seatStatus(SeatStatus.AVAILABLE)
-                        .build();
-                bookingSeats.add(bookingSeat);
-            }
-            showTime.setBookingSeats(new HashSet<>(bookingSeats));
+//            List<BookingSeat> bookingSeats = bookingSeatService.create(showTime);
+//            showTime.setBookingSeats(new HashSet<>(bookingSeats));
             showTimeRepository.save(showTime);
+
+            bookingSeatService.create(showTime);
         }
 
         return ShowTimeResponse.builder()
                 .message("success")
                 .build();
     }
+
+
 
 }

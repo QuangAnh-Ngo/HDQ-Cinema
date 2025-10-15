@@ -1,5 +1,6 @@
 package com.example.HDQCinema.mapper;
 
+import com.example.HDQCinema.dto.request.BookingRequest;
 import com.example.HDQCinema.dto.response.BookingResponse;
 import com.example.HDQCinema.entity.Booking;
 import com.example.HDQCinema.entity.BookingDetail;
@@ -44,4 +45,8 @@ public interface BookingMapper {
             return bookingResponse.build();
         }
     }
+
+    @Mapping(target = "totalPrice", ignore = true)
+    @Mapping(target = "bookingDetails", ignore = true)
+    Booking toBooking(BookingRequest request);
 }

@@ -19,14 +19,10 @@ public interface ShowTimeRepository extends JpaRepository<ShowTime, String> {
             "from show_time st " +
             "inner join movie m " +
             "on st.movie_id = m.movie_id " +
-            "where m.movie_id = :movie_id " +
+            "where m.movie_id = :movie_id and st.start_time > NOW() " +
             "order by st.start_time;",
     nativeQuery = true)
 
     List<ShowTime> toShowTimes(@Param("movie_id") String movieId);
 
-    @Transactional
-    @Modifying
-    @Query("delete from ShowTime s where s.startTime < ?1")
-    void deleteAllByStartTimeIsLessThan(LocalDateTime startTimeIsLessThan);
 }
