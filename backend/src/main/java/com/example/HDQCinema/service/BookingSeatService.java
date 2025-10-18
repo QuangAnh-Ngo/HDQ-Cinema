@@ -47,6 +47,7 @@ public class BookingSeatService {
                 .map(seat -> BookingSeatResponse.builder()
                         .seat(""+ seat.getSeatRow()+seat.getSeatNumber())
                         .price(getPrice(showTime,seat))
+                        .status(bookingSeatRepository.findStatusBySeatAndShowTime(seat, showTime).name())
                         .build())
                 .sorted(
                         Comparator.comparing((BookingSeatResponse r) -> r.getSeat().substring(0, 1)) // theo hàng

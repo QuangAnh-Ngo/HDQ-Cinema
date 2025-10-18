@@ -1,5 +1,6 @@
 package com.example.HDQCinema.repository;
 
+import com.example.HDQCinema.entity.Room;
 import com.example.HDQCinema.entity.ShowTime;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -25,4 +26,5 @@ public interface ShowTimeRepository extends JpaRepository<ShowTime, String> {
 
     List<ShowTime> toShowTimes(@Param("movie_id") String movieId);
 
+    boolean existsShowTimeByRoomAndStartTime(Room room, LocalDateTime startTime);
 }

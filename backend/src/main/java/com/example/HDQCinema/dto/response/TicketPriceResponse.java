@@ -11,6 +11,7 @@ import lombok.experimental.FieldDefaults;
 @Builder
 public class TicketPriceResponse {
     double price;
+    String cinemaId;
     String dayType;
     String seatType;
 }

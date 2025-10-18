@@ -12,6 +12,7 @@ import org.hibernate.annotations.SecondaryRow;
 @Builder
 public class TicketPriceRequest {
     double price;
+    String cinemaId;
     String dayType;
     String seatType;
 }

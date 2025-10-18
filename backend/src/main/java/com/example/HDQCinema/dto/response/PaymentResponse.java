@@ -1,10 +1,9 @@
 package com.example.HDQCinema.dto.response;
 
-import com.example.HDQCinema.entity.Seat;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
-import java.util.List;
+import java.io.Serializable;
 
 @Getter
 @Setter
@@ -12,8 +11,9 @@ import java.util.List;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Builder
-public class BookingSeatResponse {
-    double price;
-    String seat;
+public class PaymentResponse implements Serializable { // Serializable = có thể đóng gói đối tượng thành bytes và khôi phục lại sau
+
     String status;
+    String message;
+    String URL;
 }

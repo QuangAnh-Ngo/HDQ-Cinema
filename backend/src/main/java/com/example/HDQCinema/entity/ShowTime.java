@@ -13,6 +13,13 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+
+@Table(
+        name = "show_time",
+        uniqueConstraints = {
+                @UniqueConstraint(columnNames = {"start_time", "room_id"})
+        }
+)
 public class ShowTime {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -31,10 +38,12 @@ public class ShowTime {
     @JoinColumn(name = "room_id", nullable = false) // khóa ngoại
     private Room room;
 
-    @OneToMany(mappedBy = "showTime", cascade = CascadeType.ALL, orphanRemoval = true)
-    Set<Booking> booking;
-    @OneToMany(mappedBy = "showTime", cascade = CascadeType.ALL, orphanRemoval = true)
-    Set<BookingSeat> bookingSeats;
+    @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL, orphanRemoval = true)
+    Set<BookingDetail> bookingDetails;
+
+//    @OneToMany(mappedBy = "showTime", cascade = CascadeType.ALL, orphanRemoval = true)
+//    Set<Booking> booking;
+
 
 //    public ShowTime(LocalDateTime startTime) {
 //        this.startTime = startTime;

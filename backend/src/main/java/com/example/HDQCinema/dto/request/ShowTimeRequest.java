@@ -17,3 +17,5 @@ public class ShowTimeRequest {
     List<ShowTimeAndRoom> showTimeRooms;
     String movieId;
 }
+
+

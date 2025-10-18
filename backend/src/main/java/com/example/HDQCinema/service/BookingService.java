@@ -3,7 +3,6 @@ package com.example.HDQCinema.service;
 import com.example.HDQCinema.dto.request.BookingDetailRequest;
 import com.example.HDQCinema.dto.request.BookingRequest;
 import com.example.HDQCinema.dto.response.BookingResponse;
-import com.example.HDQCinema.dto.response.BookingSeatResponse;
 import com.example.HDQCinema.entity.*;
 import com.example.HDQCinema.enums.BookingStatus;
 import com.example.HDQCinema.enums.SeatStatus;
@@ -19,7 +18,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 
@@ -100,15 +98,23 @@ public class BookingService {
 //    }
 
     @Transactional
+    // tạo và quản lý transaction (giao dịch) khi làm việc với DB.
+    // để tránh khi Một user giữ ghế, nhưng trước khi lưu booking, transaction đã commit → user khác vẫn có thể đặt cùng ghế.
+    // nghĩa la khi transaction chưa commit hoặc rollback thì row đó vẫn khóa
     public BookingResponse createBooking(BookingRequest request){ // khi user bấm vào trang thanh toán
-        User user = userRepository.findById(request.getUserId())
+        Member member = userRepository.findById(request.getUserId())
                 .orElseThrow(() -> new RuntimeException("user not exist"));
         ShowTime showTime = showTimeRepository.findById(request.getShowTimeId())
                 .orElseThrow(() -> new RuntimeException("showtime not exist"));
 
         double totalPrice = 0;
         List<BookingDetail> bookingDetails = new ArrayList<>();
-        Booking booking = bookingMapper.toBooking(request);
+        Booking booking = Booking.builder()
+                .createTime(LocalDateTime.now())
+                .bookingStatus(BookingStatus.PENDING)
+                .member(member)
+                .showTime(showTime)
+                .build();
 
         for (BookingDetailRequest detail : request.getBookingDetailRequests()) {
             Seat seat = seatRepository.findById(detail.getSeatId())

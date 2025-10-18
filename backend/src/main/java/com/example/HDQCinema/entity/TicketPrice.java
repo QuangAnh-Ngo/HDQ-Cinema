@@ -26,4 +26,8 @@ import lombok.experimental.FieldDefaults;
     DayType dayType;
     @Enumerated(EnumType.STRING)
     SeatType seatType;
+
+    @ManyToOne
+    @JoinColumn(name = "cinema_id", nullable = false)
+    Cinema cinema;
 }

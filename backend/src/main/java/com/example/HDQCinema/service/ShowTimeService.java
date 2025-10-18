@@ -1,5 +1,6 @@
 package com.example.HDQCinema.service;
 
+import com.example.HDQCinema.dto.request.ShowTimeAndRoom;
 import com.example.HDQCinema.dto.request.ShowTimeRequest;
 import com.example.HDQCinema.dto.response.ShowTimeResponse;
 import com.example.HDQCinema.entity.*;
@@ -40,6 +41,10 @@ public class ShowTimeService {
         for(var showTimeRoom : request.getShowTimeRooms()){
             Room room = roomRepository.findById(showTimeRoom.getRoomId())
                     .orElseThrow(()-> new RuntimeException("room not exist"));
+
+//            if(showTimeRepository.existsShowTimeByRoomAndStartTime(room, showTimeRoom.getShowTime()))
+//                throw new RuntimeException("showtime existed");
+
             ShowTime showTime = showTimeMapper.toShowTime(movie, room, showTimeRoom.getShowTime());
 //            List<BookingSeat> bookingSeats = bookingSeatService.create(showTime);
 //            showTime.setBookingSeats(new HashSet<>(bookingSeats));

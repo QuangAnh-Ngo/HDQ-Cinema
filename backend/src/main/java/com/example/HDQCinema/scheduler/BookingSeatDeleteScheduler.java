@@ -1,9 +1,12 @@
 package com.example.HDQCinema.scheduler;
 
+import com.example.HDQCinema.repository.BookingDetailRepository;
+import com.example.HDQCinema.repository.BookingRepository;
 import com.example.HDQCinema.repository.BookingSeatRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -11,12 +14,14 @@ import org.springframework.transaction.annotation.Transactional;
 @Component
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-public class TruncateBookingSeatScheduler {
+@Slf4j
+public class BookingSeatDeleteScheduler {
+
     BookingSeatRepository bookingSeatRepository;
 
-    @Scheduled(cron = "0 0 0 * * *") // chạy lúc 00:00 mỗi ngày(giây, phút, giờ, ngày trong tháng, tháng, ngày trong tuần)
+    @Scheduled(fixedRate = 5 * 60 * 1000)
     @Transactional
-    public void truncate(){
-        bookingSeatRepository.deleteAll();
+    public void autoDelete(){
+        bookingSeatRepository.deleteExpiredTimeBookingSeat();
     }
 }

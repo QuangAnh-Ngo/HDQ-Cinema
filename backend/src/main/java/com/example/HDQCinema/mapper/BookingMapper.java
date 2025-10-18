@@ -46,7 +46,5 @@ public interface BookingMapper {
         }
     }
 
-    @Mapping(target = "totalPrice", ignore = true)
-    @Mapping(target = "bookingDetails", ignore = true)
     Booking toBooking(BookingRequest request);
 }

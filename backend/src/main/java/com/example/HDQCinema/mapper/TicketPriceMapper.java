@@ -9,7 +9,9 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring")
 public interface TicketPriceMapper {
     @Mapping(target = "dayType" , ignore = true)
+    @Mapping(target = "cinema" , ignore = true)
     TicketPrice toTicketPrice(TicketPriceRequest request);
     @Mapping(target = "dayType" , ignore = true)
+    @Mapping(target = "cinema_id" , ignore = true)
     TicketPriceResponse toResponse(TicketPrice ticketPrice);
 }

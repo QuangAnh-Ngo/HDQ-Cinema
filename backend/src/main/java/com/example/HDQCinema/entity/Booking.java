@@ -28,11 +28,11 @@ public class Booking {
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
-    User user;
+    Member member;
 
-    @ManyToOne
-    @JoinColumn(name = "showtime_id", nullable = false)
-    ShowTime showTime;
+//    @ManyToOne
+//    @JoinColumn(name = "showtime_id", nullable = false)
+//    ShowTime showTime;
 
     @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL, orphanRemoval = true)
     Set<BookingDetail> bookingDetails;
