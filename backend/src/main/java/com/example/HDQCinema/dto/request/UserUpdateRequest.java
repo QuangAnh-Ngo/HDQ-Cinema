@@ -3,17 +3,15 @@ package com.example.HDQCinema.dto.request;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
-import java.time.LocalDate;
-import java.util.List;
-
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class UserCreationRequest {
-    String username, password, email, phoneNumber;
-    LocalDate dob;
-    List<String> roles;
+public class UserUpdateRequest {
+    String password;
+    String email;
+    String phoneNumber;
+
 }
