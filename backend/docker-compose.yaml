@@ -37,7 +37,7 @@ services:
   springboot-app:
     build: .
     container_name: my-spring-app-cinema
-    restart: unless-stopped
+    restart: on-failure
     ports:
       - "8080:8080" # 8080 (trái dấu :) là cổng trên máy host, 8080 (phải dấu :) là trong container
     environment:
