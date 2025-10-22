@@ -5,6 +5,8 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -22,12 +24,14 @@ public class Movie {
 
     String name, poster;
     Integer duration;
+    LocalDate dayStart, dayEnd;
+
     Integer limitAge;
 
-    @OneToMany(mappedBy = "movie",//Bên Showtime giữ khóa ngoại movie_id.
+    @OneToMany(mappedBy = "movie",//Movie “nhìn ngược lại” thông qua mappedBy = "movie" (chính là tên field " private Movie movie; " ở ShowTime).
             cascade = CascadeType.ALL,//Mọi thao tác (lưu, xóa, update) trên Movie sẽ tự động lan xuống Showtimes.
             orphanRemoval = true) //Nếu bạn bỏ một Showtime ra khỏi danh sách, nó sẽ bị xóa luôn trong DB.
     //Một Movie có nhiều Showtime.
 
-    Set<ShowTime> showtimes;
+    List<ShowTime> showtimes;
 }
