@@ -5,6 +5,7 @@ import com.example.HDQCinema.entity.ShowTime;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
 
@@ -19,5 +20,6 @@ public class MovieResponse {
     String name, poster;
     Integer duration;
     Integer limitAge;
+    LocalDate dayStart, dayEnd;
     List<ShowTimeAndRoom> showtimes;
 }

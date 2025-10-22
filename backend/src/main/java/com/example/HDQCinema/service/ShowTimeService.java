@@ -1,12 +1,9 @@
 package com.example.HDQCinema.service;
 
-import com.example.HDQCinema.dto.request.ShowTimeAndRoom;
 import com.example.HDQCinema.dto.request.ShowTimeRequest;
 import com.example.HDQCinema.dto.response.ShowTimeResponse;
 import com.example.HDQCinema.entity.*;
-import com.example.HDQCinema.enums.SeatStatus;
 import com.example.HDQCinema.mapper.ShowTimeMapper;
-import com.example.HDQCinema.repository.BookingSeatRepository;
 import com.example.HDQCinema.repository.MovieRepository;
 import com.example.HDQCinema.repository.RoomRepository;
 import com.example.HDQCinema.repository.ShowTimeRepository;
@@ -15,13 +12,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-
-import java.time.LocalDateTime;
-import java.time.chrono.ChronoLocalDateTime;
-import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -32,7 +22,6 @@ public class ShowTimeService {
     ShowTimeMapper showTimeMapper;
     RoomRepository roomRepository;
     MovieRepository movieRepository;
-    BookingSeatService bookingSeatService;
 
     public ShowTimeResponse create(ShowTimeRequest request){
         Movie movie = movieRepository.findById(request.getMovieId())
@@ -50,7 +39,6 @@ public class ShowTimeService {
 //            showTime.setBookingSeats(new HashSet<>(bookingSeats));
             showTimeRepository.save(showTime);
 
-            bookingSeatService.create(showTime);
         }
 
         return ShowTimeResponse.builder()

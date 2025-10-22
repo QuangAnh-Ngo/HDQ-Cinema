@@ -38,4 +38,8 @@ public interface ShowTimeMapper {
         }
     }
 
+    default LocalDateTime toLocalDateTime(ShowTime showTime) {
+        return showTime != null ? showTime.getStartTime() : null;
+    }
+
 }

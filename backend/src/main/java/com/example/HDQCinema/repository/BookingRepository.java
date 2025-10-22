@@ -19,7 +19,7 @@ public interface BookingRepository extends JpaRepository<Booking, String> {
     @Query(value = """
         DELETE  
         FROM booking b 
-        WHERE MINUTE(TIMEDIFF(NOW(), b.create_time)) > :lim AND b.booking_status = 'PENDING'; 
+        WHERE EXTRACT(EPOCH FROM (NOW() - b.create_time)) / 60 > :lim AND b.booking_status = 'PENDING'; 
         """, nativeQuery = true)
     void deleteBookingByTimeLimit(@Param("lim") Integer lim);
 }

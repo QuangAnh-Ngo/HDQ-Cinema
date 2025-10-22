@@ -26,6 +26,7 @@ public class BookingDetail {
     String id;
 
     double price;
+    @Enumerated(EnumType.STRING)
     SeatStatus seatStatus;
 
 //    @Enumerated(EnumType.STRING) // JPA sẽ lưu tên enum dưới dạng string (VD: "VIP", "NORMAL") thay vì số thứ tự (0, 1, 2)

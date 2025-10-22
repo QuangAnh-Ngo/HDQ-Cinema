@@ -14,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -53,4 +54,11 @@ public class CinemaService {
             throw new RuntimeException("invalid input");
         }
     }
+
+    public List<CinemaResponse> getAll(){
+        var cinemas = cinemaRepository.findAll();
+        return cinemaMapper.toResponses(cinemas);
+    }
+
+
 }

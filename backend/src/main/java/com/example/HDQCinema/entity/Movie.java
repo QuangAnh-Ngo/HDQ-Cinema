@@ -5,6 +5,7 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 
@@ -23,7 +24,7 @@ public class Movie {
 
     String name, poster;
     Integer duration;
-
+    LocalDate dayStart, dayEnd;
 
     Integer limitAge;
 

@@ -7,7 +7,6 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.Date;
 
 @Repository
 public interface TicketPriceRepository extends JpaRepository<TicketPrice, String> {
@@ -21,10 +20,10 @@ public interface TicketPriceRepository extends JpaRepository<TicketPrice, String
                 JOIN show_time st
                   ON st.showtime_id = :showtimeId
                  AND dt.day_start IS NOT NULL
-                 AND st.start_time BETWEEN dt.day_start AND dt.day_end + INTERVAL 1 DAY
+                 AND st.start_time BETWEEN dt.day_start AND dt.day_end + INTERVAL INTERVAL '1 day'
               ),
               (
-                SELECT UPPER(DAYNAME(st.start_time))
+                SELECT UPPER(TO_CHAR(st.start_time, 'DAY'))
                 FROM show_time st
                 WHERE st.showtime_id = :showtimeId
               )
@@ -34,4 +33,16 @@ public interface TicketPriceRepository extends JpaRepository<TicketPrice, String
     nativeQuery = true) // COALESCE là hàm SQL trả về giá trị đầu tiên không NULL trong danh sách các giá trị được đưa vào.
     double toPrice(@Param("seatType") String seatType,
                    @Param("showtimeId") String showtimeId);
+
+    //SELECT tp.price
+    //FROM ticket_price tp
+    //JOIN show_time st ON st.showtime_id = :showtimeId
+    //LEFT JOIN day_type dt
+    //  ON st.start_time BETWEEN dt.day_start AND dt.day_end + INTERVAL '1 day'
+    //WHERE tp.day_type = COALESCE(
+    //    dt.day_type,
+    //    UPPER(TRIM(TO_CHAR(st.start_time, 'DAY')))
+    //)
+    //AND tp.seat_type = :seatType
+    //LIMIT 1;
 }

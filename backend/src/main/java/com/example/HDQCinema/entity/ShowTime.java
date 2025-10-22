@@ -38,7 +38,7 @@ public class ShowTime {
     @JoinColumn(name = "room_id", nullable = false) // khóa ngoại
     private Room room;
 
-    @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "showTime", cascade = CascadeType.ALL, orphanRemoval = true)
     Set<BookingDetail> bookingDetails;
 
 //    @OneToMany(mappedBy = "showTime", cascade = CascadeType.ALL, orphanRemoval = true)

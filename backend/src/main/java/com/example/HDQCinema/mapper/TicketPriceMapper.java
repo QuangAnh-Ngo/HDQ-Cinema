@@ -12,6 +12,5 @@ public interface TicketPriceMapper {
     @Mapping(target = "cinema" , ignore = true)
     TicketPrice toTicketPrice(TicketPriceRequest request);
     @Mapping(target = "dayType" , ignore = true)
-    @Mapping(target = "cinema_id" , ignore = true)
     TicketPriceResponse toResponse(TicketPrice ticketPrice);
 }

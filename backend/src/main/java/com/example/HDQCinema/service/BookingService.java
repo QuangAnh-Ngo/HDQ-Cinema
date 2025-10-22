@@ -6,6 +6,8 @@ import com.example.HDQCinema.dto.response.BookingResponse;
 import com.example.HDQCinema.entity.*;
 import com.example.HDQCinema.enums.BookingStatus;
 import com.example.HDQCinema.enums.SeatStatus;
+import com.example.HDQCinema.exception.AppException;
+import com.example.HDQCinema.exception.ErrorCode;
 import com.example.HDQCinema.mapper.BookingMapper;
 import com.example.HDQCinema.repository.*;
 
@@ -13,6 +15,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,8 +35,7 @@ public class BookingService {
     SeatRepository seatRepository;
     BookingMapper bookingMapper;
     TicketPriceRepository ticketPriceRepository;
-    BookingSeatRepository bookingSeatRepository;
-
+    BookingDetailRepository bookingDetailRepository;
 
 //    @Transactional
 //    // tạo và quản lý transaction (giao dịch) khi làm việc với DB.
@@ -101,6 +103,7 @@ public class BookingService {
     // tạo và quản lý transaction (giao dịch) khi làm việc với DB.
     // để tránh khi Một user giữ ghế, nhưng trước khi lưu booking, transaction đã commit → user khác vẫn có thể đặt cùng ghế.
     // nghĩa la khi transaction chưa commit hoặc rollback thì row đó vẫn khóa
+
     public BookingResponse createBooking(BookingRequest request){ // khi user bấm vào trang thanh toán
         Member member = userRepository.findById(request.getUserId())
                 .orElseThrow(() -> new RuntimeException("user not exist"));
@@ -113,29 +116,21 @@ public class BookingService {
                 .createTime(LocalDateTime.now())
                 .bookingStatus(BookingStatus.PENDING)
                 .member(member)
-                .showTime(showTime)
                 .build();
 
         for (BookingDetailRequest detail : request.getBookingDetailRequests()) {
             Seat seat = seatRepository.findById(detail.getSeatId())
                     .orElseThrow();
-            BookingSeat bookingSeat = bookingSeatRepository.findForUpdate(showTime.getId(), seat.getId())
-                    .orElseThrow(() -> new RuntimeException("not found"));
-
-            if (bookingSeat.getSeatStatus() == SeatStatus.BOOKED)
-                throw new RuntimeException("Seat already booked");
-            if (bookingSeat.getSeatStatus() == SeatStatus.HOLD && bookingSeat.getHoldTime().isAfter(LocalDateTime.now()))
-                throw new RuntimeException("Seat temporarily held");
 
             double price = ticketPriceRepository.toPrice(seat.getSeatType().toString(), showTime.getId());
-            bookingSeatRepository.update(showTime.getId(), seat.getId(),
-                    SeatStatus.HOLD.name(), LocalDateTime.now().plusMinutes(5));
 
 
             BookingDetail bookingDetail = BookingDetail.builder()
                     .seat(seat)
+                    .showTime(showTime)
                     .price(price)
                     .booking(booking)
+                    .seatStatus(SeatStatus.HOLD)
                     .build();
             bookingDetails.add(bookingDetail);
 
@@ -144,9 +139,16 @@ public class BookingService {
 
         booking.setTotalPrice(totalPrice);
         booking.setBookingDetails(new HashSet<>(bookingDetails));
+        try {
+            booking = bookingReppository.save(booking);
+        }catch (DataIntegrityViolationException e){
+            throw new AppException(ErrorCode.SEAT_UNAVAILABLE);
+        }
 
-        bookingReppository.save(booking);
-        return bookingMapper.toResponse(booking);
+        var response = bookingMapper.toResponse(booking);
+        response.setShowTime(showTime.getStartTime());
+
+        return response;
     }
 
 
@@ -155,14 +157,7 @@ public class BookingService {
         Booking booking = bookingReppository.findById(bookingId)
                 .orElseThrow(() -> new RuntimeException("Booking not found"));
 
-        for (BookingDetail detail : booking.getBookingDetails()) {
-            bookingSeatRepository.update(
-                    booking.getShowTime().getId(),
-                    detail.getSeat().getId(),
-                    SeatStatus.BOOKED.name(),
-                    null
-            );
-        }
+        bookingDetailRepository.updateSeatStatus(booking.getId());
 
         booking.setBookingStatus(BookingStatus.CONFIRM);
         bookingReppository.save(booking);

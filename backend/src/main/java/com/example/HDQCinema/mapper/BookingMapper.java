@@ -41,7 +41,6 @@ public interface BookingMapper {
             bookingResponse.totalPrice(booking.getTotalPrice());
             bookingResponse.createTime(booking.getCreateTime());
             bookingResponse.seats(toSeat(booking));
-            bookingResponse.showTime(booking.getShowTime().getStartTime());
             return bookingResponse.build();
         }
     }

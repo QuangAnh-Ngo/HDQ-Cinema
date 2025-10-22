@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -18,4 +19,5 @@ public class MovieCreationRequest {
     String name, poster;
     Integer duration;
     Integer limitAge;
+    LocalDate dayStart, dayEnd;
 }

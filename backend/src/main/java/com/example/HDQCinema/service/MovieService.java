@@ -15,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -44,18 +45,22 @@ public class MovieService {
         Movie movie = movieRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("movie not exist"));
 
-        var showTimes = showTimeRepository.toShowTimes(id);
-
-        var response = movieMapper.toMovieResponse(movie);
-
-        response.setShowtimes(showTimeAndRoomMapper.toShowTimeAndRooms(showTimes));
-
-        return response;
+        return movieMapper.toMovieResponse(movie);
     }
 
     private void validInput(String s){
         if(s == null || s.contains("--")){
             throw new RuntimeException("invalid input");
         }
+    }
+
+    public List<MovieResponse> getMovieUpComing(){
+        var movies = movieRepository.findAllByDayStartAfter(LocalDate.now());
+        return movieMapper.toMovieResponses(movies);
+    }
+
+    public List<MovieResponse> getMoviesShowing(){
+        var movies = movieRepository.findShowingMovie(LocalDate.now());
+        return movieMapper.toMovieResponses(movies);
     }
 }

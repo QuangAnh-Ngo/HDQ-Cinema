@@ -8,6 +8,8 @@ import com.example.HDQCinema.service.CinemaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/theaters")
 public class CinemaController {
@@ -29,6 +31,14 @@ public class CinemaController {
 
         return ApiResponse.<CinemaResponse>builder()
                 .result(cinema)
+                .build();
+    }
+
+    @GetMapping
+    ApiResponse<List<CinemaResponse>> getAllCinemas(){
+        var response = cinemaService.getAll();
+        return ApiResponse.<List<CinemaResponse>>builder()
+                .result(response)
                 .build();
     }
 }
