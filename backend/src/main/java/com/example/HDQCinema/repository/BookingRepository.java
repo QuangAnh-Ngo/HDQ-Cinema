@@ -22,4 +22,11 @@ public interface BookingRepository extends JpaRepository<Booking, String> {
         WHERE EXTRACT(EPOCH FROM (NOW() - b.create_time)) / 60 > :lim AND b.booking_status = 'PENDING'; 
         """, nativeQuery = true)
     void deleteBookingByTimeLimit(@Param("lim") Integer lim);
+
+    @Query(value = """
+            SELECT b.total_price 
+            FROM booking b 
+            WHERE b.booking_id = :bookingId;
+            """, nativeQuery = true)
+    double findTotalPriceByBookingId(@Param("bookingId") String bookingId);
 }

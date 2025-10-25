@@ -8,7 +8,7 @@ import org.mapstruct.Mapping;
 
 import java.util.List;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", uses = {RoomMapper.class})
 public interface CinemaMapper {
     @Mapping(ignore = true, target = "rooms")
     Cinema toCinema(CinemaCreationRequest request);

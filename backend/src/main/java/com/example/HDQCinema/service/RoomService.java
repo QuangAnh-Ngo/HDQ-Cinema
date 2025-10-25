@@ -9,10 +9,7 @@ import com.example.HDQCinema.enums.SeatStatus;
 import com.example.HDQCinema.exception.AppException;
 import com.example.HDQCinema.exception.ErrorCode;
 import com.example.HDQCinema.mapper.RoomMapper;
-import com.example.HDQCinema.repository.BookingDetailRepository;
-import com.example.HDQCinema.repository.CinemaRepository;
-import com.example.HDQCinema.repository.RoomRepository;
-import com.example.HDQCinema.repository.ShowTimeRepository;
+import com.example.HDQCinema.repository.*;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -32,6 +29,7 @@ public class RoomService {
     CinemaRepository cinemaRepository;
     ShowTimeRepository showTimeRepository;
     BookingDetailRepository bookingDetailRepository;
+    TicketPriceRepository ticketPriceRepository;
 
     public RoomResponse create(RoomRequest request){
         Cinema cinema = cinemaRepository.findById(request.getCinemaId())
@@ -56,12 +54,14 @@ public class RoomService {
         List<SeatPerShowTimeResponse> seats = new ArrayList<>();
         for(Seat seat : room.getSeats()){
             BookingDetail bookingDetail = bookingDetailRepository.findBySeatAndShowTime(seat, showTime);
+            double price = ticketPriceRepository.toPrice(seat.getSeatType().name(), showTimeId);
 
             SeatPerShowTimeResponse response = SeatPerShowTimeResponse.builder()
                     .seatStatus(bookingDetail != null ? bookingDetail.getSeatStatus() : SeatStatus.AVAILABLE)
                     .seatId(seat.getId())
                     .seatName(""+seat.getSeatRow()+seat.getSeatNumber())
                     .seatType(seat.getSeatType())
+                    .price(price)
                     .build();
             seats.add(response);
         }

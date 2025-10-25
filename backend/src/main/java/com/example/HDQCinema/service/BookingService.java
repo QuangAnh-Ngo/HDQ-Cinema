@@ -159,9 +159,14 @@ public class BookingService {
 
         bookingDetailRepository.updateSeatStatus(booking.getId());
 
+        var showtime = bookingDetailRepository.findFirstShowTimeByBooking(bookingId);
+
         booking.setBookingStatus(BookingStatus.CONFIRM);
         bookingReppository.save(booking);
-        return bookingMapper.toResponse(booking);
+
+        var response = bookingMapper.toResponse(booking);
+        response.setShowTime(showtime);
+        return response;
     }
 
     @Transactional

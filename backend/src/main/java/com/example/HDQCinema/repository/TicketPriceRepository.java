@@ -20,7 +20,7 @@ public interface TicketPriceRepository extends JpaRepository<TicketPrice, String
                 JOIN show_time st
                   ON st.showtime_id = :showtimeId
                  AND dt.day_start IS NOT NULL
-                 AND st.start_time BETWEEN dt.day_start AND dt.day_end + INTERVAL INTERVAL '1 day'
+                 AND st.start_time BETWEEN dt.day_start AND dt.day_end + INTERVAL '1 day'
               ),
               (
                 SELECT UPPER(TO_CHAR(st.start_time, 'DAY'))

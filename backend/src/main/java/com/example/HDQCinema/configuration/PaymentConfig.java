@@ -4,7 +4,11 @@ import jakarta.servlet.http.HttpServletRequest;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -13,9 +17,9 @@ import java.util.*;
 public class PaymentConfig {
 
     public static String vnp_PayUrl = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
-//    public static String vnp_ReturnUrl = "http://localhost:8080/vnpay_jsp/vnpay_return.jsp";
-    public static String vnp_TmnCode = "";
-    public static String secretKey = "";
+    public static String vnp_ReturnUrl = "http://localhost:8080/vnpay_jsp/vnpay_return.jsp";  // thanh toán thành công thì return về trang này
+    public static String vnp_TmnCode = "UKPH9R84";
+    public static String secretKey = "1HJZH81ISD8M5GB54LJG2DCTOM4XHZ41";
     public static String vnp_ApiUrl = "https://sandbox.vnpayment.vn/merchant_webapi/api/transaction";
     public static String vnp_Version = "2.1.0";
     public static String vnp_Command = "pay";
@@ -121,6 +125,25 @@ public class PaymentConfig {
             sb.append(chars.charAt(rnd.nextInt(chars.length())));
         }
         return sb.toString();
+    }
+
+    public static String getPublicIp() { //Hàm này có nhiệm vụ trả về địa chỉ IP public của máy chủ đang chạy chương trình
+        try {
+            URL url = new URL("https://api.ipify.org"); //Đây là một dịch vụ miễn phí chuyên trả về IP public của client gọi nó (ở đây là server của bạn).
+
+
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            //Mở một kết nối HTTP tới địa chỉ vừa tạo (https://api.ipify.org).
+            //HttpURLConnection cho phép ta gửi request (GET/POST, …) và nhận phản hồi từ web.
+
+            conn.setRequestMethod("GET");
+            BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream())); // “Tạo một bộ đọc văn bản từ phản hồi của web”.
+            String ip = in.readLine(); //Đọc dòng đầu tiên trong phản hồi của API — chính là địa chỉ IP public
+            in.close();
+            return ip;
+        } catch (Exception e) {
+            return "127.0.0.1"; // fallback
+        }
     }
 
 }

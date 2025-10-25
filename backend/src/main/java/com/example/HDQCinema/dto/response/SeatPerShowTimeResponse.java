@@ -12,6 +12,7 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Builder
 public class SeatPerShowTimeResponse {
+    double price;
     String seatId;
     String seatName;
     SeatType seatType;
