@@ -1,10 +1,10 @@
 package com.example.HDQCinema.entity;
 
+import com.example.HDQCinema.enums.BookingStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Set;
 
@@ -23,13 +23,17 @@ public class Booking {
     double totalPrice;
     LocalDateTime createTime;
 
+    @Enumerated(EnumType.STRING)
+    BookingStatus bookingStatus;
+
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
-    User user;
-    @ManyToOne
-    @JoinColumn(name = "showtime_id", nullable = false)
-    ShowTime showTime;
+    Member member;
+
+//    @ManyToOne
+//    @JoinColumn(name = "showtime_id", nullable = false)
+//    ShowTime showTime;
 
     @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL, orphanRemoval = true)
-    Set<Seat> seats;
+    Set<BookingDetail> bookingDetails;
 }

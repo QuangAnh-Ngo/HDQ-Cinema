@@ -13,3 +13,13 @@ spring:
     hibernate:
       ddl-auto: update
     show-sql: true
+
+jwt:
+  signerKey: ${JWT_SIGNER_KEY}
+  valid-duration: 3600 # in seconds
+  refreshable-duration: 36000 # in seconds
+
+#    properties:
+#      hibernate.dialect: org.hibernate.dialect.PostgreSQLDialect
+#      default_schema: public
+#      jdbc.time_zone: "Asia/Ho_Chi_Minh"

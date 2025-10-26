@@ -12,8 +12,11 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class UserCreationRequest {
-    String username, password, email, phoneNumber;
-    LocalDate dob;
+public class EmployeeAccountCreationRequest {
+    String username;
+    String password;
+    String email;
+    LocalDate dayCreated;
+
     List<String> roles;
 }

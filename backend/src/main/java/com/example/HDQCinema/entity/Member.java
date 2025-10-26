@@ -11,7 +11,7 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class User {
+public class Member {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     String userId;
@@ -19,9 +19,6 @@ public class User {
     String username, password, email, phoneNumber;
     LocalDate dob;
 
-    @ManyToMany
-    Set<Role> roles;
-
-    @OneToMany(mappedBy = "user" ,orphanRemoval = true, cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "member",orphanRemoval = true, cascade = CascadeType.ALL)
     Set<Booking> bookings;
 }

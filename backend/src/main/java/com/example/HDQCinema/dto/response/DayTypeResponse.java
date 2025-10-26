@@ -1,12 +1,10 @@
 package com.example.HDQCinema.dto.response;
 
-import com.example.HDQCinema.entity.Role;
-import jakarta.persistence.ManyToMany;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDate;
-import java.util.Set;
+import java.util.Date;
 
 @Getter
 @Setter
@@ -14,11 +12,8 @@ import java.util.Set;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Builder
-public class UserResponse {
-    String userId;
-
-    String username, email, phoneNumber;
-    LocalDate dob;
-
-    Set<Object> roles;
+public class DayTypeResponse {
+    String dayType;
+    LocalDate dayStart;
+    LocalDate dayEnd;
 }

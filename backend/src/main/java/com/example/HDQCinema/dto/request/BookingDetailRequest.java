@@ -3,15 +3,12 @@ package com.example.HDQCinema.dto.request;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
-@Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Getter
+@Setter
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class UserUpdateRequest {
-    String password;
-    String email;
-    String phoneNumber;
-
+public class BookingDetailRequest {
+    String seatId;
 }
