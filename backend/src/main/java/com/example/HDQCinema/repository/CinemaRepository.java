@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Set;
 
 @Repository
 public interface CinemaRepository extends JpaRepository<Cinema, String> {
@@ -16,4 +17,5 @@ public interface CinemaRepository extends JpaRepository<Cinema, String> {
     @EntityGraph(attributePaths = {"rooms.cinema"}, type = EntityGraph.EntityGraphType.LOAD)
     @Query("select c from Cinema c")
     List<Cinema> findAll();
+
 }

@@ -16,15 +16,16 @@ import java.time.LocalDateTime;
 @Repository
 public interface BookingDetailRepository extends JpaRepository<BookingDetail, String> {
     @Modifying
-    @Query(value = """
-            DELETE FROM booking_detail
-            WHERE booking_id IN(
-                        SELECT b.booking_id
-                        FROM booking b
-                        WHERE EXTRACT(EPOCH FROM (NOW() - b.create_time)) / 60 > :lim AND b.booking_status = 'PENDING'
-                        )
-            """, nativeQuery = true)
-    void deleteBookingDetailByTimeLimit(@Param("lim") Integer lim);
+//    @Query(value = """
+//            DELETE FROM booking_detail
+//            WHERE booking_id IN(
+//                        SELECT b.booking_id
+//                        FROM booking b
+//                        WHERE EXTRACT(EPOCH FROM (NOW() - b.create_time)) / 60 > :lim AND b.booking_status = 'PENDING'
+//                        )
+//            """, nativeQuery = true)
+    @Query("DELETE FROM BookingDetail bd WHERE bd.booking.id IN(select b.id from Booking b where b.createTime < ?1 and b.bookingStatus = 'PENDING')")
+    void deleteBookingDetailByTimeLimit(LocalDateTime lim);
 
     @Modifying
     @Query(value = """
@@ -41,4 +42,6 @@ public interface BookingDetailRepository extends JpaRepository<BookingDetail, St
             nativeQuery = true
     )
     LocalDateTime findFirstShowTimeByBooking(@Param("bookingId") String bookingId);
+
+    void deleteAllByBooking_Id(String bookingId);
 }

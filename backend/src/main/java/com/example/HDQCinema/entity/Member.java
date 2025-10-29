@@ -14,6 +14,7 @@ import java.util.Set;
 public class Member {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "member_id")
     String id;
 
     String username, password, email, phoneNumber;
@@ -21,4 +22,7 @@ public class Member {
 
     @OneToMany(mappedBy = "member",orphanRemoval = true, cascade = CascadeType.ALL)
     Set<Booking> bookings;
+
+    @OneToMany(mappedBy = "member", orphanRemoval = true,cascade = CascadeType.ALL)
+    Set<PaymentURL> paymentURLS;
 }

@@ -15,10 +15,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -54,7 +52,7 @@ public class RoomService {
         List<SeatPerShowTimeResponse> seats = new ArrayList<>();
         for(Seat seat : room.getSeats()){
             BookingDetail bookingDetail = bookingDetailRepository.findBySeatAndShowTime(seat, showTime);
-            double price = ticketPriceRepository.toPrice(seat.getSeatType().name(), showTimeId);
+            double price = ticketPriceRepository.toPrice(seat.getSeatType().name(), showTimeId, room.getCinema().getId());
 
             SeatPerShowTimeResponse response = SeatPerShowTimeResponse.builder()
                     .seatStatus(bookingDetail != null ? bookingDetail.getSeatStatus() : SeatStatus.AVAILABLE)
@@ -65,6 +63,9 @@ public class RoomService {
                     .build();
             seats.add(response);
         }
+
+        seats.sort(Comparator.comparing((SeatPerShowTimeResponse s) -> s.getSeatName().charAt(0))
+                .thenComparing(s -> Integer.parseInt(s.getSeatName().substring(1))));
 
         return RoomForShowTimeResponse.builder()
                 .roomId(roomId)

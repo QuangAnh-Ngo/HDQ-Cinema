@@ -1,6 +1,7 @@
 package com.example.HDQCinema.service;
 
 import com.example.HDQCinema.configuration.PaymentConfig;
+import com.example.HDQCinema.dto.request.PaymentRequest;
 import com.example.HDQCinema.dto.response.ApiResponse;
 import com.example.HDQCinema.dto.response.BookingResponse;
 import com.example.HDQCinema.dto.response.PaymentResponse;
@@ -26,8 +27,11 @@ public class PaymentService {
 
     BookingRepository bookingRepository;
     BookingService bookingService;
+    PaymentURLService paymentURLService;
 
-    public PaymentResponse createPayment(String bookingId) throws UnsupportedEncodingException {
+    public PaymentResponse createPayment(PaymentRequest request) throws UnsupportedEncodingException {
+
+        String bookingId = request.getBookingId();
 
         String orderType = "other"; // client trả về
         long amount = (long)bookingRepository.findTotalPriceByBookingId(bookingId)*1000000;
@@ -117,6 +121,8 @@ public class PaymentService {
                 .URL(paymentUrl)
                 .build();
 
+        paymentURLService.create(bookingId, paymentUrl);
+
 //        com.google.gson.JsonObject job = new JsonObject();
 //        job.addProperty("code", "00");
 //        job.addProperty("message", "success");
@@ -131,7 +137,13 @@ public class PaymentService {
 
         if(responseCode.equals("00")){
             var response = bookingService.approvePayment(txnRef);
+            paymentURLService.deleteURL(txnRef);
             return response;
+        }
+        else if(responseCode.equals("24")){
+            paymentURLService.deleteURL(txnRef);
+            bookingService.deletePayment(txnRef);
+            return null;
         }
         else {
             throw new AppException(ErrorCode.BOOKING_FAIL);

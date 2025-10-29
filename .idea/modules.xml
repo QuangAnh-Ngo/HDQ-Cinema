@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/HDQ-Cinema.iml" filepath="$PROJECT_DIR$/.idea/HDQ-Cinema.iml" />
+      <module fileurl="file://$PROJECT_DIR$/backend/HDQCinema.iml" filepath="$PROJECT_DIR$/backend/HDQCinema.iml" />
     </modules>
   </component>
 </project>

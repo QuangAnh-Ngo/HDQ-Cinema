@@ -27,7 +27,7 @@ public class Booking {
     BookingStatus bookingStatus;
 
     @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "member_id", nullable = false)
     Member member;
 
 //    @ManyToOne
@@ -36,4 +36,7 @@ public class Booking {
 
     @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL, orphanRemoval = true)
     Set<BookingDetail> bookingDetails;
+
+    @OneToOne(mappedBy = "booking", cascade = CascadeType.ALL, orphanRemoval = true)
+    PaymentURL paymentURL;
 }

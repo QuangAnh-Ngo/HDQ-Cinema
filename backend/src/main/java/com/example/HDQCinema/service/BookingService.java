@@ -16,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,12 +31,13 @@ import java.util.List;
 @Slf4j
 public class BookingService {
     BookingRepository bookingReppository;
-    UserRepository userRepository;
+    MemberRepository memberRepository;
     ShowTimeRepository showTimeRepository;
     SeatRepository seatRepository;
     BookingMapper bookingMapper;
     TicketPriceRepository ticketPriceRepository;
     BookingDetailRepository bookingDetailRepository;
+    CinemaRepository cinemaRepository;
 
 //    @Transactional
 //    // tạo và quản lý transaction (giao dịch) khi làm việc với DB.
@@ -105,10 +107,12 @@ public class BookingService {
     // nghĩa la khi transaction chưa commit hoặc rollback thì row đó vẫn khóa
 
     public BookingResponse createBooking(BookingRequest request){ // khi user bấm vào trang thanh toán
-        Member member = userRepository.findById(request.getUserId())
+        Member member = memberRepository.findById(request.getUserId())
                 .orElseThrow(() -> new RuntimeException("user not exist"));
         ShowTime showTime = showTimeRepository.findById(request.getShowTimeId())
                 .orElseThrow(() -> new RuntimeException("showtime not exist"));
+        Cinema cinema = cinemaRepository.findById(request.getCinemaId())
+                .orElseThrow(() -> new RuntimeException("cinema not exist"));
 
         double totalPrice = 0;
         List<BookingDetail> bookingDetails = new ArrayList<>();
@@ -122,7 +126,7 @@ public class BookingService {
             Seat seat = seatRepository.findById(detail.getSeatId())
                     .orElseThrow();
 
-            double price = ticketPriceRepository.toPrice(seat.getSeatType().toString(), showTime.getId());
+            double price = ticketPriceRepository.toPrice(seat.getSeatType().toString(), showTime.getId(),cinema.getId());
 
 
             BookingDetail bookingDetail = BookingDetail.builder()
@@ -151,6 +155,12 @@ public class BookingService {
         return response;
     }
 
+    @Transactional
+    public void deletePayment(String bookingId){
+        bookingDetailRepository.deleteAllByBooking_Id(bookingId);
+        bookingReppository.deleteById(bookingId);
+    }
+
 
     @Transactional
     public BookingResponse approvePayment(String bookingId) { // admin thấy user thanh toán và bấm xác nhận user đã thanh toán
@@ -174,5 +184,12 @@ public class BookingService {
         Booking booking = bookingReppository.findById(bookingId)
                 .orElseThrow(()-> new RuntimeException("Booking not found"));
         return booking.getBookingStatus().equals(BookingStatus.CONFIRM);
+    }
+
+    @Transactional
+    @Modifying(clearAutomatically = true)
+    public void deleteExpiredBookings(LocalDateTime lim) {
+        List<Booking> expiredBookings = bookingReppository.findAllByCreateTimeBeforeAndBookingStatus(lim, BookingStatus.PENDING);
+        bookingReppository.deleteAll(expiredBookings);
     }
 }

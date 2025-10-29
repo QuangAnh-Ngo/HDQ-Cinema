@@ -17,7 +17,8 @@ import java.util.*;
 public class PaymentConfig {
 
     public static String vnp_PayUrl = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
-    public static String vnp_ReturnUrl = "http://localhost:8080/vnpay_jsp/vnpay_return.jsp";  // thanh toán thành công thì return về trang này
+    public static String vnp_ReturnUrl = "http://localhost:8080/cinemas/payment/payment_infor";
+    // thanh toán thành công thì gọi luôn api này
     public static String vnp_TmnCode = "UKPH9R84";
     public static String secretKey = "1HJZH81ISD8M5GB54LJG2DCTOM4XHZ41";
     public static String vnp_ApiUrl = "https://sandbox.vnpayment.vn/merchant_webapi/api/transaction";

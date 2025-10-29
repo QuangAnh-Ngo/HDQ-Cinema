@@ -6,7 +6,7 @@ import com.example.HDQCinema.entity.Member;
 import org.mapstruct.Mapper;
 
 @Mapper(componentModel = "spring")
-public interface UserMapper {
+public interface MemberMapper {
 //    @Mapping(target = "roles", ignore = true)
     Member toUser(UserCreationRequest request);
     UserResponse toUserResponse(Member member);

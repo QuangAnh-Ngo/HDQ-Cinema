@@ -5,7 +5,7 @@ server:
 
 spring:
   datasource:
-    url: "jdbc:postgresql://localhost:5433/hdqcinema" #?options=-c%20TimeZone=Asia/Ho_Chi_Minh
+    url: "jdbc:postgresql://localhost:5433/hdqcinema?options=-c%20TimeZone=Asia/Ho_Chi_Minh" #?options=-c%20TimeZone=Asia/Ho_Chi_Minh
     password: 12345678
     username: my_app_user
 

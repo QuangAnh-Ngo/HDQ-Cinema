@@ -17,9 +17,10 @@ import java.util.Set;
 @Builder
 public class MovieResponse {
     String id;
-    String name, poster;
+    String title, poster;
     Integer duration;
     Integer limitAge;
     LocalDate dayStart, dayEnd;
+    String director, genre, description, trailer_url;
     List<ShowTimeAndRoom> showtimes;
 }
