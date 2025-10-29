@@ -30,7 +30,7 @@ import java.util.List;
 @Slf4j
 public class BookingService {
     BookingRepository bookingReppository;
-    UserRepository userRepository;
+    MemberRepository MemberRepository;
     ShowTimeRepository showTimeRepository;
     SeatRepository seatRepository;
     BookingMapper bookingMapper;
@@ -105,7 +105,7 @@ public class BookingService {
     // nghĩa la khi transaction chưa commit hoặc rollback thì row đó vẫn khóa
 
     public BookingResponse createBooking(BookingRequest request){ // khi user bấm vào trang thanh toán
-        Member member = userRepository.findById(request.getUserId())
+        Member member = MemberRepository.findById(request.getUserId())
                 .orElseThrow(() -> new RuntimeException("user not exist"));
         ShowTime showTime = showTimeRepository.findById(request.getShowTimeId())
                 .orElseThrow(() -> new RuntimeException("showtime not exist"));

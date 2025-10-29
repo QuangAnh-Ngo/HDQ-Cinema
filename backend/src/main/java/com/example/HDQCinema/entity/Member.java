@@ -14,7 +14,7 @@ import java.util.Set;
 public class Member {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    String id;
+    String userId;
 
     String username, password, email, phoneNumber;
     LocalDate dob;
