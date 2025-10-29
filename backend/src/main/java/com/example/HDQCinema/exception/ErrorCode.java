@@ -17,6 +17,7 @@ public enum ErrorCode {
     USER_NOT_FOUND(2001, "user not found", HttpStatus.NOT_FOUND),
     UNAUTHENTICATED(2002, "unauthenticated user", HttpStatus.UNAUTHORIZED),
     UNCATEGORIZED_EXCEPTION(9999, "unknown error", HttpStatus.INTERNAL_SERVER_ERROR),
+    UNAUTHORIZED(2003, "unauthorized", HttpStatus.FORBIDDEN),
     ;
 
     int code = 1000;

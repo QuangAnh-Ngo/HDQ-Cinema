@@ -11,9 +11,11 @@ import com.example.HDQCinema.repository.EmployeeAccountRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -34,6 +36,7 @@ public class EmployeeAccountService {
         return empployeeAccountMapper.toEmployeeAccountResponse(employeeAccount);
     }
 
+    @PreAuthorize("hasAuthority('ADMIN')")
     public List<EmployeeAccountResponse> getEmployeeAccount(){
         List<EmployeeAccount> users = employeeAccountRepository.findAll();
 

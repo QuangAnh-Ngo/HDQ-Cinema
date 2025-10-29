@@ -2,6 +2,8 @@ package com.example.HDQCinema.controller;
 
 import com.example.HDQCinema.dto.request.AuthenticationRequest;
 import com.example.HDQCinema.dto.request.IntrospectRequest;
+import com.example.HDQCinema.dto.request.LogoutRequest;
+import com.example.HDQCinema.dto.request.RefreshRequest;
 import com.example.HDQCinema.dto.response.ApiResponse;
 import com.example.HDQCinema.dto.response.AuthenticationResponse;
 import com.example.HDQCinema.dto.response.IntrospectResponse;
@@ -40,6 +42,23 @@ public class AuthenticationController {
     ApiResponse<IntrospectResponse> introspect(@RequestBody IntrospectRequest introspectRequest) throws JOSEException, ParseException {
         return ApiResponse.<IntrospectResponse>builder()
                 .result(authenticationService.introspect(introspectRequest))
+                .build();
+    }
+
+    @PostMapping("/logout")
+    ApiResponse<Void> logout(@RequestBody LogoutRequest request)
+            throws ParseException, JOSEException {
+        authenticationService.logout(request);
+        return ApiResponse.<Void>builder()
+                .build();
+    }
+
+    @PostMapping("/refresh")
+    ApiResponse<AuthenticationResponse> refresh(@RequestBody RefreshRequest request)
+            throws ParseException, JOSEException {
+        var result = authenticationService.refreshToken(request);
+        return ApiResponse.<AuthenticationResponse>builder()
+                .result(result)
                 .build();
     }
 }

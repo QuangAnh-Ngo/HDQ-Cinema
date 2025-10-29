@@ -3,8 +3,12 @@ package com.example.HDQCinema.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.Set;
 
 @Entity
@@ -14,6 +18,7 @@ import java.util.Set;
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@EntityListeners(AuditingEntityListener.class)
 public class EmployeeAccount {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -24,7 +29,9 @@ public class EmployeeAccount {
     String email;
     String status = "Active";
 
-    LocalDate dayCreated = LocalDate.now();
+    @CreatedDate
+    @Column(nullable = false, updatable = false)
+    LocalDateTime dayCreated;
 
     @OneToOne
     Employee employee;

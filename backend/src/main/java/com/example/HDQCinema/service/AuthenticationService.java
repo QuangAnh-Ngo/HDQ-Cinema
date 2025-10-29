@@ -2,14 +2,18 @@ package com.example.HDQCinema.service;
 
 import com.example.HDQCinema.dto.request.AuthenticationRequest;
 import com.example.HDQCinema.dto.request.IntrospectRequest;
+import com.example.HDQCinema.dto.request.LogoutRequest;
+import com.example.HDQCinema.dto.request.RefreshRequest;
 import com.example.HDQCinema.dto.response.AuthenticationResponse;
 import com.example.HDQCinema.dto.response.IntrospectResponse;
 import com.example.HDQCinema.entity.EmployeeAccount;
+import com.example.HDQCinema.entity.InvalidatedToken;
 import com.example.HDQCinema.entity.Permission;
 import com.example.HDQCinema.entity.Role;
 import com.example.HDQCinema.exception.AppException;
 import com.example.HDQCinema.exception.ErrorCode;
 import com.example.HDQCinema.repository.EmployeeAccountRepository;
+import com.example.HDQCinema.repository.InvalidatedTokenRepository;
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jose.crypto.MACVerifier;
@@ -40,6 +44,7 @@ import java.util.UUID;
 //Builder cho phép có construct gồm 3 thuộc tính trong authenticationService => mâu thuẫn với RequiredArgs (chỉ có 1 thuộc tính cho constructor)
 public class AuthenticationService {
     EmployeeAccountRepository empployeeAccountRepository;
+    InvalidatedTokenRepository invalidatedTokenRepository;
 
     @NonFinal
     @Value("${jwt.signerKey}")
@@ -48,6 +53,10 @@ public class AuthenticationService {
     @NonFinal
     @Value("${jwt.valid-duration}")
     protected long VALID_DURATION;
+
+    @NonFinal
+    @Value("${jwt.refreshable-duration}")
+    protected long REFRESHABLE_DURATION;
 
     public AuthenticationResponse authenticate(AuthenticationRequest request){
         PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
@@ -72,7 +81,7 @@ public class AuthenticationService {
         boolean isValid = true;
 
         try{
-            verifyToken(token);
+            verifyToken(token, false);
         }catch(AppException e){
             isValid = false;
         }
@@ -82,14 +91,63 @@ public class AuthenticationService {
                 .build();
     }
 
-    private SignedJWT verifyToken(String token) throws ParseException, JOSEException {
+    public void logout(LogoutRequest request) throws ParseException, JOSEException{
+        SignedJWT token = verifyToken(request.getToken(), true);
+
+        String jti = token.getJWTClaimsSet().getStringClaim("jti");
+        Date expiryTime = token.getJWTClaimsSet().getExpirationTime();
+
+        InvalidatedToken invalidatedToken = InvalidatedToken.builder()
+                .id(jti)
+                .expiryTime(expiryTime)
+                .build();
+
+        invalidatedTokenRepository.save(invalidatedToken);
+    }
+
+    public AuthenticationResponse refreshToken(RefreshRequest request) throws ParseException, JOSEException {
+        var signedJWT = verifyToken(request.getToken(), true);
+
+        String jit = signedJWT.getJWTClaimsSet().getJWTID();
+        Date expiryTime = signedJWT.getJWTClaimsSet().getExpirationTime();
+
+        InvalidatedToken invalidatedToken = InvalidatedToken.builder()
+                .id(jit)
+                .expiryTime(expiryTime)
+                .build();
+
+        invalidatedTokenRepository.save(invalidatedToken);
+
+        String username = signedJWT.getJWTClaimsSet().getSubject();
+        var user = empployeeAccountRepository.findByUsername(username)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        var token = generateToken(user);
+        return AuthenticationResponse.builder()
+                .token(token)
+                .build();
+    }
+
+    private SignedJWT verifyToken(String token, boolean isRefresh) throws ParseException, JOSEException {
         JWSVerifier jwsVerifier = new MACVerifier(JWT_SIGNER_KEY.getBytes());
+
         SignedJWT signedJWT = SignedJWT.parse(token);
         boolean isVerify = signedJWT.verify(jwsVerifier);
 
-        Date expiryTime = signedJWT.getJWTClaimsSet().getExpirationTime();
+        Date expiryTime = (isRefresh)
+                ? new Date(signedJWT
+                    .getJWTClaimsSet()
+                    .getIssueTime()
+                    .toInstant()
+                    .plus(REFRESHABLE_DURATION, ChronoUnit.SECONDS)
+                    .toEpochMilli())
+                : signedJWT.getJWTClaimsSet().getExpirationTime();
 
-        if(!isVerify || !expiryTime.after(new Date()))
+        if (!(isVerify && expiryTime.after(new Date())))
+            throw new AppException(ErrorCode.UNAUTHENTICATED);
+
+
+        if (invalidatedTokenRepository.existsById(signedJWT.getJWTClaimsSet().getJWTID()))
             throw new AppException(ErrorCode.UNAUTHENTICATED);
 
         return signedJWT;
@@ -97,7 +155,7 @@ public class AuthenticationService {
 
     public String generateToken(EmployeeAccount account){
         //header
-        JWSHeader header = new JWSHeader(JWSAlgorithm.HS256);
+        JWSHeader header = new JWSHeader(JWSAlgorithm.HS512);
 
         //payload
         JWTClaimsSet claims = new JWTClaimsSet.Builder()
@@ -118,7 +176,8 @@ public class AuthenticationService {
             jwsObject.sign(new MACSigner(JWT_SIGNER_KEY.getBytes()));
             return jwsObject.serialize();
         }catch(JOSEException e){
-            throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
+            log.error("Cannot create token", e);
+            throw new RuntimeException(e);
         }
     }
 
