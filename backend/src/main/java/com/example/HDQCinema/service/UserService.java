@@ -3,7 +3,7 @@ package com.example.HDQCinema.service;
 import com.example.HDQCinema.dto.request.UserCreationRequest;
 import com.example.HDQCinema.dto.request.UserUpdateRequest;
 import com.example.HDQCinema.dto.response.UserResponse;
-import com.example.HDQCinema.entity.User;
+import com.example.HDQCinema.entity.Member;
 import com.example.HDQCinema.mapper.UserMapper;
 import com.example.HDQCinema.repository.UserRepository;
 import lombok.AccessLevel;
@@ -21,10 +21,10 @@ public class UserService {
     UserMapper userMapper;
 
     public UserResponse createUser(UserCreationRequest request){
-        User user = userMapper.toUser(request);
+        Member member = userMapper.toUser(request);
 
-        userRepository.save(user);
-        return userMapper.toUserResponse(user);
+        userRepository.save(member);
+        return userMapper.toUserResponse(member);
     }
 
     public List<UserResponse> getUser(){

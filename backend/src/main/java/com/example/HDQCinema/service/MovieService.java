@@ -6,6 +6,7 @@ import com.example.HDQCinema.dto.response.ShowTimeResponse;
 import com.example.HDQCinema.entity.Movie;
 import com.example.HDQCinema.entity.ShowTime;
 import com.example.HDQCinema.mapper.MovieMapper;
+import com.example.HDQCinema.mapper.ShowTimeAndRoomMapper;
 import com.example.HDQCinema.mapper.ShowTimeMapper;
 import com.example.HDQCinema.repository.MovieRepository;
 import com.example.HDQCinema.repository.ShowTimeRepository;
@@ -14,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -26,17 +28,39 @@ public class MovieService {
 
     MovieRepository movieRepository;
     MovieMapper movieMapper;
+    ShowTimeAndRoomMapper showTimeAndRoomMapper;
     ShowTimeRepository showTimeRepository;
 
     public MovieResponse create(MovieCreationRequest request){
         Movie movie = movieMapper.toMovie(request);
 
-        var showTimes = showTimeRepository.findByStartTimeIn(request.getShowTimes());
-        movie.setShowtimes(new HashSet<>(showTimes));
         movie = movieRepository.save(movie); // sau lệnh này thì id mới đc tạo
 
         return movieMapper.toMovieResponse(movie);
     }
 
+    public MovieResponse get(String id){
+        validInput(id);
 
+        Movie movie = movieRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("movie not exist"));
+
+        return movieMapper.toMovieResponse(movie);
+    }
+
+    private void validInput(String s){
+        if(s == null || s.contains("--")){
+            throw new RuntimeException("invalid input");
+        }
+    }
+
+    public List<MovieResponse> getMovieUpComing(){
+        var movies = movieRepository.findAllByDayStartAfter(LocalDate.now());
+        return movieMapper.toMovieResponses(movies);
+    }
+
+    public List<MovieResponse> getMoviesShowing(){
+        var movies = movieRepository.findShowingMovie(LocalDate.now());
+        return movieMapper.toMovieResponses(movies);
+    }
 }
