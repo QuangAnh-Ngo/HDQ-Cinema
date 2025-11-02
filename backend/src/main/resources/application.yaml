@@ -5,16 +5,20 @@ server:
 
 spring:
   datasource:
-    url: "jdbc:postgresql://localhost:5433/hdqcinema?options=-c%20TimeZone=Asia/Ho_Chi_Minh" #?options=-c%20TimeZone=Asia/Ho_Chi_Minh
-    password: 12345678
-    username: my_app_user
-
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+    driver-class-name: org.postgresql.Driver
 
   jpa:
     hibernate:
       ddl-auto: update
     show-sql: true
 
+jwt:
+  signerKey: ${JWT_SIGNER_KEY}
+  valid-duration: 3600 # in seconds
+  refreshable-duration: 36000 # in seconds
 
 #    properties:
 #      hibernate.dialect: org.hibernate.dialect.PostgreSQLDialect

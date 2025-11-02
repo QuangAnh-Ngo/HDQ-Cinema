@@ -37,7 +37,7 @@ services:
   springboot-app:
     build: .
     container_name: my-spring-app-cinema
-    restart: unless-stopped
+    restart: on-failure
     ports:
       - "8080:8080" # 8080 (trái dấu :) là cổng trên máy host, 8080 (phải dấu :) là trong container
     environment:
@@ -48,6 +48,8 @@ services:
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
       SPRING_JPA_SHOW_SQL: "true"
       SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.PostgreSQLDialect
+      JWT_SIGNER_KEY: ${JWT_SIGNER_KEY}
+
     depends_on:
       - postgres-db
     networks:

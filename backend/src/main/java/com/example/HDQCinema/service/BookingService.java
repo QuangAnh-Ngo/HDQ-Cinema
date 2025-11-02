@@ -70,12 +70,12 @@ public class BookingService {
 //
 //            if (bookingSeat.getSeatStatus() == SeatStatus.BOOKED)
 //                throw new RuntimeException("Seat already booked");
-//            if (bookingSeat.getSeatStatus() == SeatStatus.HOLD && bookingSeat.getHoldTime().isAfter(LocalDateTime.now()))
+//            if (bookingSeat.getSeatStatus() == SeatStatus.HELD && bookingSeat.getHoldTime().isAfter(LocalDateTime.now()))
 //                throw new RuntimeException("Seat temporarily held");
 //
 //            double price = ticketPriceRepository.toPrice(seat.getSeatType().toString(), showTime.getId());
 //            bookingSeatRepository.update(showTime.getId(), seat.getId(),
-//                    SeatStatus.HOLD.name(), LocalDateTime.now().plusMinutes(5));
+//                    SeatStatus.HELD.name(), LocalDateTime.now().plusMinutes(5));
 //            totalPrice += price;
 //            seats.add(""+seat.getSeatRow()+seat.getSeatNumber());
 ////            BookingDetail bookingDetail = BookingDetail.builder()
@@ -134,7 +134,7 @@ public class BookingService {
                     .showTime(showTime)
                     .price(price)
                     .booking(booking)
-                    .seatStatus(SeatStatus.HOLD)
+                    .seatStatus(SeatStatus.HELD)
                     .build();
             bookingDetails.add(bookingDetail);
 

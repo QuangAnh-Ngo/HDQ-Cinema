@@ -1,5 +1,5 @@
 package com.example.HDQCinema.enums;
 
 public enum SeatStatus {
-    BOOKED, AVAILABLE, HOLD
+    BOOKED, AVAILABLE, HELD
 }

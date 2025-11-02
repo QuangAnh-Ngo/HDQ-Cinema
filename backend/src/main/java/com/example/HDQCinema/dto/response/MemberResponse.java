@@ -1,5 +1,4 @@
 package com.example.HDQCinema.dto.response;
-
 import com.example.HDQCinema.entity.Role;
 import jakarta.persistence.ManyToMany;
 import lombok.*;
@@ -14,7 +13,8 @@ import java.util.Set;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Builder
-public class UserResponse {
+
+public class MemberResponse {
     String id;
 
     String username, email, phoneNumber;

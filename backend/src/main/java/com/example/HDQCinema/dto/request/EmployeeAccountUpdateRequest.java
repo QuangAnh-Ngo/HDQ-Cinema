@@ -3,15 +3,14 @@ package com.example.HDQCinema.dto.request;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
-import java.util.Set;
 
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class RoleRequest {
-    String name;
-    String description;
-    Set<String> permissions;
+public class EmployeeAccountUpdateRequest {
+    String password;
+    String email;
 }

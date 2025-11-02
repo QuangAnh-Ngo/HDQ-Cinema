@@ -1,7 +1,5 @@
 package com.example.HDQCinema.dto.request;
 
-
-
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -13,8 +11,7 @@ import java.util.List;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Builder
-public class UserCreationRequest {
+public class MemberCreationRequest {
     String username, password, email, phoneNumber;
     LocalDate dob;
-//    List<String> roles;
 }
