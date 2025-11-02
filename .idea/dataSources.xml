@@ -1,13 +1,26 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="DataSourceManagerImpl" format="xml" multifile-model="true">
-    <data-source source="LOCAL" name="bkfilm@localhost" uuid="bade2e4e-8a97-45c7-9649-89712327e471">
+    <data-source source="LOCAL" name="hdqcinema@localhost" uuid="bade2e4e-8a97-45c7-9649-89712327e471">
       <driver-ref>mysql.8</driver-ref>
       <synchronize>true</synchronize>
       <imported>true</imported>
       <remarks>$PROJECT_DIR$/backend/src/main/resources/application.yaml</remarks>
       <jdbc-driver>com.mysql.cj.jdbc.Driver</jdbc-driver>
-      <jdbc-url>jdbc:mysql://localhost:3309/bkfilm</jdbc-url>
+      <jdbc-url>jdbc:mysql://localhost:3309/hdqcinema</jdbc-url>
+      <jdbc-additional-properties>
+        <property name="com.intellij.clouds.kubernetes.db.host.port" />
+        <property name="com.intellij.clouds.kubernetes.db.enabled" value="false" />
+        <property name="com.intellij.clouds.kubernetes.db.resource.type" value="Deployment" />
+        <property name="com.intellij.clouds.kubernetes.db.container.port" />
+      </jdbc-additional-properties>
+      <working-dir>$ProjectFileDir$</working-dir>
+    </data-source>
+    <data-source source="LOCAL" name="hdqcinema@localhost [2]" uuid="71862973-73d0-4d83-ab6f-66bbd06933f6">
+      <driver-ref>postgresql</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>org.postgresql.Driver</jdbc-driver>
+      <jdbc-url>jdbc:postgresql://localhost:5433/hdqcinema</jdbc-url>
       <jdbc-additional-properties>
         <property name="com.intellij.clouds.kubernetes.db.host.port" />
         <property name="com.intellij.clouds.kubernetes.db.enabled" value="false" />

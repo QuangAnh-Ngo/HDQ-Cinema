@@ -1,16 +1,15 @@
 package com.example.HDQCinema.controller;
 
 import com.example.HDQCinema.configuration.PaymentConfig;
+import com.example.HDQCinema.dto.request.PaymentRequest;
+import com.example.HDQCinema.dto.response.BookingResponse;
 import com.example.HDQCinema.dto.response.PaymentResponse;
 import com.example.HDQCinema.dto.response.ApiResponse;
 import com.example.HDQCinema.service.PaymentService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -26,9 +25,9 @@ public class PaymentController {
 
     PaymentService paymentService;
 
-    @GetMapping("/create_payment")
-    public ApiResponse<PaymentResponse> createPayment() throws UnsupportedEncodingException {
-        var response = paymentService.createPayment();
+    @PostMapping("/create_payment")
+    public ApiResponse<PaymentResponse> createPayment(@RequestBody PaymentRequest request) throws UnsupportedEncodingException {
+        var response = paymentService.createPayment(request);
 
         return ApiResponse.<PaymentResponse>builder()
                 .result(response)
@@ -36,15 +35,19 @@ public class PaymentController {
     }
 
     @GetMapping("/payment_infor")
-    ApiResponse<String> transaction(
+    ApiResponse<?> transaction(
             @RequestParam(value = "vnp_Amount") String amount,
             @RequestParam(value = "vnp_BankCode") String bankCode,
             @RequestParam(value = "vnp_OrderInfo") String orderInfor,
-            @RequestParam(value = "vnp_ResponseCode") String responseCode
+            @RequestParam(value = "vnp_ResponseCode") String responseCode,
+            @RequestParam(value = "vnp_TxnRef") String txnRef
     ){
-        var response = paymentService.transactionResult(amount, bankCode, orderInfor, responseCode);
-        return ApiResponse.<String>builder()
+        var response = paymentService.transactionResult(amount, bankCode, orderInfor, responseCode, txnRef);
+        if(response != null) return ApiResponse.<BookingResponse>builder()
                 .result(response)
+                .build();
+        else return ApiResponse.<String>builder()
+                .result("cancel success")
                 .build();
     }
 }

@@ -54,13 +54,13 @@ public class MovieService {
         }
     }
 
-    public List<MovieResponse> getMovieUpComing(){
-        var movies = movieRepository.findAllByDayStartAfter(LocalDate.now());
+    public List<MovieResponse> getMovieUpComing(String cinemaId){
+        var movies = movieRepository.findAllByDayStartAfter(LocalDate.now(), cinemaId);
         return movieMapper.toMovieResponses(movies);
     }
 
-    public List<MovieResponse> getMoviesShowing(){
-        var movies = movieRepository.findShowingMovie(LocalDate.now());
+    public List<MovieResponse> getMoviesShowing(String cinemaId){
+        var movies = movieRepository.findShowingMovie(LocalDate.now(), cinemaId);
         return movieMapper.toMovieResponses(movies);
     }
 }

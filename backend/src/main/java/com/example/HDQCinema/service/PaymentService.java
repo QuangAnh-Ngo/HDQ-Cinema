@@ -1,8 +1,13 @@
 package com.example.HDQCinema.service;
 
 import com.example.HDQCinema.configuration.PaymentConfig;
+import com.example.HDQCinema.dto.request.PaymentRequest;
 import com.example.HDQCinema.dto.response.ApiResponse;
+import com.example.HDQCinema.dto.response.BookingResponse;
 import com.example.HDQCinema.dto.response.PaymentResponse;
+import com.example.HDQCinema.exception.AppException;
+import com.example.HDQCinema.exception.ErrorCode;
+import com.example.HDQCinema.repository.BookingRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -20,25 +25,29 @@ import java.util.*;
 @RequiredArgsConstructor
 public class PaymentService {
 
-    public PaymentResponse createPayment() throws UnsupportedEncodingException {
-        String vnp_Version = "2.1.0";
-        String vnp_Command = "pay";
-//        String orderType = "other"; // client trả về
-//        long amount = Integer.parseInt(req.getParameter("amount"))*100;
+    BookingRepository bookingRepository;
+    BookingService bookingService;
+    PaymentURLService paymentURLService;
+
+    public PaymentResponse createPayment(PaymentRequest request) throws UnsupportedEncodingException {
+
+        String bookingId = request.getBookingId();
+
+        String orderType = "other"; // client trả về
+        long amount = (long)bookingRepository.findTotalPriceByBookingId(bookingId)*1000000;
 //        String bankCode = req.getParameter("bankCode");
 
-        long amount = 1000000;
 
-        String vnp_TxnRef = PaymentConfig.getRandomNumber(8);
-//        String vnp_IpAddr = PaymentConfig.getIpAddress(req);
+        String vnp_TxnRef = bookingId;
+        String vnp_IpAddr = PaymentConfig.getPublicIp(); // ip của ng đang thanh toán để chống giả mạo giao dịch
 
         String vnp_TmnCode = PaymentConfig.vnp_TmnCode;
 
 //        -------------------------------------- SET UP THAM SỐ ---------------------------------------
 
         Map<String, String> vnp_Params = new HashMap<>();
-        vnp_Params.put("vnp_Version", vnp_Version);
-        vnp_Params.put("vnp_Command", vnp_Command);
+        vnp_Params.put("vnp_Version", PaymentConfig.vnp_Version);
+        vnp_Params.put("vnp_Command", PaymentConfig.vnp_Command);
         vnp_Params.put("vnp_TmnCode", vnp_TmnCode);
         vnp_Params.put("vnp_Amount", String.valueOf(amount));
         vnp_Params.put("vnp_CurrCode", "VND");
@@ -52,7 +61,7 @@ public class PaymentService {
         vnp_Params.put("vnp_OrderInfo", "Thanh toan don hang:" + vnp_TxnRef); // nội dung thanh toán (?)
         vnp_Params.put("vnp_Locale", "vn");
 
-//        vnp_Params.put("vnp_OrderType", orderType);
+        vnp_Params.put("vnp_OrderType", orderType);
 //
 //        String locate = req.getParameter("language");
 //        if (locate != null && !locate.isEmpty()) {
@@ -60,8 +69,8 @@ public class PaymentService {
 //        } else {
 //            vnp_Params.put("vnp_Locale", "vn");
 //        }
-//        vnp_Params.put("vnp_ReturnUrl", PaymentConfig.vnp_ReturnUrl); // ở bên PaymentConfig
-//        vnp_Params.put("vnp_IpAddr", vnp_IpAddr);
+        vnp_Params.put("vnp_ReturnUrl", PaymentConfig.vnp_ReturnUrl); // ở bên PaymentConfig
+        vnp_Params.put("vnp_IpAddr", vnp_IpAddr);
 
         Calendar cld = Calendar.getInstance(TimeZone.getTimeZone("Etc/GMT+7"));
         SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
@@ -108,9 +117,11 @@ public class PaymentService {
 
         PaymentResponse paymentResponse = PaymentResponse.builder()
                 .status("OK")
-                .message("success")
+                .message(bookingId)
                 .URL(paymentUrl)
                 .build();
+
+        paymentURLService.create(bookingId, paymentUrl);
 
 //        com.google.gson.JsonObject job = new JsonObject();
 //        job.addProperty("code", "00");
@@ -122,15 +133,20 @@ public class PaymentService {
         return paymentResponse;
     }
 
-    public String transactionResult(String amount, String bankCode, String orderInfor, String responseCode){
-        String s;
+    public BookingResponse transactionResult(String amount, String bankCode, String orderInfor, String responseCode, String txnRef){
 
         if(responseCode.equals("00")){
-            s = "success";
+            var response = bookingService.approvePayment(txnRef);
+            paymentURLService.deleteURL(txnRef);
+            return response;
+        }
+        else if(responseCode.equals("24")){
+            paymentURLService.deleteURL(txnRef);
+            bookingService.deletePayment(txnRef);
+            return null;
         }
         else {
-            s = "fail";
+            throw new AppException(ErrorCode.BOOKING_FAIL);
         }
-        return s;
     }
 }

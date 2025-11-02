@@ -16,8 +16,9 @@ import java.util.List;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class MovieCreationRequest {
-    String name, poster;
+    String title, poster;
     Integer duration;
     Integer limitAge;
     LocalDate dayStart, dayEnd;
+    String director, genre, description, trailer_url;
 }

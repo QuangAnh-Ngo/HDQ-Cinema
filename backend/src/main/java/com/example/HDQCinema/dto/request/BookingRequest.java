@@ -14,5 +14,6 @@ import java.util.List;
 public class BookingRequest {
     String userId;
     String showTimeId;
+    String cinemaId;
     List<BookingDetailRequest> bookingDetailRequests;
 }

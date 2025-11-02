@@ -15,11 +15,12 @@ public interface MovieRepository extends JpaRepository<Movie, String> {
 
 
     @EntityGraph(attributePaths = {"showtimes.room"})
-    @Query("select m from Movie m where m.dayStart > ?1")
-    List<Movie> findAllByDayStartAfter(LocalDate dayStartAfter);
+    @Query("select m from Movie m join Room r on r.cinema.id = ?2 where m.dayStart > ?1")
+    List<Movie> findAllByDayStartAfter(LocalDate dayStartAfter, String cinemaId);
 
 
     @EntityGraph(attributePaths = {"showtimes.room"})
-    @Query("select m from Movie m where m.dayEnd > ?1 and m.dayStart < ?1")
-    List<Movie> findShowingMovie(LocalDate dayEndBefore);
+    @Query("select m from Movie m join Room r on r.cinema.id = ?2 where m.dayEnd > ?1 and m.dayStart < ?1")
+    List<Movie> findShowingMovie(LocalDate dayEndBefore, String cinemaId);
+    //join Cinema c on c.id = ?2
 }

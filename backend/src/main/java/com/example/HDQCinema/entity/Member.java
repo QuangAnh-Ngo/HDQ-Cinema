@@ -14,11 +14,15 @@ import java.util.Set;
 public class Member {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    String userId;
+    @Column(name = "member_id")
+    String id;
 
     String username, password, email, phoneNumber;
     LocalDate dob;
 
     @OneToMany(mappedBy = "member",orphanRemoval = true, cascade = CascadeType.ALL)
     Set<Booking> bookings;
+
+    @OneToMany(mappedBy = "member", orphanRemoval = true,cascade = CascadeType.ALL)
+    Set<PaymentURL> paymentURLS;
 }

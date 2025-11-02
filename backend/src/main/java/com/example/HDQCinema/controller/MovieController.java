@@ -34,16 +34,16 @@ public class MovieController {
     }
 
     @GetMapping("/upcoming")
-    ApiResponse<List<MovieResponse>> getMoviesUpComing(){
-        var response = movieService.getMovieUpComing();
+    ApiResponse<List<MovieResponse>> getMoviesUpComing(@RequestParam(value = "c") String cinemaId){
+        var response = movieService.getMovieUpComing(cinemaId);
         return ApiResponse.<List<MovieResponse>>builder()
                 .result(response)
                 .build();
     }
 
     @GetMapping("/showing")
-    ApiResponse<List<MovieResponse>> getMoviesShowing(){
-        var response = movieService.getMoviesShowing();
+    ApiResponse<List<MovieResponse>> getMoviesShowing(@RequestParam(value = "c") String cinemaId){
+        var response = movieService.getMoviesShowing(cinemaId);
         return ApiResponse.<List<MovieResponse>>builder()
                 .result(response)
                 .build();

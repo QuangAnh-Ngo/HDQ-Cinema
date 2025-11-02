@@ -13,6 +13,8 @@ public enum ErrorCode {
     SEAT_UNAVAILABLE(1001, "1 of your seats has not available right now", HttpStatus.BAD_REQUEST),
     ROOM_NOT_EXISTED(1002, "room is not existed", HttpStatus.BAD_REQUEST),
     SHOWTIME_NOT_EXISTED(1003, "showtime is not existed", HttpStatus.BAD_REQUEST),
+    BOOKING_FAIL(1004, "booking failed", HttpStatus.BAD_REQUEST),
+
 
     USER_NOT_FOUND(2001, "user not found", HttpStatus.NOT_FOUND),
     UNAUTHENTICATED(2002, "unauthenticated user", HttpStatus.UNAUTHORIZED),
