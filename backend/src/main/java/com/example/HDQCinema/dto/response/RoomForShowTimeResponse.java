@@ -1,5 +1,6 @@
 package com.example.HDQCinema.dto.response;
 
+import com.example.HDQCinema.dto.query.SeatPerShowTimeDTO;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -16,5 +17,5 @@ public class RoomForShowTimeResponse {
     String showtimeId;
     String roomName;
     String cinemaName;
-    List<SeatPerShowTimeResponse> seats;
+    List<SeatPerShowTimeDTO> seats;
 }

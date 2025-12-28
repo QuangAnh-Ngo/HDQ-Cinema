@@ -37,9 +37,11 @@ services:
   springboot-app:
     build: .
     container_name: my-spring-app-cinema
-    restart: on-failure
+    restart: no
     ports:
       - "8080:8080" # 8080 (trái dấu :) là cổng trên máy host, 8080 (phải dấu :) là trong container
+    env_file:
+      - .env.dev
     environment:
       # Biến môi trường cho Spring Boot
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-db:5432/${POSTGRES_DB}
@@ -53,12 +55,13 @@ services:
     depends_on:
       - postgres-db
     networks:
-      - cinema-network
+      cinema-network:
+
 
   postgres-db:
     image: postgres:17
     container_name: my-postgres-db-cinema
-    restart: unless-stopped
+    restart: no
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -78,3 +81,4 @@ volumes:
 
 networks:
   cinema-network:
+    external: true

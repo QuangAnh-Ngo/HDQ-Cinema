@@ -108,7 +108,7 @@ public class BookingService {
 
     public BookingResponse createBooking(BookingRequest request){ // khi user bấm vào trang thanh toán
         Member member = memberRepository.findById(request.getUserId())
-                .orElseThrow(() -> new RuntimeException("user not exist"));
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
         ShowTime showTime = showTimeRepository.findById(request.getShowTimeId())
                 .orElseThrow(() -> new RuntimeException("showtime not exist"));
         Cinema cinema = cinemaRepository.findById(request.getCinemaId())
@@ -124,7 +124,7 @@ public class BookingService {
 
         for (BookingDetailRequest detail : request.getBookingDetailRequests()) {
             Seat seat = seatRepository.findById(detail.getSeatId())
-                    .orElseThrow();
+                    .orElseThrow(() -> new RuntimeException("seat not exist"));
 
             double price = ticketPriceRepository.toPrice(seat.getSeatType().toString(), showTime.getId(),cinema.getId());
 

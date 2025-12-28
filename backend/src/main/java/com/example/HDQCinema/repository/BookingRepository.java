@@ -15,14 +15,8 @@ import java.util.List;
 @Repository
 public interface BookingRepository extends JpaRepository<Booking, String> {
 
-    @Modifying
-//    @Query(value = """
-//        DELETE
-//        FROM booking b
-//        WHERE EXTRACT(EPOCH FROM (NOW() - b.create_time)) / 60 > :lim AND b.booking_status = 'PENDING';
-//        """, nativeQuery = true)
-    @Query("delete from Booking b where b.createTime < ?1 and b.bookingStatus = 'PENDING'")
-    void deleteBookingByTimeLimit(LocalDateTime lim);
+
+
 
     @Query(value = """
             SELECT b.total_price 
