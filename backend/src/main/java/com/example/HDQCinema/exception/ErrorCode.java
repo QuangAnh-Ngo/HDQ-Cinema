@@ -20,6 +20,8 @@ public enum ErrorCode {
     UNAUTHENTICATED(2002, "unauthenticated user", HttpStatus.UNAUTHORIZED),
     UNCATEGORIZED_EXCEPTION(9999, "unknown error", HttpStatus.INTERNAL_SERVER_ERROR),
     UNAUTHORIZED(2003, "unauthorized", HttpStatus.FORBIDDEN),
+
+    ROLE_NOT_FOUND(3001, "role not found", HttpStatus.NOT_FOUND),
     ;
 
     int code = 1000;

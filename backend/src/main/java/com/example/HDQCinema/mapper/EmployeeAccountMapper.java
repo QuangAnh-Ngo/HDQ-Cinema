@@ -7,8 +7,10 @@ import com.example.HDQCinema.entity.EmployeeAccount;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
+import org.mapstruct.NullValuePropertyMappingStrategy;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring",
+        nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 public interface EmployeeAccountMapper {
     @Mapping(target = "roles", ignore = true)
     EmployeeAccount toEmployeeAccount(EmployeeAccountCreationRequest employeeAccountResponse);

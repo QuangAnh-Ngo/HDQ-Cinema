@@ -4,7 +4,6 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDate;
-import java.util.List;
 
 @Getter
 @Setter
@@ -12,11 +11,10 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class EmployeeAccountCreationRequest {
+public class MemberUpdateRequest {
     String username;
     String password;
     String email;
-    //LocalDate dayCreated = LocalDate.now();
-
-    List<String> roles;
+    String phoneNumber;
+    LocalDate dob;
 }

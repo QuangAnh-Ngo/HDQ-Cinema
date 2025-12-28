@@ -1,5 +1,6 @@
 package com.example.HDQCinema.entity;
 
+import com.example.HDQCinema.enums.AccountStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -22,20 +23,33 @@ import java.util.Set;
 public class EmployeeAccount {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "employee_account_id")
     String employeeAccountId;
+
 
     String username;
     String password;
+
+    @Column(unique = true)
     String email;
-    String status = "Active";
+
+    @Builder.Default
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    AccountStatus status = AccountStatus.ACTIVE;
 
     @CreatedDate
     @Column(nullable = false, updatable = false)
     LocalDateTime dayCreated;
 
     @OneToOne
+    @JoinColumn(
+            name = "employee_id",
+            nullable = false,
+            foreignKey = @ForeignKey(name = "fk_employee_account")
+    )
     Employee employee;
 
-    @OneToMany
+    @ManyToMany
     Set<Role> roles;
 }

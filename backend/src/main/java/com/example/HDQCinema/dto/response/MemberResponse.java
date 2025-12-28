@@ -15,9 +15,9 @@ import java.util.Set;
 @Builder
 
 public class MemberResponse {
-    String id;
-
-    String username, email, phoneNumber;
+    String username;
+    String email;
+    String phoneNumber;
     LocalDate dob;
 
     Set<Object> roles;

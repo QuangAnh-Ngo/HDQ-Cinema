@@ -4,6 +4,7 @@ import com.example.HDQCinema.constant.PredefinedRole;
 import com.example.HDQCinema.entity.Employee;
 import com.example.HDQCinema.entity.EmployeeAccount;
 import com.example.HDQCinema.entity.Role;
+import com.example.HDQCinema.enums.Position;
 import com.example.HDQCinema.repository.EmployeeAccountRepository;
 import com.example.HDQCinema.repository.EmployeeRepository;
 import com.example.HDQCinema.repository.RoleRepository;
@@ -57,7 +58,7 @@ public class ApplicationInitConfig{
                         .firstName("a")
                         .lastName("b")
                         .email(ADMIN_EMAIL)
-                        .position("It dev")
+                        .position(Position.ADMIN)
                         .phone("0")
                         .build();
                 return employeeRepository.save(e);
@@ -88,7 +89,7 @@ public class ApplicationInitConfig{
                         .password(passwordEncoder.encode(ADMIN_PASSWORD))
                         .email(ADMIN_EMAIL)
                         .roles(roles)
-                        .dayCreated(LocalDateTime.now())
+                        //.dayCreated(LocalDateTime.now())
                         .employee(employee)
                         .build();
                 employeeAccountRepository.save(employeeAccount);
