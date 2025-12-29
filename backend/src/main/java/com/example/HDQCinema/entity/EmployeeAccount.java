@@ -26,8 +26,9 @@ public class EmployeeAccount {
     @Column(name = "employee_account_id")
     String employeeAccountId;
 
-
+    @Column(unique = true)
     String username;
+
     String password;
 
     @Column(unique = true)

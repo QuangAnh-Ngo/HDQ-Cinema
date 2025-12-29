@@ -13,9 +13,11 @@ import org.mapstruct.NullValuePropertyMappingStrategy;
         nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 public interface EmployeeAccountMapper {
     @Mapping(target = "roles", ignore = true)
+    @Mapping(target = "employee", ignore = true)
     EmployeeAccount toEmployeeAccount(EmployeeAccountCreationRequest employeeAccountResponse);
     EmployeeAccountResponse toEmployeeAccountResponse(EmployeeAccount employeeAccount);
 
     @Mapping(target = "roles", ignore = true)
+    @Mapping(target = "employee", ignore = true)
     EmployeeAccount updateEmployeeAccount(@MappingTarget EmployeeAccount employeeAccount, EmployeeAccountUpdateRequest request);
 }

@@ -48,7 +48,7 @@ public class MemberService {
         Member user = memberRepository.findById(memberId)
                 .orElseThrow(()-> new AppException(ErrorCode.USER_NOT_FOUND));
 
-        return memberMapper.toMemberResponse(memberMapper.updateMember(request, user));
+        return memberMapper.toMemberResponse(memberMapper.updateMember(user, request));
     }
 
     @PreAuthorize("hasRole('ADMIN')")

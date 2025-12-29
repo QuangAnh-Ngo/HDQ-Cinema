@@ -23,7 +23,7 @@ public class MemberController {
     MemberService memberService;
     
     @PostMapping
-    ApiResponse<MemberResponse> createEmployee(@RequestBody MemberCreationRequest request){
+    ApiResponse<MemberResponse> createMember(@RequestBody MemberCreationRequest request){
         log.info("Create User");
         return ApiResponse.<MemberResponse>builder()
                 .result(memberService.createMember(request))
@@ -31,14 +31,14 @@ public class MemberController {
     }
 
     @GetMapping
-    ApiResponse<List<MemberResponse>> getEmployee(){
+    ApiResponse<List<MemberResponse>> getMember(){
         return ApiResponse.<List<MemberResponse>>builder()
                 .result(memberService.getEmployee())
                 .build();
     }
 
     @DeleteMapping("/{employeeId}")
-    ApiResponse<String> deleteEmployee(@PathVariable String employeeId){
+    ApiResponse<String> deleteMember(@PathVariable String employeeId){
         memberService.deleteEmployee(employeeId);
         return ApiResponse.<String>builder()
                 .result("Delete user successfully")
@@ -46,7 +46,7 @@ public class MemberController {
     }
 
     @PutMapping("/{employeeAccountId}")
-    ApiResponse<MemberResponse> updateEmployee(@PathVariable String memberId, @RequestBody MemberUpdateRequest request){
+    ApiResponse<MemberResponse> updateMember(@PathVariable String memberId, @RequestBody MemberUpdateRequest request){
         return ApiResponse.<MemberResponse>builder()
                 .result(memberService.updateMember(memberId, request))
                 .build();

@@ -12,6 +12,9 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Builder
 public class MemberCreationRequest {
-    String username, password, email, phoneNumber;
+    String username;
+    String password;
+    String email;
+    String phoneNumber;
     LocalDate dob;
 }

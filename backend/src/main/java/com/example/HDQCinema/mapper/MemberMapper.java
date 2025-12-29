@@ -14,5 +14,5 @@ public interface MemberMapper {
 
     Member toMember(MemberCreationRequest request);
     MemberResponse toMemberResponse(Member member);
-    Member updateMember(MemberUpdateRequest request,@MappingTarget Member member);
+    Member updateMember(@MappingTarget Member member, MemberUpdateRequest request);
 }
