@@ -65,12 +65,13 @@ public class ApplicationInitConfig{
             });
 
             log.info("Đang tạo employeeAccount");
+
             if (employeeAccountRepository.findByUsername(ADMIN_USER_NAME).isEmpty()) {
 
-                roleRepository.findByName(PredefinedRole.USER_ROLE).orElseGet(() ->
+                roleRepository.findByName(PredefinedRole.MEMBER_ROLE).orElseGet(() ->
                         roleRepository.save(Role.builder()
-                                .name(PredefinedRole.USER_ROLE)
-                                .description("User role")
+                                .name(PredefinedRole.MEMBER_ROLE)
+                                .description("Member role")
                                 .build())
                 );
 

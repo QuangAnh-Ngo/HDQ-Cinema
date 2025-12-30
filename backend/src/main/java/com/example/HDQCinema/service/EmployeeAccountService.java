@@ -18,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -54,7 +55,7 @@ public class EmployeeAccountService {
                 roles.add(role);
             }
         } else {
-            Role defaultRole = roleRepository.findByName("USER")
+            Role defaultRole = roleRepository.findByName("EMPLOYEE")
                     .orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_FOUND));
             roles.add(defaultRole);
         }
@@ -119,6 +120,15 @@ public class EmployeeAccountService {
             throw new AppException(ErrorCode.USER_NOT_FOUND);
         }
         employeeAccountRepository.deleteById(employeeAccountId);
+    }
+
+    public EmployeeAccountResponse getMyInfo(){
+        var context = SecurityContextHolder.getContext();
+        String name = context.getAuthentication().getName();
+
+        EmployeeAccount employeeAccount = employeeAccountRepository.findByUsername(name).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        return employeeAccountMapper.toEmployeeAccountResponse(employeeAccount);
     }
 
 }

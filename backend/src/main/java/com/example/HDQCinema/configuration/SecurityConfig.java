@@ -26,7 +26,7 @@ import org.springframework.web.filter.CorsFilter;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class SecurityConfig {
     String[] PUBLIC_ENDPOINTS =
-            {"/accounts", "/auth/token", "/auth/introspect", "/auth/logout", "/auth/refresh"};
+            {"/accounts", "/auth/token", "/auth/introspect", "/auth/logout", "/auth/refresh", "/members"};
 
     @NonFinal
     CustomJwtToken customJwtToken;
@@ -36,6 +36,11 @@ public class SecurityConfig {
         httpSecurity.authorizeHttpRequests(request ->
                 request.requestMatchers(HttpMethod.POST, PUBLIC_ENDPOINTS)
                         .permitAll()
+                        .requestMatchers(
+                                "/v3/api-docs/**",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html"
+                        ).permitAll()
                         .anyRequest()
                         .authenticated());
 

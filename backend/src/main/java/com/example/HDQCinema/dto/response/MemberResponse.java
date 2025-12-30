@@ -18,6 +18,8 @@ public class MemberResponse {
     String username;
     String email;
     String phoneNumber;
+    String firstName;
+    String lastName;
     LocalDate dob;
 
     Set<Object> roles;
