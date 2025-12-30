@@ -4,6 +4,7 @@ package com.example.HDQCinema.controller;
 import com.example.HDQCinema.dto.request.MemberCreationRequest;
 import com.example.HDQCinema.dto.request.MemberUpdateRequest;
 import com.example.HDQCinema.dto.response.ApiResponse;
+import com.example.HDQCinema.dto.response.EmployeeAccountResponse;
 import com.example.HDQCinema.dto.response.MemberResponse;
 import com.example.HDQCinema.service.MemberService;
 import lombok.AccessLevel;
@@ -49,6 +50,13 @@ public class MemberController {
     ApiResponse<MemberResponse> updateMember(@PathVariable String memberId, @RequestBody MemberUpdateRequest request){
         return ApiResponse.<MemberResponse>builder()
                 .result(memberService.updateMember(memberId, request))
+                .build();
+    }
+
+    @GetMapping("/my-info")
+    ApiResponse<MemberResponse> getMyInfo(){
+        return ApiResponse.<MemberResponse>builder()
+                .result(memberService.getMyInfo())
                 .build();
     }
 }
