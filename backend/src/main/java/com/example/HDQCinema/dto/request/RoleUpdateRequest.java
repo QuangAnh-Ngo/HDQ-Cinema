@@ -1,21 +1,18 @@
 package com.example.HDQCinema.dto.request;
 
-import com.example.HDQCinema.entity.Role;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.util.List;
+import java.util.Set;
 
-
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class EmployeeAccountUpdateRequest {
-    String password;
-
-    List<String> roles;
-    String employee;
+public class RoleUpdateRequest {
+    String name;
+    String description;
+    List<String> permissions;
 }

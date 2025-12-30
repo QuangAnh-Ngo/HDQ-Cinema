@@ -4,20 +4,17 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDate;
-import java.util.List;
+
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@FieldDefaults(level = AccessLevel.PRIVATE)
 @Builder
-public class MemberCreationRequest {
+@FieldDefaults(level = AccessLevel.PRIVATE)
+public class MemberUpdateRequest {
     String username;
     String password;
     String email;
     String phoneNumber;
-    String firstName;
-    String lastName;
-
     LocalDate dob;
 }

@@ -20,6 +20,15 @@ public enum ErrorCode {
     UNAUTHENTICATED(2002, "unauthenticated user", HttpStatus.UNAUTHORIZED),
     UNCATEGORIZED_EXCEPTION(9999, "unknown error", HttpStatus.INTERNAL_SERVER_ERROR),
     UNAUTHORIZED(2003, "unauthorized", HttpStatus.FORBIDDEN),
+    USER_EXISTED(2004, "user already existed", HttpStatus.CONFLICT),
+
+    ROLE_NOT_FOUND(3001, "role not found", HttpStatus.NOT_FOUND),
+    ROLE_EXISTED(3004, "role already existed", HttpStatus.CONFLICT),
+
+    PERMISSION_NOT_FOUND(4001, "permission not found", HttpStatus.NOT_FOUND),
+    PERMISSION_EXISTED(4004, "permission already existed", HttpStatus.CONFLICT),
+
+    EMPLOYEE_NOT_FOUND(5001, "employee not found", HttpStatus.NOT_FOUND),
     ;
 
     int code = 1000;
