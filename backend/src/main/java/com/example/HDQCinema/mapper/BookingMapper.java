@@ -45,5 +45,6 @@ public interface BookingMapper {
         }
     }
 
+    List<BookingResponse> toResponses(List<Booking> bookings);
     Booking toBooking(BookingRequest request);
 }

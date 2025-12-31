@@ -1,0 +1,106 @@
+.movie {
+  padding: 15px;
+  max-width: 1200px;
+  margin: auto;
+
+  .movie-items {
+    display: flex;
+    align-items: flex-start;
+    padding: 30px;
+
+    .movie-poster {
+      width: 30%;
+      height: 500px;
+      overflow: hidden;
+      border-radius: 12px;
+
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+    }
+
+    .movie-description {
+      padding-left: 40px;
+      flex: 1;
+      margin-top: 40px;
+
+      :not(.movie-title) {
+        font-family: "Montserrat", sans-serif;
+      }
+
+      .movie-title {
+        font-size: 33px !important;
+        font-weight: 700;
+        text-transform: capitalize;
+        color: black;
+        text-decoration: none;
+      }
+
+      .movie-summary {
+        font-size: 16px;
+        text-align: justify;
+        font-weight: 400;
+      }
+
+      ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        font-weight: 400;
+
+        li {
+          font-size: 16px;
+          line-height: 1.8;
+          margin-bottom: 6px;
+
+          strong {
+            font-weight: 700;
+          }
+        }
+      }
+    }
+  }
+
+  .button {
+    display: block;
+    width: calc(30% - 15px);
+    text-align: center;
+    background-color: #0a64a7 !important;
+    border-radius: 4px;
+    color: white !important;
+    font-size: 16px;
+    font-weight: 500;
+    text-transform: uppercase;
+    padding: 10px 14px;
+    margin-left: 28px;
+    height: auto;
+  }
+
+  .button:hover {
+    background-color: #258dcf !important;
+  }
+}
+
+.trailer {
+  text-align: center;
+  margin-top: 50px;
+  background-color: #3c3e4d;
+  padding-top: 40px;
+  padding-bottom: 60px;
+
+  h2 {
+    text-transform: uppercase;
+    color: white;
+    font-size: 32px;
+    font-weight: 800;
+    margin-bottom: 30px;
+  }
+
+  iframe {
+    display: inline-block;
+    width: 914px;
+    height: 514px;
+  }
+}

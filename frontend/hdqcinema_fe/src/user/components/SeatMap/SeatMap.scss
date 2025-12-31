@@ -1,0 +1,77 @@
+.seat-map {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+
+    .map {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+
+        .row {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+
+            .seat {
+                width: 40px;
+                height: 40px;
+                background-color: lightgray;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                font-size: 10px;
+                font-weight: 300;
+                cursor: pointer;
+                transition: all 0.2s ease;
+                position: relative;
+                color: white;
+
+                &:hover {
+                    background-color: gray;
+                }
+
+                i {
+                    color: black;
+                    font-size: 25px;
+                    margin-bottom: -21px;
+                }
+
+                &.vip {
+                    i {
+                        color: darkgoldenrod;
+                    }
+                }
+
+                &.selected {
+                    background-color: lightgreen;
+
+                    i {
+                        color: green;
+                    }
+                }
+
+                &.held {
+                    cursor: not-allowed;
+                    background-color: darkblue;
+
+                    i {
+                        color: blue;
+                    }
+                }
+
+                &.booked {
+                    cursor: not-allowed;
+                    background-color: darkred;
+
+                    i {
+                        color: red;
+                    }
+                }
+            }
+        }
+    }
+}

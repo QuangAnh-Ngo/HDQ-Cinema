@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="DiffGenerationConfig" isInitGenerateDdl="true">
-    <option name="initGenerateDdl" value="true" />
-    <option name="sourceModelValue" value="HDQCinema:HDQCinema" />
+  <component name="DiffGenerationConfig">
+    <option name="sourceModelValue" value="HDQCinema:entityManagerFactory" />
     <option name="targetDbValue" value="bade2e4e-8a97-45c7-9649-89712327e471" />
   </component>
 </project>

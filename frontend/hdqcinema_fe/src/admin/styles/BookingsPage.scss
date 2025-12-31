@@ -1,0 +1,16 @@
+.bookings-page {
+  .search-input.date-filter {
+    max-width: 200px;
+  }
+
+  .booking-code {
+    font-weight: 600;
+    color: #2563eb;
+  }
+
+  .booking-detail-modal {
+    .modal {
+      max-width: 800px;
+    }
+  }
+}

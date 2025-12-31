@@ -1,0 +1,112 @@
+.movieitem_container {
+    width: calc(25% - 20px);
+    margin-right: 12px;
+    margin-bottom: 20px;
+
+    .ant-card {
+        width: 100%;
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    .ant-card-cover img {
+        height: 380px;
+        object-fit: cover;
+
+        &:hover {
+            opacity: 0.9;
+        }
+    }
+
+    .ant-card-meta-title {
+        overflow: hidden;
+        margin-bottom: 15px;
+    }
+
+    .movie-title {
+        font-size: 18px !important;
+        color: #0a64a7;
+        font-weight: 600;
+        text-decoration: none;
+        display: block;
+        overflow: hidden;
+        white-space: nowrap;
+
+        &:hover {
+            text-decoration: underline;
+            color: #258dcf;
+        }
+
+        &:not(.marquee) {
+            text-overflow: ellipsis;
+        }
+    }
+
+    .marquee {
+        position: relative;
+
+        .marquee-content {
+            display: inline-block;
+            animation: marquee 10s linear infinite;
+            white-space: nowrap;
+            padding-left: 100%;
+
+            .marquee-separator {
+                padding: 0 20px;
+                opacity: 0.5;
+            }
+        }
+
+        &:hover .marquee-content {
+            animation-play-state: paused;
+        }
+    }
+
+    @keyframes marquee {
+        0% {
+            transform: translateX(0);
+        }
+
+        100% {
+            transform: translateX(-100%);
+        }
+    }
+
+    .movie-info {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        font-size: 14px;
+        color: #333;
+
+        ul {
+            margin-bottom: 25px;
+
+            li {
+                margin-bottom: 6px;
+                font-weight: 400;
+            }
+
+            strong {
+                color: #000;
+            }
+        }
+    }
+
+    .buy-button {
+        display: block;
+        width: 100%;
+        text-align: center;
+        background-color: #0a64a7;
+        border-radius: 6px;
+        color: white;
+        font-size: 16px;
+        font-weight: 500;
+        text-transform: uppercase;
+        padding: 5px 14px;
+
+        &:hover {
+            background-color: #258dcf;
+        }
+    }
+}

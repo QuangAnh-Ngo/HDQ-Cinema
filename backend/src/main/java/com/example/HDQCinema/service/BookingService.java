@@ -2,6 +2,7 @@ package com.example.HDQCinema.service;
 
 import com.example.HDQCinema.dto.request.BookingDetailRequest;
 import com.example.HDQCinema.dto.request.BookingRequest;
+import com.example.HDQCinema.dto.response.AmountOfPendingBookingResponse;
 import com.example.HDQCinema.dto.response.BookingResponse;
 import com.example.HDQCinema.entity.*;
 import com.example.HDQCinema.enums.BookingStatus;
@@ -20,6 +21,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -191,5 +193,15 @@ public class BookingService {
     public void deleteExpiredBookings(LocalDateTime lim) {
         List<Booking> expiredBookings = bookingReppository.findAllByCreateTimeBeforeAndBookingStatus(lim, BookingStatus.PENDING);
         bookingReppository.deleteAll(expiredBookings);
+    }
+
+    public List<BookingResponse> getBookings(LocalDate date) {
+        List<Booking> bookings =  bookingReppository.findBookingsByCreateTime_Date(date);
+        return bookingMapper.toResponses(bookings);
+    }
+
+    public AmountOfPendingBookingResponse countPendingBooking(){
+        var num =  bookingReppository.countBookingsByBookingStatusPending();
+        return AmountOfPendingBookingResponse.builder().amount(num).build();
     }
 }
