@@ -2,7 +2,7 @@
 <project version="4">
   <component name="VcsDirectoryMappings">
     <mapping directory="" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/HDQ-Cinema" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/backend/HDQ-Cinema" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/quanh/HDQ-Cinema" vcs="Git" />
   </component>
 </project>
