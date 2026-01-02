@@ -31,6 +31,9 @@ public enum ErrorCode {
     MEMBER_EXISTED(6002, "member already existed", HttpStatus.CONFLICT),
 
     INVALID_DOB(7001, "Your age must be at least {min}", HttpStatus.BAD_REQUEST),
+    INVALID_PASSWORD(7002, "password must be at least 8 characters", HttpStatus.BAD_REQUEST),
+    INVALID_PHONE(7003, "phone number is invalid", HttpStatus.BAD_REQUEST),
+    INVALID_EMAIL(7004, "email is invalid", HttpStatus.BAD_REQUEST),
 
     UNAUTHENTICATED(8001, "unauthenticated user", HttpStatus.UNAUTHORIZED),
     UNAUTHORIZED(8002, "unauthorized", HttpStatus.FORBIDDEN),
