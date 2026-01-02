@@ -2,6 +2,7 @@ package com.example.HDQCinema.entity;
 
 import com.example.HDQCinema.enums.AccountStatus;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Size;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.SuperBuilder;

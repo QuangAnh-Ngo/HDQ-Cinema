@@ -17,7 +17,7 @@ public class EmployeeAccount extends Account {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "employee_account_id")
-    String employeeAccountId;
+    String id;
 
     @Column(unique = true)
     String email;

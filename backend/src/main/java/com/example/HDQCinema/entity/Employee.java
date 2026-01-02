@@ -16,7 +16,7 @@ public class Employee {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "employee_id")
-    String employeeId;
+    String id;
 
     @Builder.Default
     @Enumerated(EnumType.STRING)

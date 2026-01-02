@@ -28,7 +28,6 @@ public class EmployeeService {
     public EmployeeResponse createEmployee(EmployeeCreationRequest request){
         Employee employee = employeeMapper.toEmployee(request);
 
-
         employeeRepository.save(employee);
         return employeeMapper.toEmployeeResponse(employee);
     }
@@ -44,7 +43,7 @@ public class EmployeeService {
     @PreAuthorize("hasRole('ADMIN')")
     public EmployeeResponse updateEmployee(String employeeId, EmployeeUpdateRequest request){
         Employee user = employeeRepository.findById(employeeId)
-                .orElseThrow(()-> new AppException(ErrorCode.USER_NOT_FOUND));
+                .orElseThrow(()-> new AppException(ErrorCode.EMPLOYEE_NOT_FOUND));
 
         return employeeMapper.toEmployeeResponse(employeeMapper.updateEmployee(user, request));
     }
@@ -52,7 +51,7 @@ public class EmployeeService {
     @PreAuthorize("hasRole('ADMIN')")
     public void deleteEmployee(String employeeId){
         if (!employeeRepository.existsById(employeeId)){
-            throw new AppException(ErrorCode.USER_NOT_FOUND);
+            throw new AppException(ErrorCode.EMPLOYEE_NOT_FOUND);
         }
         employeeRepository.deleteById(employeeId);
     }
