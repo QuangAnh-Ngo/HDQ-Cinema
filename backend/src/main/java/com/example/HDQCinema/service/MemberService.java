@@ -36,7 +36,7 @@ public class MemberService {
 
     public MemberResponse createMember(MemberCreationRequest request){
         if (memberRepository.findByUsername(request.getUsername()).isPresent()) {
-            throw new AppException(ErrorCode.USER_EXISTED);
+            throw new AppException(ErrorCode.MEMBER_EXISTED);
         }
 
         Member member = memberMapper.toMember(request);
@@ -52,7 +52,7 @@ public class MemberService {
         try {
             memberRepository.save(member);
         } catch (DataIntegrityViolationException exception) {
-            throw new AppException(ErrorCode.USER_EXISTED);
+            throw new AppException(ErrorCode.MEMBER_EXISTED);
         }
 
         return memberMapper.toMemberResponse(member);
@@ -60,16 +60,16 @@ public class MemberService {
 
     // Các hàm getEmployee, deleteEmployee giữ nguyên...
     @PreAuthorize("hasRole('ADMIN')")
-    public List<MemberResponse> getEmployee(){
+    public List<MemberResponse> getMember(){
         return memberRepository.findAll().stream()
                 .map(memberMapper::toMemberResponse)
                 .toList();
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-    public void deleteEmployee(String employeeId){
+    public void deleteMember(String employeeId){
         if (!memberRepository.existsById(employeeId)){
-            throw new AppException(ErrorCode.USER_NOT_FOUND);
+            throw new AppException(ErrorCode.MEMBER_NOT_FOUND);
         }
         memberRepository.deleteById(employeeId);
     }
@@ -77,7 +77,7 @@ public class MemberService {
     // Hàm update cập nhật thêm logic đổi mật khẩu
     public MemberResponse updateMember(String memberId, MemberUpdateRequest request){
         Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+                .orElseThrow(() -> new AppException(ErrorCode.MEMBER_NOT_FOUND));
 
         // Map các thông tin cơ bản
         memberMapper.updateMember(member, request);
@@ -95,7 +95,7 @@ public class MemberService {
         String name = context.getAuthentication().getName();
 
         Member member = memberRepository.findByUsername(name)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+                .orElseThrow(() -> new AppException(ErrorCode.MEMBER_NOT_FOUND));
 
         return memberMapper.toMemberResponse(member);
     }

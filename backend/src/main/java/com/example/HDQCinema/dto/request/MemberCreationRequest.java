@@ -1,5 +1,6 @@
 package com.example.HDQCinema.dto.request;
 
+import com.example.HDQCinema.validator.dob.DobConstraint;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -19,5 +20,6 @@ public class MemberCreationRequest {
     String firstName;
     String lastName;
 
+    @DobConstraint(min = 16, message = "INVALID_DOB")
     LocalDate dob;
 }

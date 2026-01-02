@@ -7,6 +7,7 @@ import com.example.HDQCinema.dto.response.ApiResponse;
 import com.example.HDQCinema.dto.response.EmployeeAccountResponse;
 import com.example.HDQCinema.dto.response.MemberResponse;
 import com.example.HDQCinema.service.MemberService;
+import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -24,7 +25,7 @@ public class MemberController {
     MemberService memberService;
     
     @PostMapping
-    ApiResponse<MemberResponse> createMember(@RequestBody MemberCreationRequest request){
+    ApiResponse<MemberResponse> createMember(@RequestBody @Valid MemberCreationRequest request){
         log.info("Create User");
         return ApiResponse.<MemberResponse>builder()
                 .result(memberService.createMember(request))
@@ -34,20 +35,20 @@ public class MemberController {
     @GetMapping
     ApiResponse<List<MemberResponse>> getMember(){
         return ApiResponse.<List<MemberResponse>>builder()
-                .result(memberService.getEmployee())
+                .result(memberService.getMember())
                 .build();
     }
 
     @DeleteMapping("/{employeeId}")
     ApiResponse<String> deleteMember(@PathVariable String employeeId){
-        memberService.deleteEmployee(employeeId);
+        memberService.deleteMember(employeeId);
         return ApiResponse.<String>builder()
                 .result("Delete user successfully")
                 .build();
     }
 
     @PutMapping("/{employeeAccountId}")
-    ApiResponse<MemberResponse> updateMember(@PathVariable String memberId, @RequestBody MemberUpdateRequest request){
+    ApiResponse<MemberResponse> updateMember(@PathVariable String memberId, @RequestBody @Valid MemberUpdateRequest request){
         return ApiResponse.<MemberResponse>builder()
                 .result(memberService.updateMember(memberId, request))
                 .build();
