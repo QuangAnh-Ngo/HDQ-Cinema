@@ -1,0 +1,46 @@
+.footer {
+    background-color: blanchedalmond;
+    padding: 50px 0;
+
+    .footer-container {
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 0 16px;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-start;
+        justify-content: space-between;
+    }
+
+    .item {
+        width: calc(50% - 60px);
+        min-width: 200px;
+        padding-left: 100px;
+    }
+
+    .footer-info {
+        font-size: large;
+    }
+
+    .footer-social i {
+        font-size: xx-large;
+        color: grey;
+        margin: 0 5px;
+
+        &:hover {
+            color: black;
+        }
+    }
+
+    h3 {
+        font-size: 20px;
+        margin-bottom: 25px;
+        padding-bottom: 7px;
+        text-transform: uppercase;
+        font-weight: bold;
+        border-bottom: 4px solid transparent;
+        border-image: linear-gradient(to right, blue, darkblue 100%);
+        border-image-slice: 1;
+        display: inline-block;
+    }
+}

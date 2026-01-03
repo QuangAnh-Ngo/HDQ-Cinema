@@ -1,7 +1,10 @@
 package com.example.HDQCinema.dto.request;
 
+import com.example.HDQCinema.entity.Role;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+
+import java.util.List;
 
 
 @Getter
@@ -12,5 +15,7 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class EmployeeAccountUpdateRequest {
     String password;
-    String email;
+
+    List<String> roles;
+    String employee;
 }

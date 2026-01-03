@@ -1,27 +1,63 @@
 package com.example.HDQCinema.controller;
 
+
 import com.example.HDQCinema.dto.request.MemberCreationRequest;
+import com.example.HDQCinema.dto.request.MemberUpdateRequest;
 import com.example.HDQCinema.dto.response.ApiResponse;
+import com.example.HDQCinema.dto.response.EmployeeAccountResponse;
 import com.example.HDQCinema.dto.response.MemberResponse;
 import com.example.HDQCinema.service.MemberService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import jakarta.validation.Valid;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/members")
+@RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@Slf4j
 public class MemberController {
-    @Autowired
-    MemberService userService;
-
+    MemberService memberService;
+    
     @PostMapping
-    ApiResponse<MemberResponse> createUser(@RequestBody MemberCreationRequest request){
-        var response = userService.createUser(request);
-
+    ApiResponse<MemberResponse> createMember(@RequestBody @Valid MemberCreationRequest request){
+        log.info("Create User");
         return ApiResponse.<MemberResponse>builder()
-                .result(response)
+                .result(memberService.createMember(request))
+                .build();
+    }
+
+    @GetMapping
+    ApiResponse<List<MemberResponse>> getMember(){
+        return ApiResponse.<List<MemberResponse>>builder()
+                .result(memberService.getMember())
+                .build();
+    }
+
+    @DeleteMapping("/{employeeId}")
+    ApiResponse<String> deleteMember(@PathVariable String employeeId){
+        memberService.deleteMember(employeeId);
+        return ApiResponse.<String>builder()
+                .result("Delete user successfully")
+                .build();
+    }
+
+    @PutMapping("/{employeeAccountId}")
+    ApiResponse<MemberResponse> updateMember(@PathVariable String memberId, @RequestBody @Valid MemberUpdateRequest request){
+        return ApiResponse.<MemberResponse>builder()
+                .result(memberService.updateMember(memberId, request))
+                .build();
+    }
+
+    @GetMapping("/my-info")
+    ApiResponse<MemberResponse> getMyInfo(){
+        return ApiResponse.<MemberResponse>builder()
+                .result(memberService.getMyInfo())
                 .build();
     }
 }

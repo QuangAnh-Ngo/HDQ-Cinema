@@ -1,0 +1,69 @@
+services:
+  # Backend Spring Boot
+  backend:
+    build: ./backend
+    container_name: hdq-cinema-backend
+    restart: on-failure
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-db:5432/${POSTGRES_DB}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_SHOW_SQL: "true"
+      SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.PostgreSQLDialect
+      JWT_SIGNER_KEY: ${JWT_SIGNER_KEY}
+    depends_on:
+      - postgres-db
+    networks:
+      - cinema-network
+
+  # Frontend React
+  frontend:
+    build: ./frontend
+    container_name: hdq-cinema-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      # Mount source code để có hot-reload
+      - ./frontend/src:/app/src
+      - ./frontend/public:/app/public
+      # Prevent node_modules from being overwritten
+      - /app/node_modules
+    environment:
+      # Để React không tự động mở browser
+      - BROWSER=none
+      # API URL - frontend sẽ gọi backend qua network
+      - REACT_APP_API_URL=http://backend:8080
+    depends_on:
+      - backend
+    networks:
+      - cinema-network
+    stdin_open: true
+    tty: true
+
+  # PostgreSQL Database
+  postgres-db:
+    image: postgres:17
+    container_name: hdq-cinema-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      TZ: "Asia/Ho_Chi_Minh"
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - cinema-network
+
+volumes:
+  postgres_data:
+
+networks:
+  cinema-network:
+    driver: bridge

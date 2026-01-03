@@ -182,11 +182,11 @@ public class AuthenticationService {
     }
 
     private String buildScope(EmployeeAccount account){
-        StringJoiner stringJoiner = new StringJoiner(",");
+        StringJoiner stringJoiner = new StringJoiner(" ");
 
         if (!CollectionUtils.isEmpty(account.getRoles())){
             for (Role role : account.getRoles()){
-                stringJoiner.add(role.getName());
+                stringJoiner.add("ROLE_" + role.getName());
 
                 if (!CollectionUtils.isEmpty(role.getPermissions())){
                     for (Permission permission : role.getPermissions()){

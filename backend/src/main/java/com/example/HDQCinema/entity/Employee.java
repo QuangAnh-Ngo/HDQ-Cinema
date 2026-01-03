@@ -1,9 +1,7 @@
 package com.example.HDQCinema.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import com.example.HDQCinema.enums.Position;
+import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -17,11 +15,20 @@ import lombok.experimental.FieldDefaults;
 public class Employee {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    String employeeId;
+    @Column(name = "employee_id")
+    String id;
 
-    String position;
+    @Builder.Default
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    Position position = Position.EMPLOYEE;
+
     String firstName;
     String lastName;
+
+    @Column(unique = true)
     String phone;
+
+    @Column(unique = true)
     String email;
 }

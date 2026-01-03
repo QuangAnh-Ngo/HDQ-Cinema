@@ -51,4 +51,11 @@ public class EmployeeAccountController {
                 .result(employeeAccountService.updateEmployeeAccount(employeeAccountId, request))
                 .build();
     }
+
+    @GetMapping("/my-info")
+    ApiResponse<EmployeeAccountResponse> getMyInfo(){
+        return ApiResponse.<EmployeeAccountResponse>builder()
+                .result(employeeAccountService.getMyInfo())
+                .build();
+    }
 }
