@@ -28,8 +28,7 @@ public class MovieService {
 
     MovieRepository movieRepository;
     MovieMapper movieMapper;
-    ShowTimeAndRoomMapper showTimeAndRoomMapper;
-    ShowTimeRepository showTimeRepository;
+
 
     public MovieResponse create(MovieCreationRequest request){
         Movie movie = movieMapper.toMovie(request);

@@ -72,14 +72,27 @@ public class PaymentService {
         vnp_Params.put("vnp_ReturnUrl", PaymentConfig.vnp_ReturnUrl); // ở bên PaymentConfig
         vnp_Params.put("vnp_IpAddr", vnp_IpAddr);
 
-        Calendar cld = Calendar.getInstance(TimeZone.getTimeZone("Etc/GMT+7"));
+        // --- BẮT ĐẦU SỬA LỖI ĐỊNH DẠNG MÚI GIỜ GMT+7 ---
+
+        // 1. Định nghĩa Múi giờ Việt Nam
+        TimeZone tz = TimeZone.getTimeZone("GMT+7");
+
+        // 2. Khởi tạo Calendar với Múi giờ đã định nghĩa
+        Calendar cld = Calendar.getInstance(tz);
+
+        // 3. Định dạng thời gian
         SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
+        formatter.setTimeZone(tz); // Đảm bảo SimpleDateFormat sử dụng đúng múi giờ
+
+        // Gán thời gian tạo
         String vnp_CreateDate = formatter.format(cld.getTime());
         vnp_Params.put("vnp_CreateDate", vnp_CreateDate);
 
+        // Gán thời gian hết hạn (sau 15 phút)
         cld.add(Calendar.MINUTE, 15);
         String vnp_ExpireDate = formatter.format(cld.getTime());
         vnp_Params.put("vnp_ExpireDate", vnp_ExpireDate);
+
 
 //        -------------------------------------- MÃ HÓA ---------------------------------------
 

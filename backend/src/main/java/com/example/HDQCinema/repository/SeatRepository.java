@@ -10,10 +10,5 @@ import java.util.Optional;
 
 @Repository
 public interface SeatRepository extends JpaRepository<Seat, String> {
-    @Query(value = "SELECT s.* " +
-            "FROM seat s " +
-            "WHERE s.seat_id = :seatId " +
-            "FOR UPDATE NOWAIT;"
-    , nativeQuery = true)
-    Optional<Seat> findSeatForUpdate(@Param("seatId") String id);
+
 }
