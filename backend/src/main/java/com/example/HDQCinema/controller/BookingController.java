@@ -6,6 +6,9 @@ import com.example.HDQCinema.dto.response.BookingResponse;
 import com.example.HDQCinema.service.BookingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import com.example.HDQCinema.dto.response.AmountOfPendingBookingResponse;
+import java.time.LocalDate;
+import java.util.List;
 
 @RestController
 @RequestMapping("/bookings")
@@ -48,4 +51,19 @@ public class BookingController {
                 .build();
     }
 
+    @GetMapping("/{date}")
+    ApiResponse<List<BookingResponse>> getBooking(@PathVariable("date") LocalDate date){
+        var response = bookingService.getBookings(date);
+        return ApiResponse.<List<BookingResponse>>builder()
+                .result(response)
+                .build();
+    }
+
+    @GetMapping("/pending")
+    ApiResponse<AmountOfPendingBookingResponse> getAmountOfPending(){
+        var response = bookingService.countPendingBooking();
+        return ApiResponse.<AmountOfPendingBookingResponse>builder()
+                .result(response)
+                .build();
+    }
 }

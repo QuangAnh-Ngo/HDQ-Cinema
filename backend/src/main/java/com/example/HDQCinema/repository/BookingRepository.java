@@ -8,9 +8,12 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
+import com.example.HDQCinema.dto.response.AmountOfPendingBookingResponse;
+
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.time.LocalDate;
 
 @Repository
 public interface BookingRepository extends JpaRepository<Booking, String> {
@@ -26,4 +29,19 @@ public interface BookingRepository extends JpaRepository<Booking, String> {
     double findTotalPriceByBookingId(@Param("bookingId") String bookingId);
 
     List<Booking> findAllByCreateTimeBeforeAndBookingStatus(LocalDateTime createTimeBefore, BookingStatus bookingStatus);
+
+
+    @Query(value = """
+            SELECT COUNT(*)
+            FROM booking
+            WHERE booking_status = 'PENDING';       
+            """, nativeQuery = true)
+    int countBookingsByBookingStatusPending();
+
+    @Query(value = """
+            SELECT *
+            FROM booking
+            WHERE create_time::date = :selected_date;
+            """, nativeQuery = true)
+    List<Booking> findBookingsByCreateTime_Date(@Param("selected_date") LocalDate date);
 }
