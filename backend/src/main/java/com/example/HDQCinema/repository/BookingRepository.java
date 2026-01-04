@@ -1,6 +1,7 @@
 package com.example.HDQCinema.repository;
 
 import com.example.HDQCinema.entity.Booking;
+import com.example.HDQCinema.entity.Member;
 import com.example.HDQCinema.enums.BookingStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -44,4 +45,6 @@ public interface BookingRepository extends JpaRepository<Booking, String> {
             WHERE create_time::date = :selected_date;
             """, nativeQuery = true)
     List<Booking> findBookingsByCreateTime_Date(@Param("selected_date") LocalDate date);
+
+    List<Booking> findAllByMemberId(String memberId);
 }

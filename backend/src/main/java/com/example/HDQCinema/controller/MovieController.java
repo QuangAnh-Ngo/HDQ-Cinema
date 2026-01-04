@@ -61,12 +61,14 @@ public class MovieController {
     }
 
     @PutMapping("/{movieId}")
+    @PreAuthorize("hasAuthority('MANAGE_MOVIE')")
     ApiResponse<MovieResponse> updateMovie(@PathVariable("movieId") String movieId, @RequestBody MovieUpdateRequest request){
         return ApiResponse.<MovieResponse>builder()
                 .result(movieService.update(movieId,request))
                 .build();
     }
     @DeleteMapping("/{movieId}")
+    @PreAuthorize("hasAuthority('MANAGE_MOVIE')")
     ApiResponse<String> deleteMovie(@PathVariable("movieId") String movieId){
         movieService.deleteMovie(movieId);
         return ApiResponse.<String>builder()
