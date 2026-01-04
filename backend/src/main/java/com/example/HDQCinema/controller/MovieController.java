@@ -1,6 +1,8 @@
 package com.example.HDQCinema.controller;
 
 import com.example.HDQCinema.dto.request.MovieCreationRequest;
+import com.example.HDQCinema.dto.request.MovieUpdateRequest;
+import com.example.HDQCinema.dto.request.ShowTimeUpdateRequest;
 import com.example.HDQCinema.dto.response.ApiResponse;
 import com.example.HDQCinema.dto.response.MovieResponse;
 import com.example.HDQCinema.entity.Movie;
@@ -47,5 +49,25 @@ public class MovieController {
         return ApiResponse.<List<MovieResponse>>builder()
                 .result(response)
                 .build();
+    }
+
+    @GetMapping
+    ApiResponse<List<MovieResponse>> getAllMovies(){
+        return ApiResponse.<List<MovieResponse>>builder()
+                .result(movieService.getAll())
+                .build();
+    }
+
+    @PutMapping("/{movieId}")
+    ApiResponse<MovieResponse> updateMovie(@PathVariable("movieId") String movieId, @RequestBody MovieUpdateRequest request){
+        return ApiResponse.<MovieResponse>builder()
+                .result(movieService.update(movieId,request))
+                .build();
+    }
+    @DeleteMapping("/{movieId}")
+    ApiResponse<String> deleteMovie(@PathVariable("movieId") String movieId){
+        movieService.deleteMovie(movieId);
+        return ApiResponse.<String>builder()
+                .result("deleted").build();
     }
 }

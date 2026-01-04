@@ -1,14 +1,9 @@
 package com.example.HDQCinema.dto.request;
 
-import com.example.HDQCinema.entity.ShowTime;
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.List;
 
 @Getter
 @Setter
@@ -16,7 +11,7 @@ import java.util.List;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Builder
-public class MovieCreationRequest {
+public class MovieUpdateRequest {
     String title, poster;
     Integer duration;
     Integer limitAge;
