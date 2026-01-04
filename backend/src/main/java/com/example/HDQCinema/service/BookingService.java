@@ -102,7 +102,7 @@ public class BookingService {
     @Transactional
     public BookingResponse approvePayment(String bookingId) {
         Booking booking = bookingRepository.findById(bookingId)
-                .orElseThrow(() -> new AppException(ErrorCode.MEMBER_NOT_FOUND));
+                .orElseThrow(() -> new AppException(ErrorCode.BOOKING_NOT_FOUND));
 
         bookingDetailRepository.updateSeatStatus(booking.getId());
 
