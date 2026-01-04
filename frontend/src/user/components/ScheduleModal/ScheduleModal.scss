@@ -1,0 +1,72 @@
+// Giữ nguyên các class nguyên bản của bạn
+.schedule-modal-custom {
+  .ant-modal-content {
+    border-radius: 16px;
+    padding: 24px !important;
+  }
+}
+
+.modal-title {
+  h3 {
+    font-weight: 800;
+    margin: 0;
+  }
+  .cinema-name {
+    margin: 5px 0 0;
+  }
+}
+
+.week-schedule-tabs {
+  .ant-tabs-tab {
+    padding: 12px 20px !important;
+
+    .ant-tabs-tab-btn {
+      font-size: 16px !important;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    &-active .ant-tabs-tab-btn {
+      color: #0a64a7 !important;
+    }
+  }
+
+  .ant-tabs-ink-bar {
+    background-color: #0a64a7;
+    height: 3px;
+  }
+}
+
+.day-schedule {
+  display: flex;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  gap: 15px;
+  padding: 20px 0;
+
+  .show-time {
+    background-color: #f3f4f6;
+    color: #1f2937;
+    min-width: 100px;
+    border-radius: 8px;
+    border: 2px solid transparent;
+    transition: all 0.2s ease;
+    cursor: pointer;
+
+    &:hover {
+      background-color: #eff6ff;
+      border-color: #3b82f6;
+      transform: translateY(-2px);
+    }
+  }
+}
+
+// Mobile responsive cho popup
+@media (max-width: 640px) {
+  .day-schedule {
+    justify-content: center;
+    .show-time {
+      width: calc(50% - 10px);
+    }
+  }
+}

@@ -1,0 +1,37 @@
+// frontend/src/user/pages/ConfirmPayment/ConfirmPayment.scss
+
+.confirm-payment-page {
+  .instructions-card {
+    .ant-card-body {
+      padding: 32px !important;
+    }
+
+    h2 {
+      letter-spacing: -0.5px;
+    }
+  }
+
+  .total-price {
+    font-family: "Montserrat", sans-serif;
+  }
+}
+
+// Mobile Responsive
+@media (max-width: 1024px) {
+  .confirm-payment-page {
+    padding: 10px;
+
+    .payment-container {
+      flex-direction: column-reverse; // Hiện ticket lên trên ở mobile
+      align-items: center;
+    }
+
+    .action-buttons {
+      flex-direction: column-reverse;
+
+      button {
+        width: 100%;
+      }
+    }
+  }
+}

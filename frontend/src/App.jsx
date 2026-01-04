@@ -1,79 +1,138 @@
-import { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
-import { Layout } from 'antd';
-import Header from './components/Header/Header';
-import Footer from './components/Footer/Footer';
-import HomePage from './pages/HomePage/HomePage';
-import MovieDetail from './pages/MovieDetail/MovieDetail';
-import SchedulePopup from './pages/SchedulePopup/SchedulePopup';
-import SeatSelection from './pages/SeatSelection/SeatSelection';
-import ConfirmPayment from './pages/ConfirmPayment/ConfirmPayment';
-import LogIn from './pages/LogIn/LogIn';
-import './App.css';
+import { useState } from "react";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+  useLocation,
+} from "react-router-dom";
+import { Layout } from "antd";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
+import Header from "./user/components/Header/Header";
+import Footer from "./user/components/Footer/Footer";
+
+import HomePage from "./user/pages/HomePage/HomePage";
+import MovieDetail from "./user/pages/MovieDetail/MovieDetail";
+import SeatSelection from "./user/pages/SeatSelection/SeatSelection";
+import ConfirmPayment from "./user/pages/ConfirmPayment/ConfirmPayment";
+import PaymentResult from "./user/pages/PaymentResult/PaymentResult";
+import LogIn from "./user/pages/LogIn/LogIn";
+import Register from "./user/pages/Register/Register";
+
+import UserProtectedRoute from "./user/UserProtectedRoute";
+import AdminProtectedRoute from "./admin/AdminProtectedRoute";
+import AdminRoutes from "./admin/AdminRoutes";
+
+import "./App.css";
 
 const { Content } = Layout;
 
-const ProtectedRoute = ({ children }) => {
-    const token = localStorage.getItem("token");
-    return token ? children : <Navigate to="/login" replace />;
+const HEADER_HEIGHT = 80;
+const PUBLIC_ROUTES = ["/login", "/register"];
+
+const shouldHideLayout = (pathname) => {
+  return PUBLIC_ROUTES.includes(pathname) || pathname.startsWith("/admin");
 };
 
 const AppLayout = () => {
-    const location = useLocation();
-    const [selectedMovieId, setSelectedMovieId] = useState(null);
+  const location = useLocation();
+  const hideLayout = shouldHideLayout(location.pathname);
 
-    const hideLayout = location.pathname === '/login';
+  return (
+    <Layout className="min-h-screen">
+      {!hideLayout && <Header />}
 
-    return (
-        <Layout >
-            {!hideLayout && <Header />}
-            <Content style={{ padding: 0, marginTop: hideLayout ? 0 : 80 }}>
-                <Routes>
-                    <Route
-                        path="/"
-                        element={<HomePage setSelectedMovieId={setSelectedMovieId} />}
-                    />
-                    <Route
-                        path="/movie-detail/:id"
-                        element={<MovieDetail setSelectedMovieId={setSelectedMovieId} />}
-                    />
-                    <Route
-                        path="/seat-selection"
-                        element={
-                            <ProtectedRoute>
-                                <SeatSelection />
-                            </ProtectedRoute>
-                        }
-                    />
-                    <Route
-                        path="/confirm-payment"
-                        element={
-                            <ProtectedRoute>
-                                <ConfirmPayment />
-                            </ProtectedRoute>
-                        }
-                    />
-                    <Route
-                        path="/login"
-                        element={<LogIn />}
-                    />
-                </Routes>
-            </Content>
-            {!hideLayout && <Footer />}
-            {selectedMovieId && (
-                <SchedulePopup
-                    id={selectedMovieId}
-                    onClose={() => setSelectedMovieId(null)}
-                />
-            )}
-        </Layout>
-    );
+      <Content
+        style={{
+          marginTop: hideLayout ? 0 : HEADER_HEIGHT,
+          minHeight: `calc(100vh - ${HEADER_HEIGHT}px)`,
+        }}
+      >
+        <Routes>
+          <Route path="/login" element={<LogIn />} />
+          <Route path="/register" element={<Register />} />
+
+          <Route
+            path="/"
+            element={
+              <UserProtectedRoute requireAuth={false}>
+                <HomePage />
+              </UserProtectedRoute>
+            }
+          />
+          <Route
+            path="/movie-detail/:id"
+            element={
+              <UserProtectedRoute requireAuth={false}>
+                <MovieDetail />
+              </UserProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/seat-selection/:showtimeId"
+            element={
+              <UserProtectedRoute requireAuth={true}>
+                <SeatSelection />
+              </UserProtectedRoute>
+            }
+          />
+          <Route
+            path="/confirm-payment/:bookingId"
+            element={
+              <UserProtectedRoute requireAuth={true}>
+                <ConfirmPayment />
+              </UserProtectedRoute>
+            }
+          />
+          <Route
+            path="/payment-result"
+            element={
+              <UserProtectedRoute requireAuth={true}>
+                <PaymentResult />
+              </UserProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin/*"
+            element={
+              <AdminProtectedRoute
+                allowedRoles={["ADMIN", "MANAGER", "EMPLOYEE"]}
+              >
+                <AdminRoutes />
+              </AdminProtectedRoute>
+            }
+          />
+
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Content>
+
+      {!hideLayout && <Footer />}
+
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={true}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
+    </Layout>
+  );
 };
 
 const App = () => (
-    <Router>
-        <AppLayout />
-    </Router>
+  <Router>
+    <AppLayout />
+  </Router>
 );
 
 export default App;

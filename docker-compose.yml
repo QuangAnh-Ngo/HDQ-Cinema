@@ -19,30 +19,32 @@ services:
     networks:
       - cinema-network
 
-  # Frontend React
+  # Frontend
   frontend:
     build: ./frontend
     container_name: hdq-cinema-frontend
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "5173:5173"
     volumes:
-      # Mount source code để có hot-reload
-      - ./frontend/src:/app/src
-      - ./frontend/public:/app/public
-      # Prevent node_modules from being overwritten
+      # Vite thường để index.html ở root, nên mount cả thư mục project sẽ tốt hơn
+      - ./frontend:/app
+      # Giữ lại node_modules trong container
       - /app/node_modules
     environment:
-      # Để React không tự động mở browser
       - BROWSER=none
-      # API URL - frontend sẽ gọi backend qua network
-      - REACT_APP_API_URL=http://backend:8080
+      # ✅ FIX: Đổi tên biến cho đúng
+      - VITE_API_BASE_URL=${VITE_API_BASE_URL:-http://localhost:8080/cinemas}
+      # ✅ Vite dev server cần host 0.0.0.0 để access từ bên ngoài container
+      - VITE_HOST=0.0.0.0
+      - VITE_PORT=5173
     depends_on:
       - backend
     networks:
       - cinema-network
     stdin_open: true
     tty: true
+    command: npm run dev -- --host 0.0.0.0
 
   # PostgreSQL Database
   postgres-db:
