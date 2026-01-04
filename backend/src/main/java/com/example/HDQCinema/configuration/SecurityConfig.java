@@ -25,8 +25,11 @@ import org.springframework.web.filter.CorsFilter;
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class SecurityConfig {
-    String[] PUBLIC_ENDPOINTS =
-            {"/accounts", "/auth/token", "/auth/introspect", "/auth/logout", "/auth/refresh", "/members", "/movies/**", "/theaters/**", "/seats/**", "/rooms/**", "/showtimes/**"};
+    String[] PUBLIC_POST_ENDPOINTS =
+            {"/accounts", "/auth/token", "/auth/introspect", "/auth/logout", "/auth/refresh", "/members"};
+
+    String[] PUBLIC_GET_ENDPOINTS =
+            {"/members", "/movies/**", "/theaters/**", "/seats/**", "/rooms/**", "/showtimes/**"};
 
     @NonFinal
     CustomJwtToken customJwtToken;
@@ -34,9 +37,9 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
         httpSecurity.authorizeHttpRequests(request ->
-                request.requestMatchers(HttpMethod.POST, PUBLIC_ENDPOINTS)
+                request.requestMatchers(HttpMethod.POST, PUBLIC_POST_ENDPOINTS)
                         .permitAll()
-                        .requestMatchers(HttpMethod.GET, PUBLIC_ENDPOINTS)
+                        .requestMatchers(HttpMethod.GET, PUBLIC_GET_ENDPOINTS)
                         .permitAll()
                         .requestMatchers(
                                 "/v3/api-docs/**",

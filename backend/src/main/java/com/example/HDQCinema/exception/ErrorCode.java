@@ -1,6 +1,7 @@
 package com.example.HDQCinema.exception;
 
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 
 import lombok.experimental.FieldDefaults;
@@ -14,6 +15,9 @@ public enum ErrorCode {
     ROOM_NOT_EXISTED(1002, "room is not existed", HttpStatus.BAD_REQUEST),
     SHOWTIME_NOT_EXISTED(1003, "showtime is not existed", HttpStatus.BAD_REQUEST),
     BOOKING_FAIL(1004, "booking failed", HttpStatus.BAD_REQUEST),
+    SEAT_NOT_FOUND(1005, "seat not found", HttpStatus.NOT_FOUND),
+    CINEMA_NOT_FOUND(1006, "cinema not found", HttpStatus.NOT_FOUND),
+    SHOWTIME_NOT_FOUND(1007, "showtime not found",  HttpStatus.NOT_FOUND),
 
 
     USER_NOT_FOUND(2001, "user not found", HttpStatus.NOT_FOUND),
@@ -42,6 +46,7 @@ public enum ErrorCode {
     UNCATEGORIZED_EXCEPTION(9999, "unknown error", HttpStatus.INTERNAL_SERVER_ERROR),
 
     ;
+
 
     int code = 1000;
     String message;

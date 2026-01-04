@@ -12,4 +12,5 @@ public class PredefinedPermission {
     public static final String VIEW_REPORTS = "VIEW_REPORTS";
     public static final String MANAGE_SEATS = "MANAGE_SEATS";
     public static final String PROCESS_REFUNDS = "PROCESS_REFUNDS";
+    public static final String BOOKING = "BOOKING";
 }
