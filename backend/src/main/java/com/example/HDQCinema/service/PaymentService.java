@@ -11,6 +11,7 @@ import com.example.HDQCinema.repository.BookingRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestParam;
 
@@ -29,6 +30,7 @@ public class PaymentService {
     BookingService bookingService;
     PaymentURLService paymentURLService;
 
+    @PreAuthorize("hasRole('MEMBER')")
     public PaymentResponse createPayment(PaymentRequest request) throws UnsupportedEncodingException {
 
         String bookingId = request.getBookingId();

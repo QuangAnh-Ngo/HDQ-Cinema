@@ -6,6 +6,7 @@ import com.example.HDQCinema.dto.response.MovieResponse;
 import com.example.HDQCinema.entity.Movie;
 import com.example.HDQCinema.service.MovieService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,6 +18,7 @@ public class MovieController {
     private MovieService movieService;
 
     @PostMapping
+    @PreAuthorize("hasAuthority('MANAGE_MOVIE')")
     ApiResponse<MovieResponse> createMovie(@RequestBody MovieCreationRequest request){
         var movie = movieService.create(request);
         return ApiResponse.<MovieResponse>builder()

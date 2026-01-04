@@ -15,6 +15,11 @@ spring:
       ddl-auto: update
     show-sql: true
 
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
 jwt:
   signerKey: ${JWT_SIGNER_KEY}
   valid-duration: 3600 # in seconds

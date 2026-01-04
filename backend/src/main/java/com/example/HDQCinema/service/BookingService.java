@@ -17,6 +17,7 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -105,7 +106,7 @@ public class BookingService {
     // tạo và quản lý transaction (giao dịch) khi làm việc với DB.
     // để tránh khi Một user giữ ghế, nhưng trước khi lưu booking, transaction đã commit → user khác vẫn có thể đặt cùng ghế.
     // nghĩa la khi transaction chưa commit hoặc rollback thì row đó vẫn khóa
-
+    @PreAuthorize("hasRole('MEMBER')")
     public BookingResponse createBooking(BookingRequest request){ // khi user bấm vào trang thanh toán
         Member member = memberRepository.findById(request.getUserId())
                 .orElseThrow(() -> new RuntimeException("user not exist"));
@@ -155,12 +156,12 @@ public class BookingService {
         return response;
     }
 
+    @PreAuthorize("hasRole('MEMBER')")
     @Transactional
     public void deletePayment(String bookingId){
         bookingDetailRepository.deleteAllByBooking_Id(bookingId);
         bookingReppository.deleteById(bookingId);
     }
-
 
     @Transactional
     public BookingResponse approvePayment(String bookingId) { // admin thấy user thanh toán và bấm xác nhận user đã thanh toán
