@@ -23,7 +23,7 @@ import java.util.Set;
 public class ShowTime {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-            @Column(name = "showtime_id")
+    @Column(name = "showtime_id")
     String id;
 
     private LocalDateTime startTime; // ngày + giờ chiếu

@@ -11,9 +11,5 @@ import java.util.List;
 public interface PaymentURLRepository extends JpaRepository<PaymentURL, String> {
     List<PaymentURL> findAllByMember_Id(String memberId);
 
-    Object findPaymentURLByBooking(Booking booking);
-
-    void deleteByBooking(Booking booking);
-
     void deleteByBooking_Id(String bookingId);
 }

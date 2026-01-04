@@ -25,6 +25,11 @@ public interface TicketPriceRepository extends JpaRepository<TicketPrice, String
                    @Param("showtimeId") String showtimeId,
                    @Param("cinemaId") String cinemaId);
 
+
+    TicketPrice findTicketPriceById(String id);
+
+    void deleteTicketPriceById(String id);
+
     //SELECT tp.price
     //FROM ticket_price tp
     //JOIN show_time st ON st.showtime_id = :showtimeId

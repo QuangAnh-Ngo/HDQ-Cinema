@@ -14,8 +14,8 @@ import java.util.Set;
 @Repository
 public interface CinemaRepository extends JpaRepository<Cinema, String> {
 
-    @EntityGraph(attributePaths = {"rooms.cinema"}, type = EntityGraph.EntityGraphType.LOAD)
-    @Query("select c from Cinema c")
-    List<Cinema> findAll();
+//    @EntityGraph(attributePaths = {"rooms.cinema"}, type = EntityGraph.EntityGraphType.LOAD)
+//    @Query("select c from Cinema c")
+//    List<Cinema> findAll();
 
 }

@@ -1,5 +1,6 @@
 package com.example.HDQCinema.dto.response;
 
+import com.example.HDQCinema.dto.request.ShowTimeAndRoom;
 import com.example.HDQCinema.entity.ShowTime;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.*;
@@ -15,5 +16,7 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Builder
 public class ShowTimeResponse {
-    String message;
+    String showtimeId;
+    String movieId;
+    List<ShowTimeAndRoom> showTimeRooms;
 }

@@ -1,0 +1,11 @@
+.rooms-page {
+  .room-capacity {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+
+    svg {
+      color: #6b7280;
+    }
+  }
+}

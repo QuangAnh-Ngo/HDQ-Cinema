@@ -25,10 +25,9 @@ public class RoomController {
     }
 
     @GetMapping
-    ApiResponse<RoomForShowTimeResponse> getRoom(@RequestParam String roomId,
-                                                 @RequestParam String showtimeId){
+    ApiResponse<RoomForShowTimeResponse> getRoom(@RequestParam String showtimeId){
         return ApiResponse.<RoomForShowTimeResponse>builder()
-                .result(roomService.get(roomId, showtimeId))
+                .result(roomService.get(showtimeId))
                 .build();
     }
 }

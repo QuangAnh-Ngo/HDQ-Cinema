@@ -8,21 +8,18 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
+import com.example.HDQCinema.dto.response.AmountOfPendingBookingResponse;
+
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.time.LocalDate;
 
 @Repository
 public interface BookingRepository extends JpaRepository<Booking, String> {
 
-    @Modifying
-//    @Query(value = """
-//        DELETE
-//        FROM booking b
-//        WHERE EXTRACT(EPOCH FROM (NOW() - b.create_time)) / 60 > :lim AND b.booking_status = 'PENDING';
-//        """, nativeQuery = true)
-    @Query("delete from Booking b where b.createTime < ?1 and b.bookingStatus = 'PENDING'")
-    void deleteBookingByTimeLimit(LocalDateTime lim);
+
+
 
     @Query(value = """
             SELECT b.total_price 
@@ -32,4 +29,19 @@ public interface BookingRepository extends JpaRepository<Booking, String> {
     double findTotalPriceByBookingId(@Param("bookingId") String bookingId);
 
     List<Booking> findAllByCreateTimeBeforeAndBookingStatus(LocalDateTime createTimeBefore, BookingStatus bookingStatus);
+
+
+    @Query(value = """
+            SELECT COUNT(*)
+            FROM booking
+            WHERE booking_status = 'PENDING';       
+            """, nativeQuery = true)
+    int countBookingsByBookingStatusPending();
+
+    @Query(value = """
+            SELECT *
+            FROM booking
+            WHERE create_time::date = :selected_date;
+            """, nativeQuery = true)
+    List<Booking> findBookingsByCreateTime_Date(@Param("selected_date") LocalDate date);
 }

@@ -1,5 +1,6 @@
 package com.example.HDQCinema.service;
 
+import com.example.HDQCinema.dto.query.SeatPerShowTimeDTO;
 import com.example.HDQCinema.dto.request.RoomRequest;
 import com.example.HDQCinema.dto.response.RoomForShowTimeResponse;
 import com.example.HDQCinema.dto.response.RoomResponse;
@@ -45,30 +46,31 @@ public class RoomService {
         return response;
     }
 
-    public RoomForShowTimeResponse get(String roomId, String showTimeId){
-        Room room = roomRepository.findById(roomId).orElseThrow(() -> new AppException(ErrorCode.ROOM_NOT_EXISTED));
+    public RoomForShowTimeResponse get(String showTimeId){
         ShowTime showTime = showTimeRepository.findById(showTimeId).orElseThrow(() -> new AppException(ErrorCode.SHOWTIME_NOT_EXISTED));
+        Room room = showTime.getRoom();
 
-        List<SeatPerShowTimeResponse> seats = new ArrayList<>();
-        for(Seat seat : room.getSeats()){
-            BookingDetail bookingDetail = bookingDetailRepository.findBySeatAndShowTime(seat, showTime);
-            double price = ticketPriceRepository.toPrice(seat.getSeatType().name(), showTimeId, room.getCinema().getId());
 
-            SeatPerShowTimeResponse response = SeatPerShowTimeResponse.builder()
-                    .seatStatus(bookingDetail != null ? bookingDetail.getSeatStatus() : SeatStatus.AVAILABLE)
-                    .seatId(seat.getId())
-                    .seatName(""+seat.getSeatRow()+seat.getSeatNumber())
-                    .seatType(seat.getSeatType())
-                    .price(price)
-                    .build();
-            seats.add(response);
-        }
+        List<SeatPerShowTimeDTO> seats = roomRepository.getSeatPerShowTimeDTO(showTimeId);
+//        for(Seat seat : room.getSeats()){
+//            BookingDetail bookingDetail = bookingDetailRepository.findBySeatAndShowTime(seat, showTime);
+//            double price = ticketPriceRepository.toPrice(seat.getSeatType().name(), showTimeId, room.getCinema().getId());
+//
+//            SeatPerShowTimeResponse response = SeatPerShowTimeResponse.builder()
+//                    .seatStatus(bookingDetail != null ? bookingDetail.getSeatStatus() : SeatStatus.AVAILABLE)
+//                    .seatId(seat.getId())
+//                    .seatName(""+seat.getSeatRow()+seat.getSeatNumber())
+//                    .seatType(seat.getSeatType())
+//                    .price(price)
+//                    .build();
+//            seats.add(response);
+//        }
 
-        seats.sort(Comparator.comparing((SeatPerShowTimeResponse s) -> s.getSeatName().charAt(0))
+        seats.sort(Comparator.comparing((SeatPerShowTimeDTO s) -> s.getSeatName().charAt(0))
                 .thenComparing(s -> Integer.parseInt(s.getSeatName().substring(1))));
 
         return RoomForShowTimeResponse.builder()
-                .roomId(roomId)
+                .roomId(room.getId())
                 .showtimeId(showTimeId)
                 .seats(seats)
                 .roomName(room.getRoomName())
