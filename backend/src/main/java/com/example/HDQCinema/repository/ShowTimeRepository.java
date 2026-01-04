@@ -27,4 +27,6 @@ public interface ShowTimeRepository extends JpaRepository<ShowTime, String> {
     List<ShowTime> toShowTimes(@Param("movie_id") String movieId);
 
     boolean existsShowTimeByRoomAndStartTime(Room room, LocalDateTime startTime);
+
+    ShowTime findShowTimesById(String id);
 }

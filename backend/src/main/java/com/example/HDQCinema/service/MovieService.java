@@ -1,6 +1,7 @@
 package com.example.HDQCinema.service;
 
 import com.example.HDQCinema.dto.request.MovieCreationRequest;
+import com.example.HDQCinema.dto.request.MovieUpdateRequest;
 import com.example.HDQCinema.dto.response.MovieResponse;
 import com.example.HDQCinema.dto.response.ShowTimeResponse;
 import com.example.HDQCinema.entity.Movie;
@@ -61,5 +62,23 @@ public class MovieService {
     public List<MovieResponse> getMoviesShowing(String cinemaId){
         var movies = movieRepository.findShowingMovie(LocalDate.now(), cinemaId);
         return movieMapper.toMovieResponses(movies);
+    }
+
+    public List<MovieResponse> getAll(){
+        return movieMapper.toMovieResponses(movieRepository.findAll());
+    }
+
+    public MovieResponse update(String movieId, MovieUpdateRequest request){
+        Movie movie = movieRepository.findMovieById(movieId);
+
+        movieMapper.updateMovie(movie, request);
+
+        movie = movieRepository.save(movie); // sau lệnh này thì id mới đc tạo
+
+        return movieMapper.toMovieResponse(movie);
+    }
+
+    public void deleteMovie(String movieId){
+        movieRepository.deleteById(movieId);
     }
 }
