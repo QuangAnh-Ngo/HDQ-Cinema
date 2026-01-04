@@ -1,0 +1,49 @@
+// frontend/src/user/pages/SeatSelection/SeatSelection.scss
+
+.seat-selection-page {
+  display: flex;
+  flex-direction: row;
+  gap: 30px;
+  align-items: flex-start;
+
+  .seat-container {
+    flex: 1;
+    text-align: center;
+
+    .seat-annotation {
+      display: flex;
+      justify-content: center;
+      gap: 30px;
+      flex-wrap: wrap;
+
+      .seat-type {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: #64748b;
+      }
+    }
+
+    .screen-wrapper {
+      .screen-line {
+        width: 70%;
+        height: 4px;
+        background: linear-gradient(to bottom, #cbd5e1, transparent);
+        border-radius: 100%;
+        box-shadow: 0 10px 20px rgba(203, 213, 225, 0.5);
+      }
+    }
+  }
+
+  // Responsive cho Mobile
+  @media (max-width: 1024px) {
+    flex-direction: column;
+
+    .ticket-summary-panel {
+      width: 100%;
+      position: sticky;
+      bottom: 0;
+      z-index: 100;
+    }
+  }
+}

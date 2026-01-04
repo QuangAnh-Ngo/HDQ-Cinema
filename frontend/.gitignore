@@ -1,26 +1,40 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+# --- Logs ---
+# Chặn các file log phát sinh trong quá trình chạy 
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+debug.log 
 
-# dependencies
-/node_modules
-/.pnp
-.pnp.js
+# --- Dependencies ---
+# Không đẩy thư mục thư viện cực nặng lên Git 
+node_modules/ 
+dist/
+dist-ssr/
+*.local
 
-# testing
-/coverage
-
-# production
-/build
-
-# misc
+# --- Editor / IDE ---
+# Chặn các file cấu hình riêng của trình soạn thảo 
+.vscode/*
+!.vscode/extensions.json
+.idea/ 
 .DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# --- Environment Variables ---
+# CHẶN TUYỆT ĐỐI các file chứa thông tin nhạy cảm của frontend 
+.env 
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
 
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-.env
-.env.dev
+# --- Testing ---
+/coverage

@@ -1,0 +1,178 @@
+:root {
+  --color-primary: #8864f0;
+  --color-border: #686870;
+  --color-muted: #67666e;
+  --color-card: #292334;
+}
+
+.login-container {
+  height: 100vh;
+  margin: 0;
+  display: grid;
+  place-items: center;
+  background: url("../../../assets/images/login-nen.gif") no-repeat center
+    center;
+  background-size: cover;
+  color: #f9f9f9;
+
+  .card {
+    display: flex;
+    flex-direction: column;
+    background: var(--color-card);
+    border-radius: 22px;
+    padding: 6px;
+    width: clamp(300px, 85vw, 750px);
+    box-shadow: 0 50px 100px rgb(0 0 0 /12%);
+
+    form {
+      flex: 1 1 50%;
+      padding: 30px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      transition: padding 0.3s;
+
+      h2,
+      h3 {
+        text-align: center;
+      }
+
+      & > h2 {
+        font-size: 22px;
+      }
+
+      & > h3 {
+        font-size: 14px;
+        margin-bottom: 12px;
+        color: var(--color-muted);
+      }
+
+      button,
+      input {
+        height: 44px;
+        border-radius: 6px;
+        border: none;
+        color: inherit;
+        font-family: inherit;
+        width: 100%;
+        outline-color: var(--color-primary);
+        transition: all 0.2s ease;
+      }
+
+      button:hover {
+        background-color: #8864aa !important;
+      }
+
+      input {
+        background: #3c364c;
+        padding: 0 2.5vw;
+
+        &::placeholder {
+          color: #7f7990;
+        }
+      }
+
+      .socials {
+        display: flex;
+        gap: 8px;
+
+        .social-btn {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+          background: transparent;
+          border: 1px solid var(--color-border);
+          cursor: pointer;
+        }
+
+        img {
+          width: 20px;
+          height: 20px;
+        }
+
+        p {
+          margin: 0;
+        }
+      }
+
+      & > button[type="submit"] {
+        background: var(--color-primary);
+      }
+
+      .switch-auth {
+        margin-top: 10px;
+        text-align: center;
+        font-size: 14px;
+        color: #7f7990;
+
+        a {
+          color: #ff4d4f;
+          font-weight: 600;
+
+          &:hover {
+            text-decoration: underline;
+          }
+        }
+      }
+
+      .or {
+        position: relative;
+        height: 24px;
+
+        &::before {
+          content: "";
+          position: absolute;
+          z-index: 0;
+          top: 50%;
+          left: 0;
+          width: 100%;
+          translate: 0 -50%;
+          height: 1px;
+          background: var(--color-border);
+        }
+
+        &::after {
+          content: "Or";
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          translate: -50% -50%;
+          z-index: 1;
+          background-color: var(--color-card);
+          color: var(--color-muted);
+          font-size: 12px;
+          padding: 0 12px;
+        }
+      }
+    }
+  }
+}
+
+@media (width >=485px) {
+  form {
+    padding-inline: 50px;
+  }
+}
+
+@media (width >=500px) {
+  form {
+    transition: none;
+  }
+}
+
+@media (width >=580px) {
+  .card {
+    flex-direction: row;
+    padding: 6px 0 6px 6px;
+    width: clamp(300px, 90vw, 740px);
+  }
+
+  form :is(h2, h3) {
+    text-align: left;
+  }
+
+  form {
+    padding: 60px 30px;
+  }
+}

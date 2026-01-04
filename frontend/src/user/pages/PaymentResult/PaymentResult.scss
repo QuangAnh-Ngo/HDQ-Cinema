@@ -1,0 +1,82 @@
+// frontend/src/user/pages/PaymentResult/PaymentResult.scss
+
+.payment-result-page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 20px;
+  background: radial-gradient(circle at top, #2d1b69, #141121);
+  font-family: "Poppins", sans-serif;
+
+  .result-card {
+    width: 100%;
+    max-width: 600px;
+    background: rgba(30, 25, 45, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 32px;
+    backdrop-filter: blur(20px);
+    text-align: center;
+
+    .ant-result-title,
+    .ant-result-subtitle {
+      color: white;
+    }
+
+    .btn-home {
+      background: #8864f0;
+      border: none;
+      box-shadow: 0 8px 16px rgba(136, 100, 240, 0.3);
+      &:hover {
+        background: #9d7cf5 !important;
+      }
+    }
+
+    .btn-history:hover {
+      background: rgba(255, 255, 255, 0.15) !important;
+    }
+
+    // Custom Ant Descriptions for Dark Mode
+    .custom-descriptions {
+      .ant-descriptions-item-label {
+        color: #7f7990 !important;
+        font-weight: 500;
+      }
+      .ant-descriptions-item-content {
+        padding-bottom: 8px;
+      }
+    }
+  }
+
+  .booking-summary-ticket {
+    position: relative;
+    &::before,
+    &::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      width: 20px;
+      height: 20px;
+      background: #141121; // Match background color to create "punch hole" effect
+      border-radius: 50%;
+    }
+    &::before {
+      left: -10px;
+      transform: translateY(-50%);
+    }
+    &::after {
+      right: -10px;
+      transform: translateY(-50%);
+    }
+  }
+}
+
+// Mobile
+@media (max-width: 480px) {
+  .payment-result-page .result-card {
+    padding: 10px;
+    .ant-result {
+      padding: 20px 10px;
+    }
+  }
+}
