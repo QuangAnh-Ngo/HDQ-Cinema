@@ -18,6 +18,7 @@ public enum ErrorCode {
     SEAT_NOT_FOUND(1005, "seat not found", HttpStatus.NOT_FOUND),
     CINEMA_NOT_FOUND(1006, "cinema not found", HttpStatus.NOT_FOUND),
     SHOWTIME_NOT_FOUND(1007, "showtime not found",  HttpStatus.NOT_FOUND),
+    BOOKING_NOT_FOUND(1008, "booking not found",  HttpStatus.NOT_FOUND),
 
 
     USER_NOT_FOUND(2001, "user not found", HttpStatus.NOT_FOUND),
