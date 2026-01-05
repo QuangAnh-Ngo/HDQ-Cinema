@@ -26,10 +26,10 @@ import org.springframework.web.filter.CorsFilter;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class SecurityConfig {
     String[] PUBLIC_POST_ENDPOINTS =
-            {"/accounts", "/auth/token", "/auth/introspect", "/auth/logout", "/auth/refresh", "/members"};
+            {"/accounts", "/auth/token", "/auth/introspect", "/auth/logout", "/auth/refresh", "/members", "/payment/**"};
 
     String[] PUBLIC_GET_ENDPOINTS =
-            {"/members", "/movies/**", "/theaters/**", "/seats/**", "/rooms/**", "/showtimes/**"};
+            {"/members", "/movies/**", "/theaters/**", "/seats/**", "/rooms/**", "/showtimes/**", "/payment/**", "/paymenturls/**"};
 
     @NonFinal
     CustomJwtToken customJwtToken;

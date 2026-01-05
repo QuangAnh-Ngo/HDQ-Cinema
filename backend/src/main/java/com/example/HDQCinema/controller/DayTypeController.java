@@ -5,6 +5,7 @@ import com.example.HDQCinema.dto.response.ApiResponse;
 import com.example.HDQCinema.dto.response.DayTypeResponse;
 import com.example.HDQCinema.service.DayTypeService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -17,6 +18,7 @@ public class DayTypeController {
     private DayTypeService dayTypeService;
 
     @PostMapping
+    @PreAuthorize("hasAuthority('MANAGE_PRICE')")
     ApiResponse<DayTypeResponse> createDayType(@RequestBody DayTypeRequest request){
         var response = dayTypeService.create(request);
 
