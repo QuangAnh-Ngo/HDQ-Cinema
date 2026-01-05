@@ -20,7 +20,7 @@ public class MovieController {
     private MovieService movieService;
 
     @PostMapping
-    @PreAuthorize("hasAuthority('MANAGE_MOVIE')")
+    @PreAuthorize("hasAuthority('MANAGE_MOVIES')")
     ApiResponse<MovieResponse> createMovie(@RequestBody MovieCreationRequest request){
         var movie = movieService.create(request);
         return ApiResponse.<MovieResponse>builder()
@@ -61,14 +61,14 @@ public class MovieController {
     }
 
     @PutMapping("/{movieId}")
-    @PreAuthorize("hasAuthority('MANAGE_MOVIE')")
+    @PreAuthorize("hasAuthority('MANAGE_MOVIES')")
     ApiResponse<MovieResponse> updateMovie(@PathVariable("movieId") String movieId, @RequestBody MovieUpdateRequest request){
         return ApiResponse.<MovieResponse>builder()
                 .result(movieService.update(movieId,request))
                 .build();
     }
     @DeleteMapping("/{movieId}")
-    @PreAuthorize("hasAuthority('MANAGE_MOVIE')")
+    @PreAuthorize("hasAuthority('MANAGE_MOVIES')")
     ApiResponse<String> deleteMovie(@PathVariable("movieId") String movieId){
         movieService.deleteMovie(movieId);
         return ApiResponse.<String>builder()

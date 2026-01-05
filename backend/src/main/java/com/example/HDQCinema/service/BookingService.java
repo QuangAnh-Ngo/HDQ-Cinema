@@ -92,7 +92,6 @@ public class BookingService {
         return response;
     }
 
-    @PreAuthorize("hasRole('MEMBER')")
     @Transactional
     public void deletePayment(String bookingId){
         bookingDetailRepository.deleteAllByBooking_Id(bookingId);
