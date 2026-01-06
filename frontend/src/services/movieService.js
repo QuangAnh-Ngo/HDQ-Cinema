@@ -85,28 +85,31 @@ export const movieService = {
         title: data.title,
         poster: data.poster,
         duration: parseInt(data.duration, 10),
-        limitAge: parseInt(data.limitAge, 10),
-        dayStart: data.dayStart,
-        dayEnd: data.dayEnd,
-        director: data.director,
+        limitAge: parseInt(data.limitAge, 10) || 0,
+        dayStart: data.dayStart, // YYYY-MM-DD format
+        dayEnd: data.dayEnd, // YYYY-MM-DD format
+        director: data.director || "",
         genre: data.genre,
-        description: data.description,
-        trailer_url: data.trailer_url,
+        description: data.description || "",
+        trailer_url: data.trailer_url || "",
       };
 
+      console.log("📤 Creating movie:", payload);
+
       const response = await axiosInstance.post("/movies", payload);
+
+      console.log("✅ Movie created:", response);
+
       return response;
     } catch (error) {
-      console.error("Create movie error:", error);
+      console.error("❌ Create movie error:", error);
+      console.error("Response:", error.response?.data);
       throw error;
     }
   },
 
   /**
-   * Cập nhật phim (PUT /movies/{id})
-   * @param {string} id - Movie ID
-   * @param {Object} data - Dữ liệu phim cần update
-   * @returns {Promise<Object>} Object phim đã update
+   * ✅ Update movie with correct field mapping
    */
   update: async (id, data) => {
     try {
@@ -114,33 +117,42 @@ export const movieService = {
         title: data.title,
         poster: data.poster,
         duration: parseInt(data.duration, 10),
-        limitAge: parseInt(data.limitAge, 10),
+        limitAge: parseInt(data.limitAge, 10) || 0,
         dayStart: data.dayStart,
         dayEnd: data.dayEnd,
-        director: data.director,
+        director: data.director || "",
         genre: data.genre,
-        description: data.description,
-        trailer_url: data.trailer_url,
+        description: data.description || "",
+        trailer_url: data.trailer_url || "",
       };
 
+      console.log("📤 Updating movie:", id, payload);
+
       const response = await axiosInstance.put(`/movies/${id}`, payload);
+
+      console.log("✅ Movie updated:", response);
+
       return response;
     } catch (error) {
-      console.error("Update movie error:", error);
+      console.error("❌ Update movie error:", error);
+      console.error("Response:", error.response?.data);
       throw error;
     }
   },
 
   /**
-   * Xóa phim (DELETE /movies/{id})
-   * @param {string} id - Movie ID
-   * @returns {Promise<void>}
+   * ✅ Delete movie with proper error handling
    */
   delete: async (id) => {
     try {
+      console.log("📤 Deleting movie:", id);
+
       await axiosInstance.delete(`/movies/${id}`);
+
+      console.log("✅ Movie deleted:", id);
     } catch (error) {
-      console.error("Delete movie error:", error);
+      console.error("❌ Delete movie error:", error);
+      console.error("Response:", error.response?.data);
       throw error;
     }
   },
