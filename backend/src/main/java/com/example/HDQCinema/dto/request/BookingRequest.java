@@ -13,7 +13,7 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class BookingRequest {
     String userId;
-    String showTimeId;
-    String cinemaId;
+    Long showTimeId;
+    Long cinemaId;
     List<BookingDetailRequest> bookingDetailRequests;
 }

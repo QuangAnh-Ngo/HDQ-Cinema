@@ -13,6 +13,7 @@ import java.util.Date;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Builder
 public class DayTypeResponse {
+    Long id;
     String dayType;
     LocalDate dayStart;
     LocalDate dayEnd;

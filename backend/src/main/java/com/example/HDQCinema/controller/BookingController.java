@@ -33,7 +33,7 @@ public class BookingController {
     }
 
     @GetMapping("/date/{date}")
-    @PreAuthorize("hasAuthority('MANAGE_BOOKING')")
+    @PreAuthorize("hasAuthority('MANAGE_BOOKING') or hasRole('ADMIN')")
     ApiResponse<List<BookingResponse>> getBookingsByDate(@PathVariable("date") LocalDate date){
         var response = bookingService.getBookingsByDate(date);
         return ApiResponse.<List<BookingResponse>>builder()
@@ -49,7 +49,7 @@ public class BookingController {
     }
 
     @GetMapping("/pending")
-    @PreAuthorize("hasAuthority('MANAGE_BOOKING')")
+    @PreAuthorize("hasAuthority('MANAGE_BOOKING') or hasRole('ADMIN')")
     ApiResponse<AmountOfPendingBookingResponse> getAmountOfPending(){
         var response = bookingService.countPendingBooking();
         return ApiResponse.<AmountOfPendingBookingResponse>builder()

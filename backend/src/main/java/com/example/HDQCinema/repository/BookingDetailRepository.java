@@ -14,7 +14,7 @@ import org.springframework.stereotype.Repository;
 import java.time.LocalDateTime;
 
 @Repository
-public interface BookingDetailRepository extends JpaRepository<BookingDetail, String> {
+public interface BookingDetailRepository extends JpaRepository<BookingDetail, Long> {
 //    @Query(value = """
 //            DELETE FROM booking_detail
 //            WHERE booking_id IN(
@@ -30,7 +30,7 @@ public interface BookingDetailRepository extends JpaRepository<BookingDetail, St
                 SET seat_status = 'BOOKED' 
                 WHERE booking_id = :bookingId;
                 """, nativeQuery = true)
-    void updateSeatStatus(@Param("bookingId") String bookingId);
+    void updateSeatStatus(@Param("bookingId") Long bookingId);
 
     BookingDetail findBySeatAndShowTime(Seat seat, ShowTime showTime);
 
@@ -38,7 +38,7 @@ public interface BookingDetailRepository extends JpaRepository<BookingDetail, St
             value = "SELECT st.start_time FROM show_time st WHERE showtime_id = (SELECT b.showtime_id FROM booking_detail b WHERE b.booking_id = :bookingId LIMIT 1);",
             nativeQuery = true
     )
-    LocalDateTime findFirstShowTimeByBooking(@Param("bookingId") String bookingId);
+    LocalDateTime findFirstShowTimeByBooking(@Param("bookingId") Long bookingId);
 
-    void deleteAllByBooking_Id(String bookingId);
+    void deleteAllByBooking_Id(Long bookingId);
 }

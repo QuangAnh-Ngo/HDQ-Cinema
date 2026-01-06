@@ -8,7 +8,7 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 @Repository
-public interface DayTypeRepository extends JpaRepository<DayType, String> {
+public interface DayTypeRepository extends JpaRepository<DayType, Long> {
 
     @Query("select d from DayType d where d.dayType = ?1")
     Optional<Object> findDayTypeByDayType(String dayType);

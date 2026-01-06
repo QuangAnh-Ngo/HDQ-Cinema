@@ -39,7 +39,7 @@ public class MovieService {
         return movieMapper.toMovieResponse(movie);
     }
 
-    public MovieResponse get(String id){
+    public MovieResponse get(Long id){
         validInput(id);
 
         Movie movie = movieRepository.findById(id)
@@ -48,18 +48,18 @@ public class MovieService {
         return movieMapper.toMovieResponse(movie);
     }
 
-    private void validInput(String s){
-        if(s == null || s.contains("--")){
+    private void validInput(Long id){
+        if(id == null || id <= 0){
             throw new RuntimeException("invalid input");
         }
     }
 
-    public List<MovieResponse> getMovieUpComing(String cinemaId){
+    public List<MovieResponse> getMovieUpComing(Long cinemaId){
         var movies = movieRepository.findAllByDayStartAfter(LocalDate.now(), cinemaId);
         return movieMapper.toMovieResponses(movies);
     }
 
-    public List<MovieResponse> getMoviesShowing(String cinemaId){
+    public List<MovieResponse> getMoviesShowing(Long cinemaId){
         var movies = movieRepository.findShowingMovie(LocalDate.now(), cinemaId);
         return movieMapper.toMovieResponses(movies);
     }
@@ -68,7 +68,7 @@ public class MovieService {
         return movieMapper.toMovieResponses(movieRepository.findAll());
     }
 
-    public MovieResponse update(String movieId, MovieUpdateRequest request){
+    public MovieResponse update(Long movieId, MovieUpdateRequest request){
         Movie movie = movieRepository.findMovieById(movieId);
 
         movieMapper.updateMovie(movie, request);
@@ -78,7 +78,7 @@ public class MovieService {
         return movieMapper.toMovieResponse(movie);
     }
 
-    public void deleteMovie(String movieId){
+    public void deleteMovie(Long movieId){
         movieRepository.deleteById(movieId);
     }
 }

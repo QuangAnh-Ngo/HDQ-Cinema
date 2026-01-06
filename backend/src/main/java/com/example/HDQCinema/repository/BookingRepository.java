@@ -17,7 +17,7 @@ import java.util.List;
 import java.time.LocalDate;
 
 @Repository
-public interface BookingRepository extends JpaRepository<Booking, String> {
+public interface BookingRepository extends JpaRepository<Booking, Long> {
 
 
 
@@ -27,7 +27,7 @@ public interface BookingRepository extends JpaRepository<Booking, String> {
             FROM booking b 
             WHERE b.booking_id = :bookingId;
             """, nativeQuery = true)
-    double findTotalPriceByBookingId(@Param("bookingId") String bookingId);
+    double findTotalPriceByBookingId(@Param("bookingId") Long bookingId);
 
     List<Booking> findAllByCreateTimeBeforeAndBookingStatus(LocalDateTime createTimeBefore, BookingStatus bookingStatus);
 

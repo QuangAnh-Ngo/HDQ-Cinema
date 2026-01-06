@@ -27,7 +27,7 @@ public class TicketPriceController {
 
     @PutMapping("/{ticketPriceId}")
     @PreAuthorize("hasAuthority('MANAGE_PRICE')")
-    ApiResponse<TicketPriceResponse> updateTicket(@PathVariable("ticketPriceId") String ticketPriceId, @RequestBody TicketPriceUpdateRequest request){
+    ApiResponse<TicketPriceResponse> updateTicket(@PathVariable("ticketPriceId") Long ticketPriceId, @RequestBody TicketPriceUpdateRequest request){
         return ApiResponse.<TicketPriceResponse>builder()
                 .result(ticketPriceService.update(ticketPriceId, request))
                 .build();
@@ -35,7 +35,7 @@ public class TicketPriceController {
 
     @DeleteMapping("/{ticketPriceId}")
     @PreAuthorize("hasAuthority('MANAGE_PRICE')")
-    ApiResponse<String> deleteTicket(@PathVariable("ticketPriceId") String ticketPriceId){
+    ApiResponse<String> deleteTicket(@PathVariable("ticketPriceId") Long ticketPriceId){
         ticketPriceService.delete(ticketPriceId);
         return ApiResponse.<String>builder()
                 .result("deleted").build();

@@ -36,7 +36,7 @@ public class CinemaService {
         return cinemaMapper.toResponse(cinema);
     }
 
-    public CinemaResponse get(String id){
+    public CinemaResponse get(Long id){
         validInput(id);
 
         Cinema cinema = cinemaRepository.findById(id)
@@ -49,8 +49,8 @@ public class CinemaService {
         return response;
     }
 
-    private void validInput(String s){
-        if(s == null || s.contains("--")){
+    private void validInput(Long id){
+        if(id == null || id <= 0){
             throw new RuntimeException("invalid input");
         }
     }

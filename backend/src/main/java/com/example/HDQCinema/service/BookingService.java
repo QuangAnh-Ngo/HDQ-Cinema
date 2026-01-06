@@ -93,13 +93,13 @@ public class BookingService {
     }
 
     @Transactional
-    public void deletePayment(String bookingId){
+    public void deletePayment(Long bookingId){
         bookingDetailRepository.deleteAllByBooking_Id(bookingId);
         bookingRepository.deleteById(bookingId);
     }
 
     @Transactional
-    public BookingResponse approvePayment(String bookingId) {
+    public BookingResponse approvePayment(Long bookingId) {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new AppException(ErrorCode.BOOKING_NOT_FOUND));
 

@@ -45,23 +45,23 @@ public class TicketPriceService {
         return response;
     }
 
-    public TicketPriceResponse update(String ticketPriceId,TicketPriceUpdateRequest request){
+    public TicketPriceResponse update(Long ticketPriceId, TicketPriceUpdateRequest request){
         TicketPrice ticket = ticketPriceRepository.findTicketPriceById(ticketPriceId);
 
-        if(!request.getCinemaId().isEmpty()) {
+        if(request.getCinemaId() != null && !String.valueOf(request.getCinemaId()).isEmpty()) {
             var cinema = cinemaRepository.findById(request.getCinemaId())
                     .orElseThrow(() -> new RuntimeException("cinema not exist"));
             ticket.setCinema(cinema);
         }
 
-        if(!request.getDayType().isEmpty()) {
+        if(request.getDayType() != null && !request.getDayType().isEmpty()) {
             var dayType = dayTypeRepository.findDayTypeByDayType(request.getDayType())
                     .orElseThrow(() -> new RuntimeException("day not exist"));
             ticket.setDayType((DayType) dayType);
         }
 
         if(!String.valueOf(request.getPrice()).isEmpty()) ticket.setPrice(request.getPrice());
-        if(!String.valueOf(request.getSeatType()).isEmpty()) ticket.setSeatType(SeatType.valueOf(request.getSeatType()));
+        if(request.getSeatType() != null && !String.valueOf(request.getSeatType()).isEmpty()) ticket.setSeatType(SeatType.valueOf(request.getSeatType()));
 
         ticketPriceRepository.save(ticket);
 
@@ -72,7 +72,7 @@ public class TicketPriceService {
         return response;
     }
 
-    public void delete(String ticketPriceId){
+    public void delete(Long ticketPriceId){
         ticketPriceRepository.deleteTicketPriceById(ticketPriceId);
     }
 }

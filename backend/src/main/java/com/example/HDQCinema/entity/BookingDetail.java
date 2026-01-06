@@ -22,8 +22,8 @@ public class BookingDetail {
     //Việc ghế có được đặt hay không sẽ do BookingSeat quyết định.
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    String id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    Long id;
 
     double price;
     @Enumerated(EnumType.STRING)

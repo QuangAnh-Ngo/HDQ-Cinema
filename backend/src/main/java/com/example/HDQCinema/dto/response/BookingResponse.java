@@ -14,7 +14,7 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Builder
 public class BookingResponse {
-    String id;
+    Long id;
     double totalPrice;
     LocalDateTime createTime;
     String username;

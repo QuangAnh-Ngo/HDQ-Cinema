@@ -9,7 +9,7 @@ import org.springframework.stereotype.Repository;
 
 
 @Repository
-public interface TicketPriceRepository extends JpaRepository<TicketPrice, String> {
+public interface TicketPriceRepository extends JpaRepository<TicketPrice, Long> {
     @Query(value = """
             SELECT tp.price
             FROM ticket_price tp
@@ -22,13 +22,13 @@ public interface TicketPriceRepository extends JpaRepository<TicketPrice, String
             """,
     nativeQuery = true) // COALESCE là hàm SQL trả về giá trị đầu tiên không NULL trong danh sách các giá trị được đưa vào.
     Double toPrice(@Param("seatType") String seatType,
-                   @Param("showtimeId") String showtimeId,
-                   @Param("cinemaId") String cinemaId);
+                   @Param("showtimeId") Long showtimeId,
+                   @Param("cinemaId") Long cinemaId);
 
 
-    TicketPrice findTicketPriceById(String id);
+    TicketPrice findTicketPriceById(Long id);
 
-    void deleteTicketPriceById(String id);
+    void deleteTicketPriceById(Long id);
 
     //SELECT tp.price
     //FROM ticket_price tp

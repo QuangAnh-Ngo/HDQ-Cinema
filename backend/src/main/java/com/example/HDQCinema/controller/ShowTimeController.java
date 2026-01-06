@@ -36,7 +36,7 @@ public class ShowTimeController {
 
     @DeleteMapping("/{showtimeId}")
     @PreAuthorize("hasAuthority('MANAGE_SHOWTIMES')")
-    ApiResponse<String> deleteShowTime(@PathVariable("showtimeId") String showtimeId){
+    ApiResponse<String> deleteShowTime(@PathVariable("showtimeId") Long showtimeId){
         showTimeService.delete(showtimeId);
         return ApiResponse.<String>builder()
                 .result("deleted").build();
@@ -44,7 +44,7 @@ public class ShowTimeController {
     }
     @PutMapping("/{showtimeId}")
     @PreAuthorize("hasAuthority('MANAGE_SHOWTIMES')")
-    ApiResponse<ShowTimeResponse> updateShowTime(@PathVariable("showtimeId") String showtimeId, @RequestBody ShowTimeUpdateRequest request){
+    ApiResponse<ShowTimeResponse> updateShowTime(@PathVariable("showtimeId") Long showtimeId, @RequestBody ShowTimeUpdateRequest request){
         return ApiResponse.<ShowTimeResponse>builder()
                 .result(showTimeService.update(showtimeId, request))
                 .build();

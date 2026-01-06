@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Set;
 
 @Repository
-public interface CinemaRepository extends JpaRepository<Cinema, String> {
+public interface CinemaRepository extends JpaRepository<Cinema, Long> {
 
 //    @EntityGraph(attributePaths = {"rooms.cinema"}, type = EntityGraph.EntityGraphType.LOAD)
 //    @Query("select c from Cinema c")
