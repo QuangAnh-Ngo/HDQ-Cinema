@@ -48,7 +48,7 @@ public class TicketPriceService {
     public TicketPriceResponse update(Long ticketPriceId, TicketPriceUpdateRequest request){
         TicketPrice ticket = ticketPriceRepository.findTicketPriceById(ticketPriceId);
 
-        if(request.getCinemaId() != null && !String.valueOf(request.getCinemaId()).isEmpty()) {
+        if(request.getCinemaId() != null) {
             var cinema = cinemaRepository.findById(request.getCinemaId())
                     .orElseThrow(() -> new RuntimeException("cinema not exist"));
             ticket.setCinema(cinema);
