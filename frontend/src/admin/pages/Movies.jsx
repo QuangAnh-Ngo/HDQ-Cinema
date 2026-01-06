@@ -111,27 +111,13 @@ const Movies = () => {
     setShowDeleteDialog(true);
   }, []);
 
-  const confirmDelete = async () => {
-    try {
-      await movieService.delete(movieToDelete.id);
-
-      // ✅ Update state efficiently
-      setMovies((prev) => prev.filter((m) => m.id !== movieToDelete.id));
-
-      message.success("Xóa phim thành công!");
-      setShowDeleteDialog(false);
-      setMovieToDelete(null);
-    } catch (error) {
-      console.error("Error deleting movie:", error);
-      message.error("Có lỗi xảy ra khi xóa phim!");
-    }
-  };
-
   const handleSubmitMovie = async (movieData) => {
     try {
       if (selectedMovie) {
         // ✅ Update existing movie
         const updated = await movieService.update(selectedMovie.id, movieData);
+
+        // ✅ Recalculate status after update
         const updatedWithStatus = {
           ...updated,
           status: calculateMovieStatus(updated),
@@ -145,6 +131,8 @@ const Movies = () => {
       } else {
         // ✅ Add new movie
         const newMovie = await movieService.create(movieData);
+
+        // ✅ Calculate status for new movie
         const newMovieWithStatus = {
           ...newMovie,
           status: calculateMovieStatus(newMovie),
@@ -157,9 +145,35 @@ const Movies = () => {
 
       setShowMovieForm(false);
       setSelectedMovie(null);
+
+      // ✅ Refresh data to ensure sync
+      setTimeout(() => {
+        fetchMovies();
+      }, 500);
     } catch (error) {
       console.error("Error submitting movie:", error);
       message.error(error.message || "Có lỗi xảy ra!");
+    }
+  };
+
+  const confirmDelete = async () => {
+    try {
+      await movieService.delete(movieToDelete.id);
+
+      // ✅ Update local state
+      setMovies((prev) => prev.filter((m) => m.id !== movieToDelete.id));
+
+      message.success("Xóa phim thành công!");
+      setShowDeleteDialog(false);
+      setMovieToDelete(null);
+
+      // ✅ Force refresh to ensure backend sync
+      setTimeout(() => {
+        fetchMovies();
+      }, 500);
+    } catch (error) {
+      console.error("Error deleting movie:", error);
+      message.error(error.message || "Có lỗi xảy ra khi xóa phim!");
     }
   };
 

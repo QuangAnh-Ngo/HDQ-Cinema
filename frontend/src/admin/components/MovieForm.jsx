@@ -1,3 +1,4 @@
+// frontend/src/admin/components/MovieForm.jsx
 import { useState, useEffect } from "react";
 import { FiX } from "react-icons/fi";
 import "../styles/AdminLayout.scss";
@@ -8,21 +9,34 @@ const MovieForm = ({ movie, onClose, onSubmit }) => {
     title: "",
     description: "",
     duration: "",
-    releaseDate: "",
+    dayStart: "", // ✅ Changed from releaseDate
+    dayEnd: "", // ✅ Added
     director: "",
     genre: "",
     language: "Tiếng Việt",
-    rating: "",
-    trailer: "",
+    limitAge: "", // ✅ Changed from rating
+    trailer_url: "", // ✅ Changed from trailer
     poster: "",
-    status: "coming_soon",
   });
 
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
     if (movie) {
-      setFormData(movie);
+      // ✅ Map backend data to form
+      setFormData({
+        title: movie.title || "",
+        description: movie.description || "",
+        duration: movie.duration || "",
+        dayStart: movie.dayStart || "",
+        dayEnd: movie.dayEnd || "",
+        director: movie.director || "",
+        genre: movie.genre || "",
+        language: movie.language || "Tiếng Việt",
+        limitAge: movie.limitAge || "",
+        trailer_url: movie.trailer_url || "",
+        poster: movie.poster || "",
+      });
     }
   }, [movie]);
 
@@ -41,10 +55,21 @@ const MovieForm = ({ movie, onClose, onSubmit }) => {
       newErrors.title = "Tên phim không được để trống";
     if (!formData.duration || formData.duration <= 0)
       newErrors.duration = "Thời lượng phải lớn hơn 0";
-    if (!formData.releaseDate)
-      newErrors.releaseDate = "Vui lòng chọn ngày khởi chiếu";
+    if (!formData.dayStart)
+      newErrors.dayStart = "Vui lòng chọn ngày bắt đầu chiếu";
+    if (!formData.dayEnd)
+      newErrors.dayEnd = "Vui lòng chọn ngày kết thúc chiếu";
     if (!formData.genre.trim()) newErrors.genre = "Vui lòng chọn thể loại";
     if (!formData.poster.trim()) newErrors.poster = "Vui lòng nhập URL poster";
+
+    // ✅ Validate date range
+    if (formData.dayStart && formData.dayEnd) {
+      const start = new Date(formData.dayStart);
+      const end = new Date(formData.dayEnd);
+      if (end < start) {
+        newErrors.dayEnd = "Ngày kết thúc phải sau ngày bắt đầu";
+      }
+    }
 
     // ✅ Validate URL format
     if (formData.poster.trim()) {
@@ -62,7 +87,22 @@ const MovieForm = ({ movie, onClose, onSubmit }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (validate()) {
-      onSubmit(formData);
+      // ✅ Transform data to match backend API
+      const submitData = {
+        title: formData.title,
+        poster: formData.poster,
+        duration: parseInt(formData.duration, 10),
+        limitAge: parseInt(formData.limitAge, 10) || 0,
+        dayStart: formData.dayStart,
+        dayEnd: formData.dayEnd,
+        director: formData.director,
+        genre: formData.genre,
+        description: formData.description,
+        trailer_url: formData.trailer_url,
+      };
+
+      console.log("📦 Submitting movie data:", submitData);
+      onSubmit(submitData);
     }
   };
 
@@ -71,7 +111,7 @@ const MovieForm = ({ movie, onClose, onSubmit }) => {
       <div className="modal large">
         <div className="modal-header">
           <h2>{movie ? "Chỉnh sửa phim" : "Thêm phim mới"}</h2>
-          <button onClick={onClose}>
+          <button onClick={onClose} type="button">
             <FiX size={24} />
           </button>
         </div>
@@ -108,6 +148,7 @@ const MovieForm = ({ movie, onClose, onSubmit }) => {
                   onChange={handleChange}
                   className={errors.duration ? "error" : ""}
                   placeholder="120"
+                  min="1"
                 />
                 {errors.duration && (
                   <p className="error-message">{errors.duration}</p>
@@ -116,17 +157,33 @@ const MovieForm = ({ movie, onClose, onSubmit }) => {
 
               <div className="form-group">
                 <label>
-                  Ngày khởi chiếu <span className="required">*</span>
+                  Ngày bắt đầu chiếu <span className="required">*</span>
                 </label>
                 <input
                   type="date"
-                  name="releaseDate"
-                  value={formData.releaseDate}
+                  name="dayStart"
+                  value={formData.dayStart}
                   onChange={handleChange}
-                  className={errors.releaseDate ? "error" : ""}
+                  className={errors.dayStart ? "error" : ""}
                 />
-                {errors.releaseDate && (
-                  <p className="error-message">{errors.releaseDate}</p>
+                {errors.dayStart && (
+                  <p className="error-message">{errors.dayStart}</p>
+                )}
+              </div>
+
+              <div className="form-group">
+                <label>
+                  Ngày kết thúc chiếu <span className="required">*</span>
+                </label>
+                <input
+                  type="date"
+                  name="dayEnd"
+                  value={formData.dayEnd}
+                  onChange={handleChange}
+                  className={errors.dayEnd ? "error" : ""}
+                />
+                {errors.dayEnd && (
+                  <p className="error-message">{errors.dayEnd}</p>
                 )}
               </div>
 
@@ -165,20 +222,6 @@ const MovieForm = ({ movie, onClose, onSubmit }) => {
                 {errors.genre && (
                   <p className="error-message">{errors.genre}</p>
                 )}
-              </div>
-
-              <div className="form-group">
-                <label>Ngôn ngữ</label>
-                <select
-                  name="language"
-                  value={formData.language}
-                  onChange={handleChange}
-                >
-                  <option value="Tiếng Việt">Tiếng Việt</option>
-                  <option value="Tiếng Anh">Tiếng Anh</option>
-                  <option value="Phụ đề Việt">Phụ đề Việt</option>
-                  <option value="Lồng tiếng">Lồng tiếng</option>
-                </select>
               </div>
             </div>
 
@@ -222,11 +265,6 @@ const MovieForm = ({ movie, onClose, onSubmit }) => {
                       }}
                       onLoad={(e) => {
                         e.target.style.display = "block";
-                        setErrors((prev) => {
-                          const newErrors = { ...prev };
-                          delete newErrors.poster;
-                          return newErrors;
-                        });
                       }}
                     />
                   </div>
@@ -234,32 +272,16 @@ const MovieForm = ({ movie, onClose, onSubmit }) => {
               </div>
 
               <div className="form-group">
-                <label>Độ tuổi</label>
+                <label>Độ tuổi giới hạn</label>
                 <select
-                  name="rating"
-                  value={formData.rating}
+                  name="limitAge"
+                  value={formData.limitAge}
                   onChange={handleChange}
                 >
-                  <option value="">Chọn độ tuổi</option>
-                  <option value="P">P - Phổ biến</option>
-                  <option value="K">K - Dưới 13 tuổi</option>
-                  <option value="T13">T13 - Từ 13 tuổi</option>
-                  <option value="T16">T16 - Từ 16 tuổi</option>
-                  <option value="T18">T18 - Từ 18 tuổi</option>
-                  <option value="C">C - Cấm chiếu</option>
-                </select>
-              </div>
-
-              <div className="form-group">
-                <label>Trạng thái</label>
-                <select
-                  name="status"
-                  value={formData.status}
-                  onChange={handleChange}
-                >
-                  <option value="coming_soon">Sắp chiếu</option>
-                  <option value="now_showing">Đang chiếu</option>
-                  <option value="ended">Ngừng chiếu</option>
+                  <option value="0">P - Phổ biến</option>
+                  <option value="13">T13 - Từ 13 tuổi</option>
+                  <option value="16">T16 - Từ 16 tuổi</option>
+                  <option value="18">T18 - Từ 18 tuổi</option>
                 </select>
               </div>
 
@@ -267,8 +289,8 @@ const MovieForm = ({ movie, onClose, onSubmit }) => {
                 <label>Link Trailer (YouTube)</label>
                 <input
                   type="url"
-                  name="trailer"
-                  value={formData.trailer}
+                  name="trailer_url"
+                  value={formData.trailer_url}
                   onChange={handleChange}
                   placeholder="https://youtube.com/watch?v=..."
                 />
