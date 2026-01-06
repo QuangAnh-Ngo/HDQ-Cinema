@@ -1,5 +1,6 @@
+// frontend/src/admin/components/MovieForm.jsx
 import { useState, useEffect } from "react";
-import { FiX, FiUpload } from "react-icons/fi";
+import { FiX } from "react-icons/fi";
 import "../styles/AdminLayout.scss";
 import "../styles/MovieForm.scss";
 
@@ -8,24 +9,34 @@ const MovieForm = ({ movie, onClose, onSubmit }) => {
     title: "",
     description: "",
     duration: "",
-    releaseDate: "",
+    dayStart: "", // ✅ Changed from releaseDate
+    dayEnd: "", // ✅ Added
     director: "",
-    cast: "",
     genre: "",
     language: "Tiếng Việt",
-    rating: "",
-    trailer: "",
+    limitAge: "", // ✅ Changed from rating
+    trailer_url: "", // ✅ Changed from trailer
     poster: "",
-    status: "coming_soon",
   });
 
-  const [posterPreview, setPosterPreview] = useState("");
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
     if (movie) {
-      setFormData(movie);
-      setPosterPreview(movie.poster);
+      // ✅ Map backend data to form
+      setFormData({
+        title: movie.title || "",
+        description: movie.description || "",
+        duration: movie.duration || "",
+        dayStart: movie.dayStart || "",
+        dayEnd: movie.dayEnd || "",
+        director: movie.director || "",
+        genre: movie.genre || "",
+        language: movie.language || "Tiếng Việt",
+        limitAge: movie.limitAge || "",
+        trailer_url: movie.trailer_url || "",
+        poster: movie.poster || "",
+      });
     }
   }, [movie]);
 
@@ -37,26 +48,6 @@ const MovieForm = ({ movie, onClose, onSubmit }) => {
     }
   };
 
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        setErrors((prev) => ({
-          ...prev,
-          poster: "Kích thước file không được vượt quá 5MB",
-        }));
-        return;
-      }
-
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPosterPreview(reader.result);
-        setFormData((prev) => ({ ...prev, poster: reader.result }));
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
   const validate = () => {
     const newErrors = {};
 
@@ -64,10 +55,30 @@ const MovieForm = ({ movie, onClose, onSubmit }) => {
       newErrors.title = "Tên phim không được để trống";
     if (!formData.duration || formData.duration <= 0)
       newErrors.duration = "Thời lượng phải lớn hơn 0";
-    if (!formData.releaseDate)
-      newErrors.releaseDate = "Vui lòng chọn ngày khởi chiếu";
+    if (!formData.dayStart)
+      newErrors.dayStart = "Vui lòng chọn ngày bắt đầu chiếu";
+    if (!formData.dayEnd)
+      newErrors.dayEnd = "Vui lòng chọn ngày kết thúc chiếu";
     if (!formData.genre.trim()) newErrors.genre = "Vui lòng chọn thể loại";
-    if (!posterPreview) newErrors.poster = "Vui lòng tải lên poster";
+    if (!formData.poster.trim()) newErrors.poster = "Vui lòng nhập URL poster";
+
+    // ✅ Validate date range
+    if (formData.dayStart && formData.dayEnd) {
+      const start = new Date(formData.dayStart);
+      const end = new Date(formData.dayEnd);
+      if (end < start) {
+        newErrors.dayEnd = "Ngày kết thúc phải sau ngày bắt đầu";
+      }
+    }
+
+    // ✅ Validate URL format
+    if (formData.poster.trim()) {
+      try {
+        new URL(formData.poster);
+      } catch {
+        newErrors.poster = "URL poster không hợp lệ";
+      }
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -76,7 +87,22 @@ const MovieForm = ({ movie, onClose, onSubmit }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (validate()) {
-      onSubmit(formData);
+      // ✅ Transform data to match backend API
+      const submitData = {
+        title: formData.title,
+        poster: formData.poster,
+        duration: parseInt(formData.duration, 10),
+        limitAge: parseInt(formData.limitAge, 10) || 0,
+        dayStart: formData.dayStart,
+        dayEnd: formData.dayEnd,
+        director: formData.director,
+        genre: formData.genre,
+        description: formData.description,
+        trailer_url: formData.trailer_url,
+      };
+
+      console.log("📦 Submitting movie data:", submitData);
+      onSubmit(submitData);
     }
   };
 
@@ -85,7 +111,7 @@ const MovieForm = ({ movie, onClose, onSubmit }) => {
       <div className="modal large">
         <div className="modal-header">
           <h2>{movie ? "Chỉnh sửa phim" : "Thêm phim mới"}</h2>
-          <button onClick={onClose}>
+          <button onClick={onClose} type="button">
             <FiX size={24} />
           </button>
         </div>
@@ -122,6 +148,7 @@ const MovieForm = ({ movie, onClose, onSubmit }) => {
                   onChange={handleChange}
                   className={errors.duration ? "error" : ""}
                   placeholder="120"
+                  min="1"
                 />
                 {errors.duration && (
                   <p className="error-message">{errors.duration}</p>
@@ -130,17 +157,33 @@ const MovieForm = ({ movie, onClose, onSubmit }) => {
 
               <div className="form-group">
                 <label>
-                  Ngày khởi chiếu <span className="required">*</span>
+                  Ngày bắt đầu chiếu <span className="required">*</span>
                 </label>
                 <input
                   type="date"
-                  name="releaseDate"
-                  value={formData.releaseDate}
+                  name="dayStart"
+                  value={formData.dayStart}
                   onChange={handleChange}
-                  className={errors.releaseDate ? "error" : ""}
+                  className={errors.dayStart ? "error" : ""}
                 />
-                {errors.releaseDate && (
-                  <p className="error-message">{errors.releaseDate}</p>
+                {errors.dayStart && (
+                  <p className="error-message">{errors.dayStart}</p>
+                )}
+              </div>
+
+              <div className="form-group">
+                <label>
+                  Ngày kết thúc chiếu <span className="required">*</span>
+                </label>
+                <input
+                  type="date"
+                  name="dayEnd"
+                  value={formData.dayEnd}
+                  onChange={handleChange}
+                  className={errors.dayEnd ? "error" : ""}
+                />
+                {errors.dayEnd && (
+                  <p className="error-message">{errors.dayEnd}</p>
                 )}
               </div>
 
@@ -152,17 +195,6 @@ const MovieForm = ({ movie, onClose, onSubmit }) => {
                   value={formData.director}
                   onChange={handleChange}
                   placeholder="Tên đạo diễn"
-                />
-              </div>
-
-              <div className="form-group">
-                <label>Diễn viên</label>
-                <input
-                  type="text"
-                  name="cast"
-                  value={formData.cast}
-                  onChange={handleChange}
-                  placeholder="Tên diễn viên (cách nhau bởi dấu phẩy)"
                 />
               </div>
 
@@ -197,82 +229,59 @@ const MovieForm = ({ movie, onClose, onSubmit }) => {
             <div>
               <div className="form-group">
                 <label>
-                  Poster <span className="required">*</span>
+                  URL Poster <span className="required">*</span>
                 </label>
-                <div className="poster-upload">
-                  {posterPreview ? (
-                    <div className="preview-container">
-                      <img src={posterPreview} alt="Preview" />
-                      <button
-                        type="button"
-                        className="remove-button"
-                        onClick={() => {
-                          setPosterPreview("");
-                          setFormData((prev) => ({ ...prev, poster: "" }));
-                        }}
-                      >
-                        <FiX size={16} />
-                      </button>
-                    </div>
-                  ) : (
-                    <label className="upload-area">
-                      <FiUpload size={48} />
-                      <span className="upload-text">Click để tải poster</span>
-                      <span className="upload-hint">PNG, JPG (Max 5MB)</span>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleFileChange}
-                      />
-                    </label>
-                  )}
-                </div>
+                <input
+                  type="url"
+                  name="poster"
+                  value={formData.poster}
+                  onChange={handleChange}
+                  className={errors.poster ? "error" : ""}
+                  placeholder="https://example.com/poster.jpg"
+                />
                 {errors.poster && (
                   <p className="error-message">{errors.poster}</p>
+                )}
+
+                {/* ✅ Preview poster if URL is valid */}
+                {formData.poster && !errors.poster && (
+                  <div className="poster-preview" style={{ marginTop: 12 }}>
+                    <img
+                      src={formData.poster}
+                      alt="Poster preview"
+                      style={{
+                        width: "100%",
+                        maxHeight: 300,
+                        objectFit: "cover",
+                        borderRadius: 8,
+                        border: "1px solid #e5e7eb",
+                      }}
+                      onError={(e) => {
+                        e.target.style.display = "none";
+                        setErrors((prev) => ({
+                          ...prev,
+                          poster: "Không thể tải ảnh từ URL này",
+                        }));
+                      }}
+                      onLoad={(e) => {
+                        e.target.style.display = "block";
+                      }}
+                    />
+                  </div>
                 )}
               </div>
 
               <div className="form-group">
-                <label>Ngôn ngữ</label>
+                <label>Độ tuổi giới hạn</label>
                 <select
-                  name="language"
-                  value={formData.language}
+                  name="limitAge"
+                  value={formData.limitAge}
                   onChange={handleChange}
                 >
-                  <option value="Tiếng Việt">Tiếng Việt</option>
-                  <option value="Tiếng Anh">Tiếng Anh</option>
-                  <option value="Phụ đề Việt">Phụ đề Việt</option>
-                  <option value="Lồng tiếng">Lồng tiếng</option>
-                </select>
-              </div>
-
-              <div className="form-group">
-                <label>Độ tuổi</label>
-                <select
-                  name="rating"
-                  value={formData.rating}
-                  onChange={handleChange}
-                >
-                  <option value="">Chọn độ tuổi</option>
-                  <option value="P">P - Phổ biến</option>
-                  <option value="K">K - Dưới 13 tuổi</option>
-                  <option value="T13">T13 - Từ 13 tuổi</option>
-                  <option value="T16">T16 - Từ 16 tuổi</option>
-                  <option value="T18">T18 - Từ 18 tuổi</option>
-                  <option value="C">C - Cấm chiếu</option>
-                </select>
-              </div>
-
-              <div className="form-group">
-                <label>Trạng thái</label>
-                <select
-                  name="status"
-                  value={formData.status}
-                  onChange={handleChange}
-                >
-                  <option value="coming_soon">Sắp chiếu</option>
-                  <option value="now_showing">Đang chiếu</option>
-                  <option value="ended">Ngừng chiếu</option>
+                  <option value="0">P - Phổ biến</option>
+                  <option value="13">T13 - Từ 13 tuổi</option>
+                  <option value="16">T16 - Từ 16 tuổi</option>
+                  <option value="18">T18 - Từ 18 tuổi</option>
                 </select>
               </div>
 
@@ -280,10 +289,10 @@ const MovieForm = ({ movie, onClose, onSubmit }) => {
                 <label>Link Trailer (YouTube)</label>
                 <input
                   type="url"
-                  name="trailer"
-                  value={formData.trailer}
+                  name="trailer_url"
+                  value={formData.trailer_url}
                   onChange={handleChange}
-                  placeholder="https://youtube.com/..."
+                  placeholder="https://youtube.com/watch?v=..."
                 />
               </div>
             </div>
