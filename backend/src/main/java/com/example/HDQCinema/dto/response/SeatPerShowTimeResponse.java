@@ -13,7 +13,7 @@ import lombok.experimental.FieldDefaults;
 @Builder
 public class SeatPerShowTimeResponse {
     double price;
-    String seatId;
+    Long seatId;
     String seatName;
     SeatType seatType;
     SeatStatus seatStatus;

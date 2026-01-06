@@ -46,7 +46,7 @@ public class RoomService {
         return response;
     }
 
-    public RoomForShowTimeResponse get(String showTimeId){
+    public RoomForShowTimeResponse get(Long showTimeId){
         ShowTime showTime = showTimeRepository.findById(showTimeId).orElseThrow(() -> new AppException(ErrorCode.SHOWTIME_NOT_EXISTED));
         Room room = showTime.getRoom();
 

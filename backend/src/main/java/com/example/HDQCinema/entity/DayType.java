@@ -18,8 +18,8 @@ import java.util.List;
 @Builder
 public class DayType {
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    String id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    Long id;
 
     @Column(name = "day_type", unique = true)
     String dayType;

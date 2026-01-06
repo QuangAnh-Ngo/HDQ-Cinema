@@ -33,7 +33,7 @@ public class CinemaController {
     }
 
     @GetMapping("/{cinemaId}")
-    ApiResponse<CinemaResponse> getCinema(@PathVariable("cinemaId") String id){
+    ApiResponse<CinemaResponse> getCinema(@PathVariable("cinemaId") Long id){
         var cinema = cinemaService.get(id);
 
         return ApiResponse.<CinemaResponse>builder()

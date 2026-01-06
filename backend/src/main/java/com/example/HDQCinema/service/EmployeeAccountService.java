@@ -62,7 +62,7 @@ public class EmployeeAccountService {
 
         employeeAccount.setRoles(roles);
 
-        String employee = request.getEmployee();
+        Long employee = request.getEmployeeId();
         Employee employees = employeeRepository.findById(employee)
                 .orElseThrow(() -> new AppException(ErrorCode.EMPLOYEE_NOT_FOUND));
         employeeAccount.setEmployee(employees);
@@ -107,7 +107,7 @@ public class EmployeeAccountService {
         }
 
         employeeAccount.setEmployee(employeeRepository
-                .findById(request.getEmployee())
+                .findById(request.getEmployeeId())
                 .orElseThrow(() -> new AppException(ErrorCode.EMPLOYEE_NOT_FOUND))
                 );
 

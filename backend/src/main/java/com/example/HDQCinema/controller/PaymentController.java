@@ -42,7 +42,7 @@ public class PaymentController {
             @RequestParam(value = "vnp_BankCode") String bankCode,
             @RequestParam(value = "vnp_OrderInfo") String orderInfor,
             @RequestParam(value = "vnp_ResponseCode") String responseCode,
-            @RequestParam(value = "vnp_TxnRef") String txnRef
+            @RequestParam(value = "vnp_TxnRef") Long txnRef
     ){
         var response = paymentService.transactionResult(amount, bankCode, orderInfor, responseCode, txnRef);
         if(response != null) return ApiResponse.<BookingResponse>builder()

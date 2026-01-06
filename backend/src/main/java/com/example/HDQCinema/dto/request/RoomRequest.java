@@ -11,5 +11,5 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class RoomRequest {
     String roomName;
-    String cinemaId;
+    Long cinemaId;
 }

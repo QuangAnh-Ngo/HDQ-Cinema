@@ -51,7 +51,7 @@ public class ShowTimeService {
 
     }
 
-    public ShowTimeResponse update(String showtimeId, ShowTimeUpdateRequest request){
+    public ShowTimeResponse update(Long showtimeId, ShowTimeUpdateRequest request){
         ShowTime showTime = showTimeRepository.findShowTimesById(showtimeId);
 
         Movie movie = null;
@@ -63,7 +63,7 @@ public class ShowTimeService {
         }
         if (request.getShowTimeRooms() != null && !request.getShowTimeRooms().isEmpty()) {
             for(var showTimeRoom : request.getShowTimeRooms()){
-                if(!showTimeRoom.getRoomId().isEmpty()) {
+                if(showTimeRoom.getRoomId() != null) {
                     Room room = roomRepository.findById(showTimeRoom.getRoomId())
                             .orElseThrow(() -> new RuntimeException("room not exist"));
 
@@ -71,7 +71,7 @@ public class ShowTimeService {
 //                throw new RuntimeException("showtime existed");
                     showTime.setRoom(room);
                 }
-                if(!showTimeRoom.getShowTime().toString().isEmpty()) showTime.setStartTime(showTimeRoom.getShowTime());
+                if(showTimeRoom.getShowTime() != null) showTime.setStartTime(showTimeRoom.getShowTime());
 //            List<BookingSeat> bookingSeats = bookingSeatService.create(showTime);
 //            showTime.setBookingSeats(new HashSet<>(bookingSeats));
 
@@ -85,7 +85,7 @@ public class ShowTimeService {
 
         return showTimeMapper.toResponse(showTime);
     }
-    public void delete(String showtimeId){
+    public void delete(Long showtimeId){
         showTimeRepository.deleteById(showtimeId);
     }
 

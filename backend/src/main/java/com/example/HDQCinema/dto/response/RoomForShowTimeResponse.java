@@ -13,8 +13,8 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Builder
 public class RoomForShowTimeResponse {
-    String roomId;
-    String showtimeId;
+    Long roomId;
+    Long showtimeId;
     String roomName;
     String cinemaName;
     List<SeatPerShowTimeDTO> seats;

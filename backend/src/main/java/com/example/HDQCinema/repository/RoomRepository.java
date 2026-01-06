@@ -12,7 +12,7 @@ import java.util.Collection;
 import java.util.List;
 
 @Repository
-public interface RoomRepository extends JpaRepository<Room, String> {
+public interface RoomRepository extends JpaRepository<Room, Long> {
 
 
     @Query(value = "select r.* " +
@@ -21,7 +21,7 @@ public interface RoomRepository extends JpaRepository<Room, String> {
             "on c.cinema_id = r.cinema_id " +
             "where c.cinema_id = :cinema_id;"
             ,       nativeQuery = true)
-    List<Room> findRoomsByCinemaId(@Param("cinema_id") String cinemaId);
+    List<Room> findRoomsByCinemaId(@Param("cinema_id") Long cinemaId);
 
     @Query("""
             SELECT DISTINCT new com.example.HDQCinema.dto.query.SeatPerShowTimeDTO(
@@ -35,5 +35,5 @@ public interface RoomRepository extends JpaRepository<Room, String> {
             LEFT JOIN DayType dt ON FUNCTION('DATE', st.startTime) BETWEEN dt.dayStart AND dt.dayEnd
             AND tp.dayType.dayType = COALESCE(dt.dayType, UPPER(TO_CHAR(st.startTime, 'DAY')))
             """)
-    List<SeatPerShowTimeDTO> getSeatPerShowTimeDTO(@Param("showtimeId") String showtimeId);
+    List<SeatPerShowTimeDTO> getSeatPerShowTimeDTO(@Param("showtimeId") Long showtimeId);
 }

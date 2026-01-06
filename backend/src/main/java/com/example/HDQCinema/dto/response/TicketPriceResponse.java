@@ -10,8 +10,9 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Builder
 public class TicketPriceResponse {
+    Long id;
     double price;
-    String cinemaId;
+    Long cinemaId;
     String dayType;
     String seatType;
 }

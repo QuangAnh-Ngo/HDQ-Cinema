@@ -14,8 +14,8 @@ import lombok.experimental.FieldDefaults;
 @Builder
     public class TicketPrice {
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    String id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    Long id;
 
     double price;
 

@@ -1,12 +1,7 @@
 package com.example.HDQCinema.dto.request;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.Date;
 
 @Getter
 @Setter
@@ -16,8 +11,6 @@ import java.util.Date;
 @Builder
 public class DayTypeRequest {
     String dayType;
-    @JsonFormat(pattern = "yyyy-MM-dd")
-    private LocalDate dayStart;
-    @JsonFormat(pattern = "yyyy-MM-dd")
-    private LocalDate dayEnd;
+    String dayStart;
+    String dayEnd;
 }
