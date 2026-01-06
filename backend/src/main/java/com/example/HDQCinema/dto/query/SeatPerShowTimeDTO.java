@@ -13,7 +13,7 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class SeatPerShowTimeDTO {
     double price;
-    String seatId;
+    Long seatId;
     String seatName;
     SeatType seatType;
     SeatStatus seatStatus;

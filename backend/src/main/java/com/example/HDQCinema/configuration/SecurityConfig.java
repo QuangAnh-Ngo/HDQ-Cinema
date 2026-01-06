@@ -25,8 +25,11 @@ import org.springframework.web.filter.CorsFilter;
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class SecurityConfig {
-    String[] PUBLIC_ENDPOINTS =
-            {"/accounts", "/auth/token", "/auth/introspect", "/auth/logout", "/auth/refresh", "/members"};
+    String[] PUBLIC_POST_ENDPOINTS =
+            {"/accounts", "/auth/token", "/auth/introspect", "/auth/logout", "/auth/refresh", "/members", "/payment/**"};
+
+    String[] PUBLIC_GET_ENDPOINTS =
+            {"/members", "/movies/**", "/theaters/**", "/seats/**", "/rooms/**", "/showtimes/**", "/payment/**", "/paymenturls/**"};
 
     @NonFinal
     CustomJwtToken customJwtToken;
@@ -34,7 +37,9 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
         httpSecurity.authorizeHttpRequests(request ->
-                request.requestMatchers(HttpMethod.POST, PUBLIC_ENDPOINTS)
+                request.requestMatchers(HttpMethod.POST, PUBLIC_POST_ENDPOINTS)
+                        .permitAll()
+                        .requestMatchers(HttpMethod.GET, PUBLIC_GET_ENDPOINTS)
                         .permitAll()
                         .requestMatchers(
                                 "/v3/api-docs/**",
@@ -74,7 +79,7 @@ public class SecurityConfig {
 
         CorsConfiguration corsConfiguration = new CorsConfiguration();
         //corsConfiguration.setAllowCredentials(true);
-        corsConfiguration.addAllowedOrigin("http://localhost:3000"); // chỉ cho phép đchi này đc sử dụng api
+        corsConfiguration.addAllowedOrigin("http://localhost:5173"); // chỉ cho phép đchi này đc sử dụng api
         corsConfiguration.addAllowedMethod("*"); // cho phép tất cả method
         corsConfiguration.addAllowedHeader("*"); // cho phép tất cả header
 

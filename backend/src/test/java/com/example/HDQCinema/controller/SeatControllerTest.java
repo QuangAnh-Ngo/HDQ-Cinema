@@ -35,12 +35,12 @@ class SeatControllerTest {
     void testCreateSeats_Success() throws Exception {
         // Given
         SeatCreationRequest request = SeatCreationRequest.builder()
-                .roomId("room-id-123")
+                .roomId(1L)
                 .firstSeatRow('A')
                 .lastSeatRow('C')
                 .firstColumnSeatNumber(1)
                 .lastColumnSeatNumber(5)
-                .type("NORMAL")
+                .type("CLASSIC")
                 .build();
 
         SeatCreationResponse response = SeatCreationResponse.builder()

@@ -14,7 +14,7 @@ import java.util.Collection;
 import java.util.List;
 
 @Repository
-public interface ShowTimeRepository extends JpaRepository<ShowTime, String> {
+public interface ShowTimeRepository extends JpaRepository<ShowTime, Long> {
 
     @Query(value = "select st.* " +
             "from show_time st " +
@@ -24,7 +24,9 @@ public interface ShowTimeRepository extends JpaRepository<ShowTime, String> {
             "order by st.start_time;",
     nativeQuery = true)
 
-    List<ShowTime> toShowTimes(@Param("movie_id") String movieId);
+    List<ShowTime> toShowTimes(@Param("movie_id") Long movieId);
 
     boolean existsShowTimeByRoomAndStartTime(Room room, LocalDateTime startTime);
+
+    ShowTime findShowTimesById(Long id);
 }

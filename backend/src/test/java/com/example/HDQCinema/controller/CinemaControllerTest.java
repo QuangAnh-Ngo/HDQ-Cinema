@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Arrays;
@@ -34,6 +35,7 @@ class CinemaControllerTest {
     private ObjectMapper objectMapper;
 
     @Test
+    @WithMockUser(authorities = "MANAGE_CINEMAS")
     @DisplayName("POST /theaters - tạo cinema thành công")
     void testCreateCinema_Success() throws Exception {
         // Given
@@ -44,7 +46,7 @@ class CinemaControllerTest {
         request.setAddress("123 Đường ABC");
 
         CinemaResponse response = new CinemaResponse();
-        response.setId("cinema-id-123");
+        response.setId(1L);
         response.setName("HDQ Cinema Hà Nội");
         response.setCity("Hà Nội");
         response.setDistrict("Cầu Giấy");
@@ -57,7 +59,7 @@ class CinemaControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.result.id").value("cinema-id-123"))
+                .andExpect(jsonPath("$.result.id").value(1))
                 .andExpect(jsonPath("$.result.name").value("HDQ Cinema Hà Nội"));
     }
 
@@ -65,7 +67,7 @@ class CinemaControllerTest {
     @DisplayName("GET /theaters/{cinemaId} - lấy thông tin cinema thành công")
     void testGetCinema_Success() throws Exception {
         // Given
-        String cinemaId = "cinema-id-123";
+        Long cinemaId = 1L;
         CinemaResponse response = new CinemaResponse();
         response.setId(cinemaId);
         response.setName("HDQ Cinema Hà Nội");
@@ -75,7 +77,7 @@ class CinemaControllerTest {
         // When & Then
         mockMvc.perform(get("/theaters/{cinemaId}", cinemaId))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.result.id").value(cinemaId))
+                .andExpect(jsonPath("$.result.id").value(1))
                 .andExpect(jsonPath("$.result.name").value("HDQ Cinema Hà Nội"));
     }
 
@@ -84,11 +86,11 @@ class CinemaControllerTest {
     void testGetAllCinemas_Success() throws Exception {
         // Given
         CinemaResponse response1 = new CinemaResponse();
-        response1.setId("cinema-1");
+        response1.setId(1L);
         response1.setName("Cinema 1");
 
         CinemaResponse response2 = new CinemaResponse();
-        response2.setId("cinema-2");
+        response2.setId(2L);
         response2.setName("Cinema 2");
 
         List<CinemaResponse> responses = Arrays.asList(response1, response2);
@@ -98,8 +100,8 @@ class CinemaControllerTest {
         mockMvc.perform(get("/theaters"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result.length()").value(2))
-                .andExpect(jsonPath("$.result[0].id").value("cinema-1"))
-                .andExpect(jsonPath("$.result[1].id").value("cinema-2"));
+                .andExpect(jsonPath("$.result[0].id").value(1))
+                .andExpect(jsonPath("$.result[1].id").value(2));
     }
 }
 

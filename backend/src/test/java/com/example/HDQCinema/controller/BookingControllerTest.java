@@ -2,6 +2,7 @@ package com.example.HDQCinema.controller;
 
 import com.example.HDQCinema.dto.request.BookingDetailRequest;
 import com.example.HDQCinema.dto.request.BookingRequest;
+import com.example.HDQCinema.dto.response.AmountOfPendingBookingResponse;
 import com.example.HDQCinema.dto.response.BookingResponse;
 import com.example.HDQCinema.service.BookingService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -13,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDate;
@@ -43,25 +45,26 @@ class BookingControllerTest {
     }
 
     @Test
+    @WithMockUser(authorities = "BOOKING")
     @DisplayName("POST /bookings - tạo booking thành công")
     void testCreateBooking_Success() throws Exception {
         // Given
         BookingDetailRequest detail1 = BookingDetailRequest.builder()
-                .seatId("seat-1")
+                .seatId(1L)
                 .build();
         BookingDetailRequest detail2 = BookingDetailRequest.builder()
-                .seatId("seat-2")
+                .seatId(2L)
                 .build();
 
         BookingRequest request = BookingRequest.builder()
-                .userId("user-id-123")
-                .showTimeId("showtime-id-123")
-                .cinemaId("cinema-id-123")
+                .memberId("member-id-123")
+                .showTimeId(1L)
+                .cinemaId(1L)
                 .bookingDetailRequests(Arrays.asList(detail1, detail2))
                 .build();
 
         BookingResponse response = BookingResponse.builder()
-                .id("booking-id-123")
+                .id(1L)
                 .totalPrice(250000.0)
                 .build();
 
@@ -72,59 +75,46 @@ class BookingControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.result.id").value("booking-id-123"))
+                .andExpect(jsonPath("$.result.id").value(1))
                 .andExpect(jsonPath("$.result.totalPrice").value(250000.0));
     }
 
     @Test
-    @DisplayName("POST /bookings/{bookingId} - approve payment thành công")
-    void testApprovePayment_Success() throws Exception {
-        // Given
-        String bookingId = "booking-id-123";
-        BookingResponse response = BookingResponse.builder()
-                .id(bookingId)
-                .build();
-
-        when(bookingService.approvePayment(bookingId)).thenReturn(response);
-
-        // When & Then
-        mockMvc.perform(post("/bookings/{bookingId}", bookingId))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.result.id").value(bookingId));
-    }
-
-    @Test
-    @DisplayName("GET /bookings/{bookingId} - get confirm payment")
-    void testGetConfirmPayment() throws Exception {
-        // Given
-        String bookingId = "booking-id-123";
-        when(bookingService.getConfirmPayment(bookingId)).thenReturn(true);
-
-        // When & Then
-        mockMvc.perform(get("/bookings/{bookingId}", bookingId))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.result").value(true));
-    }
-
-    @Test
-    @DisplayName("GET /bookings/{date} - get bookings by date")
+    @WithMockUser(authorities = {"MANAGE_BOOKING"})
+    @DisplayName("GET /bookings/date/{date} - get bookings by date")
     void testGetBookingsByDate() throws Exception {
         // Given
         LocalDate date = LocalDate.now();
         BookingResponse response1 = BookingResponse.builder()
-                .id("booking-1")
+                .id(1L)
                 .build();
         BookingResponse response2 = BookingResponse.builder()
-                .id("booking-2")
+                .id(2L)
                 .build();
 
         List<BookingResponse> responses = Arrays.asList(response1, response2);
-        when(bookingService.getBookings(date)).thenReturn(responses);
+        when(bookingService.getBookingsByDate(date)).thenReturn(responses);
 
         // When & Then
-        mockMvc.perform(get("/bookings/{date}", date))
+        mockMvc.perform(get("/bookings/date/{date}", date))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result.length()").value(2));
+    }
+
+    @Test
+    @WithMockUser(authorities = {"MANAGE_BOOKING"})
+    @DisplayName("GET /bookings/pending - get amount of pending bookings")
+    void testGetAmountOfPending() throws Exception {
+        // Given
+        AmountOfPendingBookingResponse response = AmountOfPendingBookingResponse.builder()
+                .amount(5)
+                .build();
+        when(bookingService.countPendingBooking()).thenReturn(response);
+
+        // When & Then
+        mockMvc.perform(get("/bookings/pending"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result.amount").value(5));
     }
 }
 

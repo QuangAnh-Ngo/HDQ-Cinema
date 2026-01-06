@@ -24,7 +24,6 @@ import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -56,15 +55,15 @@ class RoomServiceTest {
     private Cinema cinema;
     private Room room;
     private ShowTime showTime;
-    private String cinemaId;
-    private String roomId;
-    private String showTimeId;
+    private Long cinemaId;
+    private Long roomId;
+    private Long showTimeId;
 
     @BeforeEach
     void setUp() {
-        cinemaId = "cinema-id-123";
-        roomId = "room-id-123";
-        showTimeId = "showtime-id-123";
+        cinemaId = 1L;
+        roomId = 1L;
+        showTimeId = 1L;
 
         cinema = Cinema.builder()
                 .id(cinemaId)
@@ -78,7 +77,7 @@ class RoomServiceTest {
                 .build();
 
         Movie movie = Movie.builder()
-                .id("movie-id-123")
+                .id(1L)
                 .title("Test Movie")
                 .build();
 
@@ -146,7 +145,7 @@ class RoomServiceTest {
         when(showTimeRepository.findById(showTimeId)).thenReturn(Optional.of(showTime));
 
         SeatPerShowTimeDTO seatDTO1 = SeatPerShowTimeDTO.builder()
-                .seatId("seat-1")
+                .seatId(1L)
                 .seatName("A1")
                 .seatType(SeatType.CLASSIC)
                 .seatStatus(SeatStatus.AVAILABLE)
@@ -154,7 +153,7 @@ class RoomServiceTest {
                 .build();
 
         SeatPerShowTimeDTO seatDTO2 = SeatPerShowTimeDTO.builder()
-                .seatId("seat-2")
+                .seatId(2L)
                 .seatName("A2")
                 .seatType(SeatType.VIP)
                 .seatStatus(SeatStatus.HELD)
@@ -194,7 +193,7 @@ class RoomServiceTest {
 
         assertEquals(ErrorCode.SHOWTIME_NOT_EXISTED, exception.getErrorCode());
         verify(showTimeRepository, times(1)).findById(showTimeId);
-        verify(roomRepository, never()).getSeatPerShowTimeDTO(anyString());
+        verify(roomRepository, never()).getSeatPerShowTimeDTO(any());
     }
 }
 

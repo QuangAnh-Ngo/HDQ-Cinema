@@ -12,7 +12,7 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Builder
 public class RoomResponse {
-    String roomId;
+    Long roomId;
     String roomName;
     String cinemaName;
 }

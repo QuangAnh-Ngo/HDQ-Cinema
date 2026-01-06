@@ -1,0 +1,94 @@
+.banner-loading {
+  height: 70vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-color: #222;
+  color: #fff;
+}
+
+.homepage-container {
+  max-width: 1200px;
+  margin: 40px auto;
+  padding: 0 15px;
+
+  .ant-tabs {
+    .ant-tabs-nav {
+      margin-bottom: 30px;
+
+      &::before {
+        border-bottom: 2px solid #f0f0f0;
+      }
+    }
+
+    .ant-tabs-tab {
+      padding: 12px 24px !important;
+      transition: all 0.3s ease;
+
+      .ant-tabs-tab-btn {
+        font-size: 18px !important;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: #888;
+        letter-spacing: 1px;
+      }
+
+      &:hover .ant-tabs-tab-btn {
+        color: #0a64a7;
+      }
+
+      &.ant-tabs-tab-active {
+        .ant-tabs-tab-btn {
+          color: #0a64a7 !important;
+        }
+      }
+    }
+
+    .ant-tabs-ink-bar {
+      background-color: #0a64a7;
+      height: 3px;
+      border-radius: 3px 3px 0 0;
+    }
+  }
+
+  // ✅ THÊM: Flexbox layout
+  .movie-list {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin: 10px -12px 0; // ✅ Negative margin để bù margin của items
+  }
+
+  .no-movies {
+    width: 100%;
+    text-align: center;
+    padding: 80px 20px;
+    font-size: 16px;
+    color: #999;
+    background: #fff;
+    border-radius: 16px;
+    border: 1px dashed #d9d9d9;
+    margin: 0 12px; // ✅ Match với item margin
+  }
+}
+
+// Media Queries
+@media (max-width: 1024px) {
+  .homepage-container {
+    padding: 0 20px;
+    margin: 20px auto;
+  }
+}
+
+@media (max-width: 640px) {
+  .homepage-container {
+    .ant-tabs-tab {
+      padding: 10px 12px !important;
+
+      .ant-tabs-tab-btn {
+        font-size: 14px !important;
+      }
+    }
+  }
+}

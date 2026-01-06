@@ -12,13 +12,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Arrays;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -37,6 +38,7 @@ class EmployeeControllerTest {
     private ObjectMapper objectMapper;
 
     @Test
+    @WithMockUser(roles = "ADMIN")
     @DisplayName("POST /employees - tạo employee thành công")
     void testCreateEmployee_Success() throws Exception {
         // Given
@@ -64,6 +66,7 @@ class EmployeeControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "ADMIN")
     @DisplayName("GET /employees - lấy tất cả employees")
     void testGetEmployee() throws Exception {
         // Given
@@ -84,10 +87,11 @@ class EmployeeControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "ADMIN")
     @DisplayName("PUT /employees/{id} - update employee")
     void testUpdateEmployee() throws Exception {
         // Given
-        String employeeId = "employee-id-123";
+        Long employeeId = 1L;
         EmployeeUpdateRequest request = EmployeeUpdateRequest.builder()
                 .firstName("Jane")
                 .lastName("Smith")
@@ -97,10 +101,10 @@ class EmployeeControllerTest {
                 .firstName("Jane")
                 .build();
 
-        when(employeeService.updateEmployee(anyString(), any(EmployeeUpdateRequest.class))).thenReturn(response);
+        when(employeeService.updateEmployee(anyLong(), any(EmployeeUpdateRequest.class))).thenReturn(response);
 
         // When & Then
-        mockMvc.perform(put("/employees/{employeeAccountId}", employeeId)
+        mockMvc.perform(put("/employees/{employeeId}", employeeId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -108,10 +112,11 @@ class EmployeeControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "ADMIN")
     @DisplayName("DELETE /employees/{id} - delete employee")
     void testDeleteEmployee() throws Exception {
         // Given
-        String employeeId = "employee-id-123";
+        Long employeeId = 1L;
         doNothing().when(employeeService).deleteEmployee(employeeId);
 
         // When & Then

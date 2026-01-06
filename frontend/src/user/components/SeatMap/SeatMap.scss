@@ -1,0 +1,257 @@
+// frontend/src/user/components/SeatMap/SeatMap.scss
+
+.seat-map {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  gap: 30px;
+
+  // ✅ Loading state
+  &.loading,
+  &.empty {
+    padding: 60px 20px;
+    text-align: center;
+  }
+
+  // ✅ Screen
+  .screen-wrapper {
+    width: 100%;
+    margin-bottom: 30px;
+
+    .screen-line {
+      width: 70%;
+      height: 4px;
+      background: linear-gradient(to bottom, #cbd5e1, transparent);
+      border-radius: 100%;
+      box-shadow: 0 10px 20px rgba(203, 213, 225, 0.5);
+      margin: 0 auto 12px;
+    }
+
+    .screen-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5em;
+      color: #94a3b8;
+      text-align: center;
+    }
+  }
+
+  // ✅ Seat map
+  .map {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+
+    .row {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+
+      .row-label {
+        width: 30px;
+        font-weight: 700;
+        color: #64748b;
+        text-align: center;
+        font-size: 14px;
+      }
+
+      .row-seats {
+        display: flex;
+        gap: 10px;
+      }
+
+      .seat {
+        width: 40px;
+        height: 40px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        font-size: 10px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        position: relative;
+        border-radius: 6px;
+        border: 2px solid transparent;
+
+        i {
+          font-size: 24px;
+          margin-bottom: -18px;
+          transition: all 0.2s;
+        }
+
+        .seat-label {
+          position: absolute;
+          bottom: 2px;
+          font-size: 9px;
+          font-weight: 600;
+          color: #64748b;
+        }
+
+        // ✅ AVAILABLE state
+        &.available {
+          background-color: #e2e8f0;
+
+          i {
+            color: #94a3b8;
+          }
+
+          &:hover {
+            background-color: #cbd5e1;
+            border-color: #0a64a7;
+            transform: scale(1.05);
+
+            i {
+              color: #0a64a7;
+            }
+          }
+
+          // VIP variant
+          &.vip {
+            background-color: #fef3c7;
+
+            i {
+              color: #f59e0b;
+            }
+
+            &:hover {
+              background-color: #fde68a;
+              border-color: #f59e0b;
+
+              i {
+                color: #d97706;
+              }
+            }
+          }
+        }
+
+        // ✅ SELECTED state
+        &.selected {
+          background-color: #8864f0;
+          border-color: #6b46c1;
+          transform: scale(1.1);
+
+          i {
+            color: white;
+          }
+
+          .seat-label {
+            color: white;
+          }
+
+          &:hover {
+            background-color: #7c3aed;
+          }
+        }
+
+        // ✅ BOOKED state
+        &.booked {
+          cursor: not-allowed;
+          background-color: #3c364c;
+          opacity: 0.5;
+
+          i {
+            color: #67666e;
+          }
+
+          &:hover {
+            transform: none;
+          }
+        }
+
+        // ✅ HELD state (đang được giữ bởi người khác)
+        &.held {
+          cursor: not-allowed;
+          background-color: #1e3a8a;
+          opacity: 0.7;
+
+          i {
+            color: #3b82f6;
+          }
+
+          &:hover {
+            transform: none;
+          }
+        }
+      }
+    }
+  }
+
+  // ✅ Selection summary
+  .selection-summary {
+    margin-top: 30px;
+    padding: 20px 24px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    min-width: 400px;
+    border: 1px solid #e2e8f0;
+
+    .summary-label {
+      font-size: 13px;
+      color: #64748b;
+      margin-bottom: 8px;
+    }
+
+    .selected-list {
+      font-size: 18px;
+      font-weight: 700;
+      color: #8864f0;
+      margin-bottom: 12px;
+    }
+
+    .summary-total {
+      font-size: 14px;
+      color: #64748b;
+      padding-top: 12px;
+      border-top: 1px solid #e2e8f0;
+
+      .total-price {
+        font-size: 20px;
+        font-weight: 800;
+        color: #0a64a7;
+      }
+    }
+  }
+}
+
+// Responsive
+@media (max-width: 768px) {
+  .seat-map {
+    padding: 15px 10px;
+
+    .map .row {
+      gap: 8px;
+
+      .row-label {
+        width: 24px;
+        font-size: 12px;
+      }
+
+      .row-seats {
+        gap: 8px;
+      }
+
+      .seat {
+        width: 32px;
+        height: 32px;
+
+        i {
+          font-size: 20px;
+          margin-bottom: -14px;
+        }
+
+        .seat-label {
+          font-size: 8px;
+        }
+      }
+    }
+
+    .selection-summary {
+      min-width: auto;
+      width: 100%;
+    }
+  }
+}

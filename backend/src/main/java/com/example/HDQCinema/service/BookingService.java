@@ -18,6 +18,7 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,7 +33,7 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Slf4j
 public class BookingService {
-    BookingRepository bookingReppository;
+    BookingRepository bookingRepository;
     MemberRepository memberRepository;
     ShowTimeRepository showTimeRepository;
     SeatRepository seatRepository;
@@ -41,80 +42,14 @@ public class BookingService {
     BookingDetailRepository bookingDetailRepository;
     CinemaRepository cinemaRepository;
 
-//    @Transactional
-//    // tạo và quản lý transaction (giao dịch) khi làm việc với DB.
-//    // để tránh khi Một user giữ ghế, nhưng trước khi lưu booking, transaction đã commit → user khác vẫn có thể đặt cùng ghế.
-//    // nghĩa la khi transaction chưa commit hoặc rollback thì row đó vẫn khóa
-//
-//    public BookingSeatResponse holdSeats(BookingRequest request) { // khi bấm và trang thanh toán
-////        User user = userRepository.findById(request.getUserId())
-////                .orElseThrow(() -> new RuntimeException("user not exist"));
-//        ShowTime showTime = showTimeRepository.findById(request.getShowTimeId())
-//                .orElseThrow(() -> new RuntimeException("showtime not exist"));
-//
-////        double totalPrice = 0;
-////        List<BookingDetail> bookingDetails = new ArrayList<>();
-////        Booking booking = Booking.builder()
-////                .showTime(showTime)
-////                .user(user)
-////                .createTime(LocalDateTime.now())
-////                .bookingStatus(BookingStatus.PENDING)
-////               .totalPrice(totalPrice)
-////               .bookingDetails(new HashSet<>(bookingDetails))
-////                .build();
-//        double totalPrice = 0;
-//        List<String> seats = new ArrayList<>();
-//        for (BookingDetailRequest detail : request.getBookingDetailRequests()) {
-//            Seat seat = seatRepository.findById(detail.getSeatId())
-//                    .orElseThrow();
-//            BookingSeat bookingSeat = bookingSeatRepository.findForUpdate(showTime.getId(), seat.getId())
-//                    .orElseThrow(() -> new RuntimeException("not found"));
-//
-//            if (bookingSeat.getSeatStatus() == SeatStatus.BOOKED)
-//                throw new RuntimeException("Seat already booked");
-//            if (bookingSeat.getSeatStatus() == SeatStatus.HELD && bookingSeat.getHoldTime().isAfter(LocalDateTime.now()))
-//                throw new RuntimeException("Seat temporarily held");
-//
-//            double price = ticketPriceRepository.toPrice(seat.getSeatType().toString(), showTime.getId());
-//            bookingSeatRepository.update(showTime.getId(), seat.getId(),
-//                    SeatStatus.HELD.name(), LocalDateTime.now().plusMinutes(5));
-//            totalPrice += price;
-//            seats.add(""+seat.getSeatRow()+seat.getSeatNumber());
-////            BookingDetail bookingDetail = BookingDetail.builder()
-////                    .seat(seat)
-////                    .price(price)
-////                    .booking(booking)
-////                    .build();
-////            bookingDetails.add(bookingDetail);
-////
-////            totalPrice += price;
-////        }
-////
-////        booking.setTotalPrice(totalPrice);
-////        booking.setBookingDetails(new HashSet<>(bookingDetails));
-////
-////        bookingReppository.save(booking);
-////        return bookingMapper.toResponse(booking);
-//        }
-//
-//        return BookingSeatResponse.builder()
-//                .seats(seats)
-//                .price(totalPrice)
-//                .build();
-//    }
-
     @Transactional
-    // tạo và quản lý transaction (giao dịch) khi làm việc với DB.
-    // để tránh khi Một user giữ ghế, nhưng trước khi lưu booking, transaction đã commit → user khác vẫn có thể đặt cùng ghế.
-    // nghĩa la khi transaction chưa commit hoặc rollback thì row đó vẫn khóa
-
     public BookingResponse createBooking(BookingRequest request){ // khi user bấm vào trang thanh toán
-        Member member = memberRepository.findById(request.getUserId())
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        Member member = memberRepository.findById(request.getMemberId())
+                .orElseThrow(() -> new AppException(ErrorCode.MEMBER_NOT_FOUND));
         ShowTime showTime = showTimeRepository.findById(request.getShowTimeId())
-                .orElseThrow(() -> new RuntimeException("showtime not exist"));
+                .orElseThrow(() -> new AppException(ErrorCode.SHOWTIME_NOT_FOUND));
         Cinema cinema = cinemaRepository.findById(request.getCinemaId())
-                .orElseThrow(() -> new RuntimeException("cinema not exist"));
+                .orElseThrow(() -> new AppException(ErrorCode.CINEMA_NOT_FOUND));
 
         double totalPrice = 0;
         List<BookingDetail> bookingDetails = new ArrayList<>();
@@ -126,10 +61,11 @@ public class BookingService {
 
         for (BookingDetailRequest detail : request.getBookingDetailRequests()) {
             Seat seat = seatRepository.findById(detail.getSeatId())
-                    .orElseThrow(() -> new RuntimeException("seat not exist"));
+                    .orElseThrow(() -> new AppException(ErrorCode.SEAT_NOT_FOUND));
 
-            double price = ticketPriceRepository.toPrice(seat.getSeatType().toString(), showTime.getId(),cinema.getId());
 
+            double price = ticketPriceRepository.toPrice(seat.getSeatType().toString(), showTime.getId(), cinema.getId())
+                    .orElseThrow(() -> new AppException(ErrorCode.PRICE_NOT_EXITED));
 
             BookingDetail bookingDetail = BookingDetail.builder()
                     .seat(seat)
@@ -146,7 +82,7 @@ public class BookingService {
         booking.setTotalPrice(totalPrice);
         booking.setBookingDetails(new HashSet<>(bookingDetails));
         try {
-            booking = bookingReppository.save(booking);
+            booking = bookingRepository.save(booking);
         }catch (DataIntegrityViolationException e){
             throw new AppException(ErrorCode.SEAT_UNAVAILABLE);
         }
@@ -158,51 +94,53 @@ public class BookingService {
     }
 
     @Transactional
-    public void deletePayment(String bookingId){
+    public void deletePayment(Long bookingId){
         bookingDetailRepository.deleteAllByBooking_Id(bookingId);
-        bookingReppository.deleteById(bookingId);
+        bookingRepository.deleteById(bookingId);
     }
 
-
     @Transactional
-    public BookingResponse approvePayment(String bookingId) { // admin thấy user thanh toán và bấm xác nhận user đã thanh toán
-        Booking booking = bookingReppository.findById(bookingId)
-                .orElseThrow(() -> new RuntimeException("Booking not found"));
+    public BookingResponse approvePayment(Long bookingId) {
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new AppException(ErrorCode.BOOKING_NOT_FOUND));
 
         bookingDetailRepository.updateSeatStatus(booking.getId());
 
         var showtime = bookingDetailRepository.findFirstShowTimeByBooking(bookingId);
 
         booking.setBookingStatus(BookingStatus.CONFIRM);
-        bookingReppository.save(booking);
+        bookingRepository.save(booking);
 
         var response = bookingMapper.toResponse(booking);
         response.setShowTime(showtime);
         return response;
     }
 
-    @Transactional
-    public boolean getConfirmPayment(String bookingId){ // gửi api liên tục để xem admin đã xác nhận chưa
-        Booking booking = bookingReppository.findById(bookingId)
-                .orElseThrow(()-> new RuntimeException("Booking not found"));
-        return booking.getBookingStatus().equals(BookingStatus.CONFIRM);
-    }
 
     @Transactional
     @Modifying(clearAutomatically = true)
     public void deleteExpiredBookings(LocalDateTime lim) {
-        List<Booking> expiredBookings = bookingReppository.findAllByCreateTimeBeforeAndBookingStatus(lim, BookingStatus.PENDING);
-        bookingReppository.deleteAll(expiredBookings);
+        List<Booking> expiredBookings = bookingRepository.findAllByCreateTimeBeforeAndBookingStatus(lim, BookingStatus.PENDING);
+        bookingRepository.deleteAll(expiredBookings);
     }
 
 
-    public List<BookingResponse> getBookings(LocalDate date) {
-        List<Booking> bookings =  bookingReppository.findBookingsByCreateTime_Date(date);
+    public List<BookingResponse> getBookingsByDate(LocalDate date) {
+        List<Booking> bookings =  bookingRepository.findBookingsByCreateTime_Date(date);
+        return bookingMapper.toResponses(bookings);
+    }
+
+    public List<BookingResponse> getBookingsByMember(String memberId) {
+        if (!memberRepository.existsById(memberId)) {
+            throw new AppException(ErrorCode.MEMBER_NOT_FOUND);
+        }
+
+        var bookings = bookingRepository.findAllByMemberId(memberId);
         return bookingMapper.toResponses(bookings);
     }
 
     public AmountOfPendingBookingResponse countPendingBooking(){
-        var num =  bookingReppository.countBookingsByBookingStatusPending();
+        var num =  bookingRepository.countBookingsByBookingStatusPending();
         return AmountOfPendingBookingResponse.builder().amount(num).build();
     }
 }

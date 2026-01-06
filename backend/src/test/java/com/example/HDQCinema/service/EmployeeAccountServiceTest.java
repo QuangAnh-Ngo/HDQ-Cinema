@@ -57,12 +57,12 @@ class EmployeeAccountServiceTest {
     private Employee employee;
     private Role role;
     private String employeeAccountId;
-    private String employeeId;
+    private Long employeeId;
 
     @BeforeEach
     void setUp() {
         employeeAccountId = "account-id-123";
-        employeeId = "employee-id-123";
+        employeeId = 1L;
 
         employee = Employee.builder()
                 .id(employeeId)
@@ -90,14 +90,14 @@ class EmployeeAccountServiceTest {
                 .username("testuser")
                 .password("password123")
                 .email("test@example.com")
-                .employee(employeeId)
+                .employeeId(employeeId)
                 .roles(Arrays.asList("EMPLOYEE"))
                 .build();
 
         updateRequest = EmployeeAccountUpdateRequest.builder()
                 .password("newpassword123")
                 .roles(Arrays.asList("MANAGER"))
-                .employee(employeeId)
+                .employeeId(employeeId)
                 .build();
     }
 
@@ -137,7 +137,7 @@ class EmployeeAccountServiceTest {
                 .username("testuser")
                 .password("password123")
                 .email("test@example.com")
-                .employee(employeeId)
+                .employeeId(employeeId)
                 .roles(null)
                 .build();
 

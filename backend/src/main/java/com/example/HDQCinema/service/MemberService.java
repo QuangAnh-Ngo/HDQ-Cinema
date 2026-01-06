@@ -58,7 +58,6 @@ public class MemberService {
         return memberMapper.toMemberResponse(member);
     }
 
-    // Các hàm getEmployee, deleteEmployee giữ nguyên...
     @PreAuthorize("hasRole('ADMIN')")
     public List<MemberResponse> getMember(){
         return memberRepository.findAll().stream()
@@ -74,15 +73,13 @@ public class MemberService {
         memberRepository.deleteById(employeeId);
     }
 
-    // Hàm update cập nhật thêm logic đổi mật khẩu
+    @PreAuthorize("#username == authentication.name or hasRole('ADMIN')")
     public MemberResponse updateMember(String memberId, MemberUpdateRequest request){
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new AppException(ErrorCode.MEMBER_NOT_FOUND));
 
-        // Map các thông tin cơ bản
         memberMapper.updateMember(member, request);
 
-        // Nếu request có gửi password mới -> Mã hóa lại
         if (request.getPassword() != null && !request.getPassword().isEmpty()) {
             member.setPassword(passwordEncoder.encode(request.getPassword()));
         }

@@ -1,29 +1,69 @@
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
+// frontend/src/config/api.js
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/cinemas";
 
 export const API_ENDPOINTS = {
-  // Ví dụ các endpoints của bạn - THAY ĐỔI theo API backend thật
-  MOVIES: `${API_BASE_URL}/api/movies`,
-  USERS: `${API_BASE_URL}/api/users`,
-  BOOKINGS: `${API_BASE_URL}/api/bookings`,
-  AUTH: `${API_BASE_URL}/api/auth`,
-  // Thêm các endpoints khác...
-};
+  // Authentication
+  AUTH_LOGIN: "/auth/token",
+  AUTH_LOGOUT: "/auth/logout",
+  AUTH_REFRESH: "/auth/refresh",
+  AUTH_INTROSPECT: "/auth/introspect",
 
-// Helper function để fetch dễ dàng hơn
-export const apiFetch = async (endpoint, options = {}) => {
-  const response = await fetch(endpoint, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-  });
+  // Movies
+  MOVIES: "/movies",
+  MOVIE_BY_ID: (id) => `/movies/${id}`,
 
-  if (!response.ok) {
-    throw new Error(`API Error: ${response.status}`);
-  }
+  // Cinemas
+  CINEMAS: "/cinemas",
+  CINEMA_BY_ID: (id) => `/cinemas/${id}`,
 
-  return response.json();
+  // Rooms
+  ROOMS: "/rooms",
+  ROOM_BY_ID: (id) => `/rooms/${id}`,
+  ROOMS_FOR_SHOWTIME: "/rooms/for-showtime",
+
+  // ShowTimes
+  SHOWTIMES: "/showtimes",
+  SHOWTIME_BY_ID: (id) => `/showtimes/${id}`,
+  SHOWTIMES_BY_MOVIE: (movieId) => `/showtimes/movie/${movieId}`,
+
+  // Bookings
+  BOOKINGS: "/bookings",
+  BOOKING_BY_ID: (id) => `/bookings/${id}`,
+  BOOKINGS_PENDING_AMOUNT: "/bookings/amount-of-pending-bookings",
+
+  // Members
+  MEMBERS: "/members",
+  MEMBER_BY_ID: (id) => `/members/${id}`,
+
+  // Employees
+  EMPLOYEES: "/employees",
+  EMPLOYEE_BY_ID: (id) => `/employees/${id}`,
+  EMPLOYEE_ACCOUNTS: "/employee-accounts",
+  EMPLOYEE_ACCOUNT_BY_ID: (id) => `/employee-accounts/${id}`,
+
+  // Seats
+  SEATS: "/seats",
+  SEATS_PER_SHOWTIME: "/seats/per-showtime",
+
+  // Payments
+  PAYMENT: "/payment",
+  PAYMENT_URLS: "/payment-url",
+  PAYMENT_URL_BY_ID: (id) => `/payment-url/${id}`,
+
+  // Roles & Permissions
+  ROLES: "/roles",
+  ROLE_BY_NAME: (name) => `/roles/${name}`,
+  PERMISSIONS: "/permissions",
+  PERMISSION_BY_NAME: (name) => `/permissions/${name}`,
+
+  // Ticket Prices
+  TICKET_PRICES: "/ticket-prices",
+  TICKET_PRICE_BY_ID: (id) => `/ticket-prices/${id}`,
+
+  // Day Types
+  DAY_TYPES: "/day-types",
+  DAY_TYPE_BY_ID: (id) => `/day-types/${id}`,
 };
 
 export default API_BASE_URL;

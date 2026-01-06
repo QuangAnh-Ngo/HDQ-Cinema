@@ -1,8 +1,13 @@
 package com.example.HDQCinema.service;
 
 import com.example.HDQCinema.dto.request.TicketPriceRequest;
+import com.example.HDQCinema.dto.request.TicketPriceUpdateRequest;
 import com.example.HDQCinema.dto.response.TicketPriceResponse;
 import com.example.HDQCinema.entity.DayType;
+import com.example.HDQCinema.entity.TicketPrice;
+import com.example.HDQCinema.enums.SeatType;
+import com.example.HDQCinema.exception.AppException;
+import com.example.HDQCinema.exception.ErrorCode;
 import com.example.HDQCinema.mapper.TicketPriceMapper;
 import com.example.HDQCinema.repository.CinemaRepository;
 import com.example.HDQCinema.repository.DayTypeRepository;
@@ -26,10 +31,10 @@ public class TicketPriceService {
         var ticket = ticketPriceMapper.toTicketPrice(request);
 
         var cinema = cinemaRepository.findById(request.getCinemaId())
-                .orElseThrow(() -> new RuntimeException("cinema not exist"));
+                .orElseThrow(() -> new AppException(ErrorCode.CINEMA_NOT_FOUND));
 
         var dayType = dayTypeRepository.findDayTypeByDayType(request.getDayType())
-                .orElseThrow(() -> new RuntimeException("have to create day type first"));
+                .orElseThrow(() -> new AppException(ErrorCode.DAYTYPE_NOT_FOUND));
         ticket.setDayType((DayType) dayType);
         ticket.setCinema(cinema);
 
@@ -40,5 +45,36 @@ public class TicketPriceService {
         response.setDayType(request.getDayType());
 
         return response;
+    }
+
+    public TicketPriceResponse update(Long ticketPriceId, TicketPriceUpdateRequest request){
+        TicketPrice ticket = ticketPriceRepository.findTicketPriceById(ticketPriceId);
+
+        if(request.getCinemaId() != null && !String.valueOf(request.getCinemaId()).isEmpty()) {
+            var cinema = cinemaRepository.findById(request.getCinemaId())
+                    .orElseThrow(() -> new AppException(ErrorCode.CINEMA_NOT_FOUND));
+            ticket.setCinema(cinema);
+        }
+
+        if(request.getDayType() != null && !request.getDayType().isEmpty()) {
+            var dayType = dayTypeRepository.findDayTypeByDayType(request.getDayType())
+                    .orElseThrow(() -> new AppException(ErrorCode.DAYTYPE_NOT_FOUND));
+            ticket.setDayType((DayType) dayType);
+        }
+
+        if(!String.valueOf(request.getPrice()).isEmpty()) ticket.setPrice(request.getPrice());
+        if(request.getSeatType() != null && !String.valueOf(request.getSeatType()).isEmpty()) ticket.setSeatType(SeatType.valueOf(request.getSeatType()));
+
+        ticketPriceRepository.save(ticket);
+
+        var response = ticketPriceMapper.toResponse(ticket);
+        response.setCinemaId(request.getCinemaId());
+        response.setDayType(request.getDayType());
+
+        return response;
+    }
+
+    public void delete(Long ticketPriceId){
+        ticketPriceRepository.deleteTicketPriceById(ticketPriceId);
     }
 }

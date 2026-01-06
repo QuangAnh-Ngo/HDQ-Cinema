@@ -41,7 +41,7 @@ services:
     ports:
       - "8080:8080" # 8080 (trái dấu :) là cổng trên máy host, 8080 (phải dấu :) là trong container
     env_file:
-      - .env.dev
+      - ../.env.dev
     environment:
       # Biến môi trường cho Spring Boot
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-db:5432/${POSTGRES_DB}

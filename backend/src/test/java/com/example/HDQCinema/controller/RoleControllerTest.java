@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Arrays;
@@ -36,6 +37,7 @@ class RoleControllerTest {
     private ObjectMapper objectMapper;
 
     @Test
+    @WithMockUser(roles = "ADMIN")
     @DisplayName("POST /roles - tạo role thành công")
     void testCreateRole_Success() throws Exception {
         // Given
@@ -61,6 +63,7 @@ class RoleControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "ADMIN")
     @DisplayName("GET /roles - lấy tất cả roles")
     void testGetRole() throws Exception {
         // Given
@@ -81,6 +84,7 @@ class RoleControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "ADMIN")
     @DisplayName("PUT /roles/{id} - update role")
     void testUpdateRole() throws Exception {
         // Given
@@ -106,6 +110,7 @@ class RoleControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "ADMIN")
     @DisplayName("DELETE /roles/{id} - delete role")
     void testDeleteRole() throws Exception {
         // Given

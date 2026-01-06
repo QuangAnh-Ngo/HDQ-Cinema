@@ -18,7 +18,6 @@ import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -37,11 +36,11 @@ class MovieServiceTest {
     private MovieCreationRequest movieCreationRequest;
     private Movie movie;
     private MovieResponse movieResponse;
-    private String movieId;
+    private Long movieId;
 
     @BeforeEach
     void setUp() {
-        movieId = "movie-id-123";
+        movieId = 1L;
 
         movieCreationRequest = new MovieCreationRequest();
         movieCreationRequest.setTitle("Avengers: Endgame");
@@ -136,18 +135,18 @@ class MovieServiceTest {
         });
 
         assertEquals("invalid input", exception.getMessage());
-        verify(movieRepository, never()).findById(anyString());
+        verify(movieRepository, never()).findById(any());
     }
 
     @Test
     @DisplayName("Test get movies upcoming - thành công")
     void testGetMovieUpComing_Success() {
         // Given
-        String cinemaId = "cinema-id-123";
+        Long cinemaId = 1L;
         LocalDate today = LocalDate.now();
         
         Movie upcomingMovie = Movie.builder()
-                .id("upcoming-movie-id")
+                .id(2L)
                 .title("Upcoming Movie")
                 .dayStart(today.plusDays(7))
                 .build();
@@ -156,7 +155,7 @@ class MovieServiceTest {
         when(movieRepository.findAllByDayStartAfter(today, cinemaId)).thenReturn(movies);
 
         MovieResponse response = MovieResponse.builder()
-                .id("upcoming-movie-id")
+                .id(2L)
                 .title("Upcoming Movie")
                 .build();
         when(movieMapper.toMovieResponses(movies)).thenReturn(Collections.singletonList(response));
@@ -174,11 +173,11 @@ class MovieServiceTest {
     @DisplayName("Test get movies showing - thành công")
     void testGetMoviesShowing_Success() {
         // Given
-        String cinemaId = "cinema-id-123";
+        Long cinemaId = 1L;
         LocalDate today = LocalDate.now();
         
         Movie showingMovie = Movie.builder()
-                .id("showing-movie-id")
+                .id(3L)
                 .title("Showing Movie")
                 .dayStart(today.minusDays(5))
                 .dayEnd(today.plusDays(10))
@@ -188,7 +187,7 @@ class MovieServiceTest {
         when(movieRepository.findShowingMovie(today, cinemaId)).thenReturn(movies);
 
         MovieResponse response = MovieResponse.builder()
-                .id("showing-movie-id")
+                .id(3L)
                 .title("Showing Movie")
                 .build();
         when(movieMapper.toMovieResponses(movies)).thenReturn(Collections.singletonList(response));

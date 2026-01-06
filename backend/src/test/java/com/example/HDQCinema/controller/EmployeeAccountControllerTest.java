@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Arrays;
@@ -36,6 +37,7 @@ class EmployeeAccountControllerTest {
     private ObjectMapper objectMapper;
 
     @Test
+    @WithMockUser(roles = "ADMIN")
     @DisplayName("POST /accounts - tạo employee account thành công")
     void testCreateEmployeeAccount_Success() throws Exception {
         // Given
@@ -43,7 +45,7 @@ class EmployeeAccountControllerTest {
                 .username("testuser")
                 .password("password123")
                 .email("test@example.com")
-                .employee("employee-id-123")
+                .employeeId(1L)
                 .roles(Arrays.asList("EMPLOYEE"))
                 .build();
 
@@ -66,6 +68,7 @@ class EmployeeAccountControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "ADMIN")
     @DisplayName("GET /accounts - lấy tất cả employee accounts")
     void testGetEmployeeAccount() throws Exception {
         // Given
@@ -88,6 +91,7 @@ class EmployeeAccountControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "ADMIN")
     @DisplayName("PUT /accounts/{id} - update employee account")
     void testUpdateEmployeeAccount() throws Exception {
         // Given
@@ -113,6 +117,7 @@ class EmployeeAccountControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "ADMIN")
     @DisplayName("DELETE /accounts/{id} - delete employee account")
     void testDeleteEmployeeAccount() throws Exception {
         // Given

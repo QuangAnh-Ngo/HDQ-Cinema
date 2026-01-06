@@ -41,7 +41,7 @@ public class EmployeeService {
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-    public EmployeeResponse updateEmployee(String employeeId, EmployeeUpdateRequest request){
+    public EmployeeResponse updateEmployee(Long employeeId, EmployeeUpdateRequest request){
         Employee user = employeeRepository.findById(employeeId)
                 .orElseThrow(()-> new AppException(ErrorCode.EMPLOYEE_NOT_FOUND));
 
@@ -49,7 +49,7 @@ public class EmployeeService {
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-    public void deleteEmployee(String employeeId){
+    public void deleteEmployee(Long employeeId){
         if (!employeeRepository.existsById(employeeId)){
             throw new AppException(ErrorCode.EMPLOYEE_NOT_FOUND);
         }

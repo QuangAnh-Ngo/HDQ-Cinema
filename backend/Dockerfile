@@ -9,6 +9,7 @@ COPY src ./src
 RUN mvn clean package -DskipTests
 
 FROM eclipse-temurin:21-jre-jammy
+ENV TZ=Asia/Ho_Chi_Minh
 
 WORKDIR /app
 

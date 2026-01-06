@@ -40,11 +40,11 @@ class EmployeeServiceTest {
     private EmployeeUpdateRequest updateRequest;
     private Employee employee;
     private EmployeeResponse employeeResponse;
-    private String employeeId;
+    private Long employeeId;
 
     @BeforeEach
     void setUp() {
-        employeeId = "employee-id-123";
+        employeeId = 1L;
 
         creationRequest = EmployeeCreationRequest.builder()
                 .firstName("John")
@@ -184,7 +184,7 @@ class EmployeeServiceTest {
         });
 
         assertEquals(ErrorCode.EMPLOYEE_NOT_FOUND, exception.getErrorCode());
-        verify(employeeRepository, never()).deleteById(anyString());
+        verify(employeeRepository, never()).deleteById(any());
     }
 }
 

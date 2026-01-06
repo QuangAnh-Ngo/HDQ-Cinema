@@ -20,7 +20,6 @@ import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -45,11 +44,11 @@ class CinemaServiceTest {
     private CinemaCreationRequest cinemaCreationRequest;
     private Cinema cinema;
     private CinemaResponse cinemaResponse;
-    private String cinemaId;
+    private Long cinemaId;
 
     @BeforeEach
     void setUp() {
-        cinemaId = "test-cinema-id-123";
+        cinemaId = 1L;
 
         cinemaCreationRequest = new CinemaCreationRequest();
         cinemaCreationRequest.setName("HDQ Cinema Hà Nội");
@@ -139,19 +138,19 @@ class CinemaServiceTest {
         });
 
         assertEquals("invalid input", exception.getMessage());
-        verify(cinemaRepository, never()).findById(anyString());
+        verify(cinemaRepository, never()).findById(any());
     }
 
     @Test
-    @DisplayName("Test get cinema by id - input chứa SQL injection")
-    void testGetCinemaById_SqlInjectionInput() {
+    @DisplayName("Test get cinema by id - input <= 0")
+    void testGetCinemaById_InvalidInput() {
         // When & Then
         RuntimeException exception = assertThrows(RuntimeException.class, () -> {
-            cinemaService.get("test--");
+            cinemaService.get(0L);
         });
 
         assertEquals("invalid input", exception.getMessage());
-        verify(cinemaRepository, never()).findById(anyString());
+        verify(cinemaRepository, never()).findById(any());
     }
 
     @Test

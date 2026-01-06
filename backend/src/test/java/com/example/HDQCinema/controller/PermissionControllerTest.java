@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Arrays;
@@ -36,6 +37,7 @@ class PermissionControllerTest {
     private ObjectMapper objectMapper;
 
     @Test
+    @WithMockUser(roles = "ADMIN")
     @DisplayName("POST /permissions - tạo permission thành công")
     void testCreatePermission_Success() throws Exception {
         // Given
@@ -60,6 +62,7 @@ class PermissionControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "ADMIN")
     @DisplayName("GET /permissions - lấy tất cả permissions")
     void testGetPermission() throws Exception {
         // Given
@@ -80,6 +83,7 @@ class PermissionControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "ADMIN")
     @DisplayName("PUT /permissions/{id} - update permission")
     void testUpdatePermission() throws Exception {
         // Given
@@ -104,6 +108,7 @@ class PermissionControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "ADMIN")
     @DisplayName("DELETE /permissions/{id} - delete permission")
     void testDeletePermission() throws Exception {
         // Given

@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -32,15 +33,16 @@ class RoomControllerTest {
     private ObjectMapper objectMapper;
 
     @Test
+    @WithMockUser(authorities = "MANAGE_ROOMS")
     @DisplayName("POST /rooms - tạo room thành công")
     void testCreateRoom_Success() throws Exception {
         // Given
         RoomRequest request = new RoomRequest();
         request.setRoomName("Phòng chiếu 1");
-        request.setCinemaId("cinema-id-123");
+        request.setCinemaId(1L);
 
         RoomResponse response = RoomResponse.builder()
-                .roomId("room-id-123")
+                .roomId(1L)
                 .roomName("Phòng chiếu 1")
                 .build();
 
@@ -51,7 +53,7 @@ class RoomControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.result.roomId").value("room-id-123"))
+                .andExpect(jsonPath("$.result.roomId").value(1))
                 .andExpect(jsonPath("$.result.roomName").value("Phòng chiếu 1"));
     }
 
@@ -59,9 +61,9 @@ class RoomControllerTest {
     @DisplayName("GET /rooms?showtimeId={showtimeId} - lấy room by showtime")
     void testGetRoomByShowTime() throws Exception {
         // Given
-        String showtimeId = "showtime-id-123";
+        Long showtimeId = 1L;
         RoomForShowTimeResponse response = RoomForShowTimeResponse.builder()
-                .roomId("room-id-123")
+                .roomId(1L)
                 .showtimeId(showtimeId)
                 .roomName("Phòng chiếu 1")
                 .build();
@@ -70,9 +72,9 @@ class RoomControllerTest {
 
         // When & Then
         mockMvc.perform(get("/rooms")
-                        .param("showtimeId", showtimeId))
+                        .param("showtimeId", String.valueOf(showtimeId)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.result.roomId").value("room-id-123"))
+                .andExpect(jsonPath("$.result.roomId").value(1))
                 .andExpect(jsonPath("$.result.showtimeId").value(showtimeId));
     }
 }

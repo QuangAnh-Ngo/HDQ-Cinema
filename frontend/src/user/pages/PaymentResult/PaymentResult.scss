@@ -1,0 +1,377 @@
+// frontend/src/user/pages/PaymentResult/PaymentResult.scss
+
+.payment-result-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+
+  .result-card {
+    max-width: 700px;
+    width: 100%;
+    background: #1a1528;
+    border-radius: 24px;
+    border: 1px solid rgba(136, 100, 240, 0.2);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+
+    .ant-card-body {
+      padding: 48px 40px;
+    }
+
+    // ===== LOADING STATE =====
+    &.loading {
+      text-align: center;
+      padding: 60px 40px;
+
+      .loading-title {
+        font-size: 24px;
+        font-weight: 800;
+        color: white;
+        margin-top: 32px;
+        margin-bottom: 12px;
+      }
+
+      .loading-text {
+        font-size: 15px;
+        color: #94a3b8;
+      }
+    }
+
+    // ===== SUCCESS RESULT =====
+    .success-result {
+      .ant-result {
+        padding: 0;
+
+        .success-icon {
+          font-size: 96px;
+          color: #10b981;
+          animation: successPulse 0.6s ease;
+        }
+
+        .result-title {
+          font-size: 32px;
+          font-weight: 900;
+          color: white;
+          margin-top: 24px;
+          margin-bottom: 12px;
+          text-transform: uppercase;
+          letter-spacing: -0.5px;
+        }
+
+        .result-subtitle {
+          font-size: 16px;
+          color: #94a3b8;
+          margin-bottom: 32px;
+        }
+
+        .ant-result-extra {
+          display: flex;
+          gap: 16px;
+          justify-content: center;
+          margin-top: 32px;
+        }
+      }
+
+      // Action Buttons
+      .action-btn {
+        height: 52px;
+        padding: 0 32px;
+        font-size: 15px;
+        font-weight: 700;
+        border-radius: 12px;
+        transition: all 0.3s;
+
+        &.primary {
+          background: linear-gradient(135deg, #0a64a7 0%, #0d7ec9 100%);
+          border: none;
+
+          &:hover {
+            background: linear-gradient(135deg, #0d7ec9 0%, #0a64a7 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(10, 100, 167, 0.4);
+          }
+        }
+
+        &.secondary {
+          background: rgba(255, 255, 255, 0.1);
+          color: white;
+          border: 1px solid rgba(255, 255, 255, 0.2);
+
+          &:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.3);
+          }
+        }
+
+        &.danger {
+          &:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(239, 68, 68, 0.4);
+          }
+        }
+      }
+
+      // Booking Details
+      .booking-details {
+        margin-top: 48px;
+        padding: 32px;
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 16px;
+        border: 2px dashed rgba(136, 100, 240, 0.3);
+
+        .details-title {
+          font-size: 20px;
+          font-weight: 800;
+          color: #8864f0;
+          text-align: center;
+          margin-bottom: 24px;
+          text-transform: uppercase;
+          letter-spacing: 1px;
+        }
+
+        .details-content {
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+
+          .detail-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            transition: all 0.2s;
+
+            &:hover {
+              background: rgba(255, 255, 255, 0.08);
+            }
+
+            &.highlight {
+              background: rgba(136, 100, 240, 0.15);
+              border: 1px solid rgba(136, 100, 240, 0.3);
+            }
+
+            .label {
+              font-size: 13px;
+              font-weight: 600;
+              color: #94a3b8;
+              text-transform: uppercase;
+              letter-spacing: 0.5px;
+            }
+
+            .value {
+              font-size: 15px;
+              font-weight: 700;
+              color: white;
+              text-align: right;
+
+              &.amount {
+                font-size: 22px;
+                font-weight: 900;
+                color: #ef4444;
+              }
+            }
+
+            .value-with-copy {
+              display: flex;
+              align-items: center;
+              gap: 8px;
+
+              .booking-id {
+                font-size: 16px;
+                font-weight: 900;
+                color: #fbbf24;
+                font-family: "Courier New", monospace;
+                letter-spacing: 1px;
+              }
+
+              .copy-btn {
+                color: #94a3b8;
+                transition: all 0.2s;
+
+                &:hover {
+                  color: #8864f0;
+                  transform: scale(1.1);
+                }
+              }
+            }
+
+            .ant-tag {
+              margin: 0;
+              font-weight: 700;
+              font-size: 13px;
+            }
+          }
+        }
+
+        .booking-note {
+          margin-top: 24px;
+          padding: 16px;
+          background: rgba(251, 191, 36, 0.1);
+          border: 1px solid rgba(251, 191, 36, 0.3);
+          border-radius: 12px;
+
+          p {
+            margin: 0;
+            font-size: 13px;
+            color: #fbbf24;
+            line-height: 1.6;
+
+            strong {
+              color: #fcd34d;
+              font-weight: 800;
+            }
+          }
+        }
+      }
+    }
+
+    // ===== ERROR RESULT =====
+    .ant-result-error {
+      .error-icon {
+        font-size: 96px;
+        color: #ef4444;
+        animation: errorShake 0.6s ease;
+      }
+
+      .result-title {
+        font-size: 32px;
+        font-weight: 900;
+        color: white;
+        margin-top: 24px;
+        text-transform: uppercase;
+      }
+
+      .result-subtitle {
+        font-size: 16px;
+        color: #94a3b8;
+        margin-top: 12px;
+
+        &.error {
+          color: #fca5a5;
+        }
+      }
+    }
+  }
+}
+
+// ===== ANIMATIONS =====
+@keyframes successPulse {
+  0% {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes errorShake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  10%,
+  30%,
+  50%,
+  70%,
+  90% {
+    transform: translateX(-10px);
+  }
+  20%,
+  40%,
+  60%,
+  80% {
+    transform: translateX(10px);
+  }
+}
+
+// ===== RESPONSIVE =====
+@media (max-width: 768px) {
+  .payment-result-page {
+    padding: 20px 16px;
+
+    .result-card {
+      .ant-card-body {
+        padding: 32px 24px;
+      }
+
+      .success-result {
+        .ant-result {
+          .success-icon {
+            font-size: 72px;
+          }
+
+          .result-title {
+            font-size: 24px;
+          }
+
+          .result-subtitle {
+            font-size: 14px;
+          }
+
+          .ant-result-extra {
+            flex-direction: column;
+            gap: 12px;
+
+            .action-btn {
+              width: 100%;
+            }
+          }
+        }
+
+        .booking-details {
+          padding: 24px 20px;
+          margin-top: 32px;
+
+          .details-title {
+            font-size: 18px;
+          }
+
+          .details-content {
+            .detail-row {
+              flex-direction: column;
+              align-items: flex-start;
+              gap: 8px;
+              padding: 12px;
+
+              .value {
+                text-align: left;
+
+                &.amount {
+                  font-size: 20px;
+                }
+              }
+
+              .value-with-copy {
+                width: 100%;
+
+                .booking-id {
+                  font-size: 14px;
+                  word-break: break-all;
+                }
+              }
+            }
+          }
+        }
+      }
+
+      .ant-result-error {
+        .error-icon {
+          font-size: 72px;
+        }
+
+        .result-title {
+          font-size: 24px;
+        }
+      }
+    }
+  }
+}

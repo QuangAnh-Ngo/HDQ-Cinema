@@ -37,11 +37,11 @@ class SeatServiceTest {
 
     private SeatCreationRequest seatCreationRequest;
     private Room room;
-    private String roomId;
+    private Long roomId;
 
     @BeforeEach
     void setUp() {
-        roomId = "test-room-id-123";
+        roomId = 1L;
 
         room = Room.builder()
                 .id(roomId)

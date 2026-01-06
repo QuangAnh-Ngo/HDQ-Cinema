@@ -9,6 +9,7 @@ import com.example.HDQCinema.service.PaymentService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.UnsupportedEncodingException;
@@ -26,6 +27,7 @@ public class PaymentController {
     PaymentService paymentService;
 
     @PostMapping("/create_payment")
+    @PreAuthorize("hasAuthority('PAYMENT')")
     public ApiResponse<PaymentResponse> createPayment(@RequestBody PaymentRequest request) throws UnsupportedEncodingException {
         var response = paymentService.createPayment(request);
 
@@ -40,7 +42,7 @@ public class PaymentController {
             @RequestParam(value = "vnp_BankCode") String bankCode,
             @RequestParam(value = "vnp_OrderInfo") String orderInfor,
             @RequestParam(value = "vnp_ResponseCode") String responseCode,
-            @RequestParam(value = "vnp_TxnRef") String txnRef
+            @RequestParam(value = "vnp_TxnRef") Long txnRef
     ){
         var response = paymentService.transactionResult(amount, bankCode, orderInfor, responseCode, txnRef);
         if(response != null) return ApiResponse.<BookingResponse>builder()

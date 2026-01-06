@@ -11,6 +11,7 @@ import com.example.HDQCinema.repository.BookingRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestParam;
 
@@ -29,16 +30,17 @@ public class PaymentService {
     BookingService bookingService;
     PaymentURLService paymentURLService;
 
+    @PreAuthorize("hasRole('MEMBER')")
     public PaymentResponse createPayment(PaymentRequest request) throws UnsupportedEncodingException {
 
-        String bookingId = request.getBookingId();
+        Long bookingId = request.getBookingId();
 
         String orderType = "other"; // client trả về
-        long amount = (long)bookingRepository.findTotalPriceByBookingId(bookingId)*1000000;
+        long amount = (long)bookingRepository.findTotalPriceByBookingId(bookingId)*100;
 //        String bankCode = req.getParameter("bankCode");
 
 
-        String vnp_TxnRef = bookingId;
+        String vnp_TxnRef = bookingId.toString();
         String vnp_IpAddr = PaymentConfig.getPublicIp(); // ip của ng đang thanh toán để chống giả mạo giao dịch
 
         String vnp_TmnCode = PaymentConfig.vnp_TmnCode;
@@ -130,7 +132,7 @@ public class PaymentService {
 
         PaymentResponse paymentResponse = PaymentResponse.builder()
                 .status("OK")
-                .message(bookingId)
+                .message(bookingId.toString())
                 .URL(paymentUrl)
                 .build();
 
@@ -146,7 +148,7 @@ public class PaymentService {
         return paymentResponse;
     }
 
-    public BookingResponse transactionResult(String amount, String bankCode, String orderInfor, String responseCode, String txnRef){
+    public BookingResponse transactionResult(String amount, String bankCode, String orderInfor, String responseCode, Long txnRef){
 
         if(responseCode.equals("00")){
             var response = bookingService.approvePayment(txnRef);

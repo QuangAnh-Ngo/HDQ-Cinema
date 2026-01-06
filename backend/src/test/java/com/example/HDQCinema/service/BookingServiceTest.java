@@ -67,18 +67,18 @@ class BookingServiceTest {
     private Seat seat1;
     private Seat seat2;
     private String memberId;
-    private String showTimeId;
-    private String cinemaId;
-    private String seatId1;
-    private String seatId2;
+    private Long showTimeId;
+    private Long cinemaId;
+    private Long seatId1;
+    private Long seatId2;
 
     @BeforeEach
     void setUp() {
         memberId = "member-id-123";
-        showTimeId = "showtime-id-123";
-        cinemaId = "cinema-id-123";
-        seatId1 = "seat-id-1";
-        seatId2 = "seat-id-2";
+        showTimeId = 1L;
+        cinemaId = 1L;
+        seatId1 = 1L;
+        seatId2 = 2L;
 
         member = Member.builder()
                 .id(memberId)
@@ -91,12 +91,12 @@ class BookingServiceTest {
                 .build();
 
         Room room = Room.builder()
-                .id("room-id-123")
+                .id(1L)
                 .cinema(cinema)
                 .build();
 
         Movie movie = Movie.builder()
-                .id("movie-id-123")
+                .id(1L)
                 .title("Test Movie")
                 .build();
 
@@ -132,7 +132,7 @@ class BookingServiceTest {
                 .build();
 
         bookingRequest = BookingRequest.builder()
-                .userId(memberId)
+                .memberId(memberId)
                 .showTimeId(showTimeId)
                 .cinemaId(cinemaId)
                 .bookingDetailRequests(Arrays.asList(detail1, detail2))
@@ -148,11 +148,11 @@ class BookingServiceTest {
         when(cinemaRepository.findById(cinemaId)).thenReturn(Optional.of(cinema));
         when(seatRepository.findById(seatId1)).thenReturn(Optional.of(seat1));
         when(seatRepository.findById(seatId2)).thenReturn(Optional.of(seat2));
-        when(ticketPriceRepository.toPrice("CLASSIC", showTimeId, cinemaId)).thenReturn(100000.0);
-        when(ticketPriceRepository.toPrice("VIP", showTimeId, cinemaId)).thenReturn(150000.0);
+        when(ticketPriceRepository.toPrice("CLASSIC", showTimeId, cinemaId)).thenReturn(Optional.of(100000.0));
+        when(ticketPriceRepository.toPrice("VIP", showTimeId, cinemaId)).thenReturn(Optional.of(150000.0));
 
         Booking savedBooking = Booking.builder()
-                .id("booking-id-123")
+                .id(1L)
                 .member(member)
                 .totalPrice(250000.0)
                 .bookingStatus(BookingStatus.PENDING)
@@ -161,7 +161,7 @@ class BookingServiceTest {
         when(bookingRepository.save(any(Booking.class))).thenReturn(savedBooking);
 
         BookingResponse bookingResponse = BookingResponse.builder()
-                .id("booking-id-123")
+                .id(1L)
                 .totalPrice(250000.0)
                 .build();
         when(bookingMapper.toResponse(any(Booking.class))).thenReturn(bookingResponse);
@@ -241,7 +241,7 @@ class BookingServiceTest {
         when(cinemaRepository.findById(cinemaId)).thenReturn(Optional.of(cinema));
         when(seatRepository.findById(seatId1)).thenReturn(Optional.of(seat1));
         when(seatRepository.findById(seatId2)).thenReturn(Optional.of(seat2));
-        when(ticketPriceRepository.toPrice(anyString(), anyString(), anyString())).thenReturn(100000.0);
+        when(ticketPriceRepository.toPrice(anyString(), anyLong(), anyLong())).thenReturn(Optional.of(100000.0));
         when(bookingRepository.save(any(Booking.class)))
                 .thenThrow(new DataIntegrityViolationException("Seat already booked"));
 
@@ -257,7 +257,7 @@ class BookingServiceTest {
     @DisplayName("Test approve payment - thành công")
     void testApprovePayment_Success() {
         // Given
-        String bookingId = "booking-id-123";
+        Long bookingId = 1L;
         Booking booking = Booking.builder()
                 .id(bookingId)
                 .member(member)
@@ -286,55 +286,16 @@ class BookingServiceTest {
     }
 
     @Test
-    @DisplayName("Test get confirm payment - đã xác nhận")
-    void testGetConfirmPayment_Confirmed() {
-        // Given
-        String bookingId = "booking-id-123";
-        Booking booking = Booking.builder()
-                .id(bookingId)
-                .bookingStatus(BookingStatus.CONFIRM)
-                .build();
-
-        when(bookingRepository.findById(bookingId)).thenReturn(Optional.of(booking));
-
-        // When
-        boolean result = bookingService.getConfirmPayment(bookingId);
-
-        // Then
-        assertTrue(result);
-        verify(bookingRepository, times(1)).findById(bookingId);
-    }
-
-    @Test
-    @DisplayName("Test get confirm payment - chưa xác nhận")
-    void testGetConfirmPayment_Pending() {
-        // Given
-        String bookingId = "booking-id-123";
-        Booking booking = Booking.builder()
-                .id(bookingId)
-                .bookingStatus(BookingStatus.PENDING)
-                .build();
-
-        when(bookingRepository.findById(bookingId)).thenReturn(Optional.of(booking));
-
-        // When
-        boolean result = bookingService.getConfirmPayment(bookingId);
-
-        // Then
-        assertFalse(result);
-    }
-
-    @Test
     @DisplayName("Test get bookings by date - thành công")
-    void testGetBookings_Success() {
+    void testGetBookingsByDate_Success() {
         // Given
         LocalDate date = LocalDate.now();
         Booking booking1 = Booking.builder()
-                .id("booking-1")
+                .id(1L)
                 .createTime(LocalDateTime.now())
                 .build();
         Booking booking2 = Booking.builder()
-                .id("booking-2")
+                .id(2L)
                 .createTime(LocalDateTime.now())
                 .build();
 
@@ -342,15 +303,15 @@ class BookingServiceTest {
         when(bookingRepository.findBookingsByCreateTime_Date(date)).thenReturn(bookings);
 
         BookingResponse response1 = BookingResponse.builder()
-                .id("booking-1")
+                .id(1L)
                 .build();
         BookingResponse response2 = BookingResponse.builder()
-                .id("booking-2")
+                .id(2L)
                 .build();
         when(bookingMapper.toResponses(bookings)).thenReturn(Arrays.asList(response1, response2));
 
         // When
-        List<BookingResponse> result = bookingService.getBookings(date);
+        List<BookingResponse> result = bookingService.getBookingsByDate(date);
 
         // Then
         assertNotNull(result);
