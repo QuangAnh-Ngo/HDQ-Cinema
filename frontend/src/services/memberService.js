@@ -29,35 +29,43 @@ export const memberService = {
   },
 
   /**
-   * Register new member (POST /members)
+   * ✅ Register new member (POST /members)
+   * Used by Register page
    */
-  create: async (data) => {
+  register: async (data) => {
     try {
       const payload = {
         username: data.username,
-        password: data.password, // Min 8 chars
+        password: data.password,
         email: data.email,
-        phoneNumber: data.phoneNumber || data.phone, // Min 10 chars
+        phoneNumber: data.phoneNumber || data.phone,
         firstName: data.firstName,
         lastName: data.lastName,
-        dob: data.dob, // Format: "YYYY-MM-DD"
+        dob: data.dob, // ✅ MUST be YYYY-MM-DD format
       };
 
-      console.log("📤 Creating member:", payload);
+      console.log("📤 Register payload:", payload);
+
       const response = await axiosInstance.post("/members", payload);
-      console.log("✅ Member created:", response);
+
+      console.log("✅ Register response:", response);
 
       return response;
     } catch (error) {
-      console.error("❌ Create member error:", error);
-      console.error("Response:", error.response?.data);
+      console.error("❌ Register error:", error);
       throw error;
     }
   },
 
   /**
+   * Create member (alias for register - used by admin)
+   */
+  create: async (data) => {
+    return memberService.register(data);
+  },
+
+  /**
    * Update member (PUT /members/{memberId})
-   * Note: API uses {employeeAccountId} in path but this is for members
    */
   update: async (memberId, data) => {
     try {
@@ -68,19 +76,14 @@ export const memberService = {
         dob: data.dob,
       };
 
-      // Only include password if provided
       if (data.password && data.password.trim()) {
         payload.password = data.password;
       }
 
-      console.log("📤 Updating member:", memberId, payload);
       const response = await axiosInstance.put(`/members/${memberId}`, payload);
-      console.log("✅ Member updated:", response);
-
       return response;
     } catch (error) {
-      console.error("❌ Update member error:", error);
-      console.error("Response:", error.response?.data);
+      console.error("Update member error:", error);
       throw error;
     }
   },
@@ -90,34 +93,9 @@ export const memberService = {
    */
   delete: async (memberId) => {
     try {
-      console.log("📤 Deleting member:", memberId);
       await axiosInstance.delete(`/members/${memberId}`);
-      console.log("✅ Member deleted:", memberId);
     } catch (error) {
-      console.error("❌ Delete member error:", error);
-      console.error("Response:", error.response?.data);
-      throw error;
-    }
-  },
-
-  /**
-   * Search members by keyword
-   */
-  search: async (keyword) => {
-    try {
-      const allMembers = await memberService.getAll();
-      const lowerKeyword = keyword.toLowerCase();
-
-      return allMembers.filter(
-        (member) =>
-          member.username?.toLowerCase().includes(lowerKeyword) ||
-          member.email?.toLowerCase().includes(lowerKeyword) ||
-          member.phoneNumber?.includes(keyword) ||
-          member.firstName?.toLowerCase().includes(lowerKeyword) ||
-          member.lastName?.toLowerCase().includes(lowerKeyword)
-      );
-    } catch (error) {
-      console.error("Search members error:", error);
+      console.error("Delete member error:", error);
       throw error;
     }
   },
