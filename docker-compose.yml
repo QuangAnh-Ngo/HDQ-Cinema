@@ -1,6 +1,7 @@
 services:
   # Backend Spring Boot
   backend:
+#    image: hung07195/hdqcinema-backend:0.0.1 #sửa để có thể build image hoặc compose up
     build: ./backend
     container_name: hdq-cinema-backend
     restart: on-failure
@@ -21,7 +22,8 @@ services:
 
   # Frontend React
   frontend:
-    build: ./frontend
+#    image: hung07195/hdqcinema-frontend:0.0.1
+    build: ./frontend 
     container_name: hdq-cinema-frontend
     restart: unless-stopped
     ports:
@@ -30,7 +32,7 @@ services:
       # Mount source code để có hot-reload
       - ./frontend/src:/app/src
       - ./frontend/public:/app/public
-      # Prevent node_modules from being overwritten
+      # Prevent node_modules from being overwritten 
       - /app/node_modules
     environment:
       # Để React không tự động mở browser
@@ -58,6 +60,20 @@ services:
       - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - cinema-network
+
+  nginx:
+    image: nginx:latest
+    container_name: hdq-cinema-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - frontend
+      - backend
     networks:
       - cinema-network
 

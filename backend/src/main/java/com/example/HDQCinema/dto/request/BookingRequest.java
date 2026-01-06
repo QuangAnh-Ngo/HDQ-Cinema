@@ -12,7 +12,7 @@ import java.util.List;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class BookingRequest {
-    String userId;
+    String memberId;
     String showTimeId;
     String cinemaId;
     List<BookingDetailRequest> bookingDetailRequests;

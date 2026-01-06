@@ -14,6 +14,7 @@ public enum ErrorCode {
     ROOM_NOT_EXISTED(1002, "room is not existed", HttpStatus.BAD_REQUEST),
     SHOWTIME_NOT_EXISTED(1003, "showtime is not existed", HttpStatus.BAD_REQUEST),
     BOOKING_FAIL(1004, "booking failed", HttpStatus.BAD_REQUEST),
+    PRICE_NOT_EXITED(1009, "can't get price", HttpStatus.NOT_FOUND),
 
 
     USER_NOT_FOUND(2001, "user not found", HttpStatus.NOT_FOUND),
