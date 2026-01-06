@@ -61,7 +61,7 @@ public class TicketPriceService {
         }
 
         if(request.getPrice() > 0) ticket.setPrice(request.getPrice());
-        if(request.getSeatType() != null && !String.valueOf(request.getSeatType()).isEmpty()) ticket.setSeatType(SeatType.valueOf(request.getSeatType()));
+        if(request.getSeatType() != null && !request.getSeatType().isEmpty()) ticket.setSeatType(SeatType.valueOf(request.getSeatType()));
 
         ticketPriceRepository.save(ticket);
 
