@@ -5,50 +5,75 @@ const API_BASE_URL = "http://localhost:8080/cinemas";
 
 const MOCK_AUTH_ONLY = true;
 
-// ✅ Public endpoints - không cần token
-const PUBLIC_ENDPOINTS = [
-  "/movies/showing",
-  "/movies/upcoming",
-  "/movies/",
-  "/theaters",
-  "/showtimes",
-  "/rooms",
-  "/auth/token",
-  "/auth/register",
-  "/auth/introspect",
+// ✅ CRITICAL: Very specific public endpoint patterns
+const PUBLIC_ENDPOINT_PATTERNS = [
+  { path: "/movies/showing", exact: true },
+  { path: "/movies/upcoming", exact: true },
+  { path: "/theaters", method: "GET", exact: true }, // Only GET /theaters
+  { path: "/auth/token", exact: false },
+  { path: "/auth/register", exact: false },
+  { path: "/auth/introspect", exact: false },
 ];
 
-// ✅ Admin endpoints - cho phép GET với mock auth
-const ADMIN_ENDPOINTS = [
-  "/rooms",
-  "/employees",
-  "/accounts",
-  "/movies",
-  "/showtimes",
-  "/members",
-  "/roles",
-  "/permissions",
-  "/bookings",
+// ✅ Admin endpoints that require authentication
+const ADMIN_ENDPOINT_PATTERNS = [
+  { path: "/movies", methods: ["POST", "PUT", "DELETE"] },
+  { path: "/rooms", methods: ["POST", "PUT", "DELETE"] },
+  { path: "/employees", methods: ["POST", "PUT", "DELETE"] },
+  { path: "/accounts", methods: ["POST", "PUT", "DELETE"] },
+  { path: "/showtimes", methods: ["POST", "PUT", "DELETE"] },
+  { path: "/theaters", methods: ["POST", "PUT", "DELETE"] },
+  { path: "/bookings", methods: ["GET", "POST", "PUT", "DELETE"] },
 ];
 
-// ✅ Payment endpoints - cho phép tất cả methods với mock auth
-const MOCK_ALLOWED_ENDPOINTS = [
-  "/payment/create_payment",
-  "/payment/payment_infor",
-  "/paymenturls/",
-  "/bookings",
-];
+/**
+ * ✅ IMPROVED: Check if endpoint is public
+ */
+const isPublicEndpoint = (url, method = "GET") => {
+  if (!url) return false;
 
-const isPublicEndpoint = (url) => {
-  return PUBLIC_ENDPOINTS.some((endpoint) => url.includes(endpoint));
+  return PUBLIC_ENDPOINT_PATTERNS.some((pattern) => {
+    // Check method if specified
+    if (pattern.method && method.toUpperCase() !== pattern.method) {
+      return false;
+    }
+
+    // Exact match required
+    if (pattern.exact) {
+      return url === pattern.path || url === `${pattern.path}/`;
+    }
+
+    // Substring match
+    return url.includes(pattern.path);
+  });
 };
 
-const isAdminEndpoint = (url) => {
-  return ADMIN_ENDPOINTS.some((endpoint) => url.includes(endpoint));
+/**
+ * ✅ IMPROVED: Check if endpoint requires admin auth
+ */
+const isAdminEndpoint = (url, method = "GET") => {
+  if (!url) return false;
+
+  return ADMIN_ENDPOINT_PATTERNS.some((pattern) => {
+    // Check if URL matches pattern
+    const urlMatches =
+      url.startsWith(pattern.path) || url.includes(pattern.path);
+
+    if (!urlMatches) return false;
+
+    // Check method if specified
+    if (pattern.methods) {
+      return pattern.methods.includes(method.toUpperCase());
+    }
+
+    return true;
+  });
 };
 
-const isMockAllowedEndpoint = (url) => {
-  return MOCK_ALLOWED_ENDPOINTS.some((endpoint) => url.includes(endpoint));
+const isPaymentEndpoint = (url) => {
+  if (!url) return false;
+  const paymentPaths = ["/payment/", "/paymenturls/"];
+  return paymentPaths.some((path) => url.includes(path));
 };
 
 const isMockMode = () => {
@@ -69,29 +94,42 @@ axiosInstance.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("token");
     const user = localStorage.getItem("user");
+    const method = config.method?.toUpperCase() || "GET";
 
-    // ✅ 1. Public endpoints - no auth needed
-    if (isPublicEndpoint(config.url)) {
+    console.log("🔍 Request:", {
+      url: config.url,
+      method: method,
+      hasToken: !!token,
+      isMock: isMockMode(),
+    });
+
+    // ✅ 1. Check if public endpoint
+    if (isPublicEndpoint(config.url, method)) {
+      console.log("✅ Public endpoint - no auth needed");
       return config;
     }
 
-    // ✅ 2. Real auth mode - use Bearer token
+    // ✅ 2. Check if admin endpoint
+    const requiresAuth = isAdminEndpoint(config.url, method);
+
+    if (requiresAuth) {
+      console.log("🔒 Admin endpoint - auth required");
+    }
+
+    // ✅ 3. Real auth mode
     if (token && !isMockMode()) {
       config.headers.Authorization = `Bearer ${token}`;
+      console.log("✅ Real auth token attached");
       return config;
     }
 
-    // ✅ 3. Mock mode - handle different cases
+    // ✅ 4. Mock mode
     if (isMockMode() && user) {
       const parsedUser = JSON.parse(user);
-
-      // Get role - handle both formats
       const userRole =
         parsedUser.role ||
         parsedUser.roles?.[0]?.replace("ROLE_", "") ||
         "MEMBER";
-
-      // Check if user is staff
       const isStaff = ["ADMIN", "MANAGER", "EMPLOYEE"].includes(
         userRole.toUpperCase()
       );
@@ -100,57 +138,51 @@ axiosInstance.interceptors.request.use(
       config.headers["X-Mock-User-Role"] = userRole;
       config.headers["X-Mock-Mode"] = "true";
 
-      // ✅ 3a. Payment endpoints - allow all methods
-      if (isMockAllowedEndpoint(config.url)) {
-        console.log(
-          "✅ Mock payment request:",
-          config.method.toUpperCase(),
-          config.url
-        );
+      console.log("🎭 Mock mode:", { role: userRole, isStaff });
+
+      // Payment endpoints - allow all users
+      if (isPaymentEndpoint(config.url)) {
+        console.log("✅ Payment endpoint allowed");
         return config;
       }
 
-      // ✅ 3b. Admin endpoints with staff user
-      if (isAdminEndpoint(config.url) && isStaff) {
-        // Allow GET for all staff
-        if (config.method.toLowerCase() === "get") {
-          console.log("✅ Mock staff GET allowed:", config.url);
-          return config;
+      // Admin endpoints - check staff + block writes
+      if (requiresAuth) {
+        if (!isStaff) {
+          console.warn("🚫 Non-staff blocked from admin endpoint");
+          return Promise.reject({
+            status: 403,
+            message: "Không có quyền truy cập",
+            mockMode: true,
+          });
         }
 
-        // Allow POST/PUT/DELETE for specific endpoints
-        const writeAllowedEndpoints = ["/bookings", "/payment"];
-        const isWriteAllowed = writeAllowedEndpoints.some((ep) =>
-          config.url.includes(ep)
-        );
-
-        if (isWriteAllowed) {
-          console.log(
-            "✅ Mock staff write allowed:",
-            config.method.toUpperCase(),
-            config.url
-          );
-          return config;
+        // Block write operations in mock mode
+        if (["POST", "PUT", "DELETE", "PATCH"].includes(method)) {
+          console.warn("🚫 Mock mode: Write operation blocked");
+          return Promise.reject({
+            status: 401,
+            message:
+              "Mock mode không hỗ trợ thao tác ghi dữ liệu. Vui lòng đăng nhập với tài khoản thật.",
+            mockMode: true,
+          });
         }
 
-        // Block other write operations in mock mode
-        console.warn("🎭 Mock mode: Write operation blocked for", config.url);
-        return Promise.reject({
-          status: 401,
-          message: "Mock mode - Write operations require real auth",
-          mockMode: true,
-        });
+        console.log("✅ Mock staff GET allowed");
+        return config;
       }
 
-      // ✅ 3c. Non-staff users - only allow payment endpoints
-      if (!isStaff && !isMockAllowedEndpoint(config.url)) {
-        console.warn("🎭 Mock mode: Non-staff blocked from", config.url);
-        return Promise.reject({
-          status: 403,
-          message: "Mock mode - Insufficient permissions",
-          mockMode: true,
-        });
-      }
+      // Other endpoints - allow with mock headers
+      return config;
+    }
+
+    // ✅ 5. No auth available
+    if (requiresAuth) {
+      console.warn("🚫 No authentication for protected endpoint");
+      return Promise.reject({
+        status: 401,
+        message: "Vui lòng đăng nhập",
+      });
     }
 
     return config;
@@ -163,12 +195,10 @@ axiosInstance.interceptors.response.use(
   (response) => {
     const { data } = response;
 
-    // ✅ Extract result from standard backend response format
     if (data && data.code === 1000 && data.result !== undefined) {
       return data.result;
     }
 
-    // ✅ Handle other successful responses
     if (data && data.result !== undefined) {
       return data.result;
     }
@@ -178,96 +208,82 @@ axiosInstance.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    // ✅ 1. Public endpoints that got 401 - return empty data
-    if (
-      isPublicEndpoint(originalRequest?.url) &&
-      error.response?.status === 401
-    ) {
-      if (MOCK_AUTH_ONLY) {
-        console.log("ℹ️ Public endpoint got 401 - returning empty data");
-        if (originalRequest.url.includes("/theaters")) return [];
-        if (originalRequest.url.includes("/movies")) return [];
-        return {};
-      }
+    if (!originalRequest) {
+      return Promise.reject({
+        status: 500,
+        message: "Internal error",
+      });
     }
 
-    // ✅ 2. Mock mode errors - provide helpful messages
-    if (isMockMode()) {
-      // Payment/Booking endpoints
-      if (
-        isMockAllowedEndpoint(originalRequest?.url) &&
-        error.response?.status === 401
-      ) {
-        console.error(
-          "❌ Backend doesn't support mock auth for:",
-          originalRequest.url
-        );
-        return Promise.reject({
-          status: 401,
-          message:
-            "Backend chưa hỗ trợ mock auth.\n\nVui lòng đăng nhập với tài khoản thật.",
-          mockMode: true,
-          needRealAuth: true,
-        });
-      }
+    const method = originalRequest.method?.toUpperCase() || "GET";
 
-      // Admin endpoints - return empty data instead of blocking UI
-      if (
-        isAdminEndpoint(originalRequest?.url) &&
-        error.response?.status === 401
-      ) {
-        console.warn(
-          "⚠️ Mock admin endpoint got 401, returning empty data:",
-          originalRequest.url
-        );
+    console.error("❌ Response error:", {
+      url: originalRequest.url,
+      method: method,
+      status: error.response?.status,
+      message: error.response?.data?.message,
+    });
 
-        // Return appropriate empty data structure
-        if (originalRequest.url.includes("/rooms")) return [];
-        if (originalRequest.url.includes("/employees")) return [];
-        if (originalRequest.url.includes("/accounts")) return [];
-        if (originalRequest.url.includes("/bookings")) return [];
-        if (originalRequest.url.includes("/showtimes")) return [];
-        if (originalRequest.url.includes("/movies")) return [];
-        if (originalRequest.url.includes("/theaters")) return [];
-
+    // ✅ 1. Handle 401 for public endpoints only
+    if (error.response?.status === 401) {
+      // ONLY return empty data for actual public endpoints
+      if (isPublicEndpoint(originalRequest.url, method)) {
+        console.log("ℹ️ Public endpoint got 401 - returning empty data");
         return [];
       }
-    }
 
-    // ✅ 3. Real auth mode - handle 401 with token refresh
-    if (
-      error.response?.status === 401 &&
-      !originalRequest?._retry &&
-      !isMockMode()
-    ) {
-      originalRequest._retry = true;
-      const currentToken = localStorage.getItem("token");
+      // For protected endpoints, try token refresh (real auth only)
+      if (!isMockMode() && !originalRequest._retry) {
+        originalRequest._retry = true;
+        const currentToken = localStorage.getItem("token");
 
-      if (!currentToken) {
-        return Promise.reject({
-          status: 401,
-          message: "Unauthorized - No token",
-        });
+        if (currentToken) {
+          try {
+            console.log("🔄 Attempting token refresh...");
+
+            const res = await axios.post(`${API_BASE_URL}/auth/refresh`, {
+              token: currentToken,
+            });
+
+            const newToken = res.data.result.token;
+            localStorage.setItem("token", newToken);
+            originalRequest.headers.Authorization = `Bearer ${newToken}`;
+
+            console.log("✅ Token refreshed, retrying request");
+            return axiosInstance(originalRequest);
+          } catch (refreshError) {
+            console.error("❌ Token refresh failed");
+            localStorage.clear();
+            window.location.href = "/login";
+            return Promise.reject(refreshError);
+          }
+        }
       }
 
-      try {
-        const res = await axios.post(`${API_BASE_URL}/auth/refresh`, {
-          token: currentToken,
-        });
-
-        const newToken = res.data.result.token;
-        localStorage.setItem("token", newToken);
-
-        originalRequest.headers.Authorization = `Bearer ${newToken}`;
-        return axiosInstance(originalRequest);
-      } catch (refreshError) {
-        localStorage.clear();
-        window.location.href = "/login";
-        return Promise.reject(refreshError);
-      }
+      // If we reach here, 401 is genuine
+      return Promise.reject({
+        status: 401,
+        message: error.response?.data?.message || "Unauthorized",
+        code: error.response?.data?.code,
+      });
     }
 
-    // ✅ 4. General error handling
+    // ✅ 2. Handle 403 Forbidden
+    if (error.response?.status === 403) {
+      console.warn("⚠️ 403 Forbidden");
+
+      if (originalRequest.url?.includes("/bookings")) {
+        return Promise.resolve([]);
+      }
+
+      return Promise.reject({
+        status: 403,
+        message: error.response?.data?.message || "Không có quyền truy cập",
+        code: error.response?.data?.code,
+      });
+    }
+
+    // ✅ 3. General error
     const errorMessage =
       error.response?.data?.message ||
       error.message ||
