@@ -36,7 +36,7 @@ public class PaymentService {
         Long bookingId = request.getBookingId();
 
         String orderType = "other"; // client trả về
-        long amount = (long)bookingRepository.findTotalPriceByBookingId(bookingId)*1000000;
+        long amount = (long)bookingRepository.findTotalPriceByBookingId(bookingId)*100;
 //        String bankCode = req.getParameter("bankCode");
 
 

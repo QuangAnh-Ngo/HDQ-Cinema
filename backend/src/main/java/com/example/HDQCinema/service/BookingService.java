@@ -44,7 +44,7 @@ public class BookingService {
 
     @Transactional
     public BookingResponse createBooking(BookingRequest request){ // khi user bấm vào trang thanh toán
-        Member member = memberRepository.findById(request.getUserId())
+        Member member = memberRepository.findById(request.getMemberId())
                 .orElseThrow(() -> new AppException(ErrorCode.MEMBER_NOT_FOUND));
         ShowTime showTime = showTimeRepository.findById(request.getShowTimeId())
                 .orElseThrow(() -> new AppException(ErrorCode.SHOWTIME_NOT_FOUND));
@@ -63,8 +63,9 @@ public class BookingService {
             Seat seat = seatRepository.findById(detail.getSeatId())
                     .orElseThrow(() -> new AppException(ErrorCode.SEAT_NOT_FOUND));
 
-            double price = ticketPriceRepository.toPrice(seat.getSeatType().toString(), showTime.getId(),cinema.getId());
 
+            double price = ticketPriceRepository.toPrice(seat.getSeatType().toString(), showTime.getId(), cinema.getId())
+                    .orElseThrow(() -> new AppException(ErrorCode.PRICE_NOT_EXITED));
 
             BookingDetail bookingDetail = BookingDetail.builder()
                     .seat(seat)

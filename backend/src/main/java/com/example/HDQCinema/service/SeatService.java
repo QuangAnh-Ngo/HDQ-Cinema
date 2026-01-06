@@ -6,6 +6,8 @@ import com.example.HDQCinema.entity.Room;
 import com.example.HDQCinema.entity.Seat;
 import com.example.HDQCinema.enums.SeatStatus;
 import com.example.HDQCinema.enums.SeatType;
+import com.example.HDQCinema.exception.AppException;
+import com.example.HDQCinema.exception.ErrorCode;
 import com.example.HDQCinema.repository.RoomRepository;
 import com.example.HDQCinema.repository.SeatRepository;
 import lombok.AccessLevel;
@@ -22,7 +24,7 @@ public class SeatService {
 
     public SeatCreationResponse create(SeatCreationRequest request){
         Room room = roomRepository.findById(request.getRoomId())
-                .orElseThrow(()-> new RuntimeException("Room not exist"));
+                .orElseThrow(()-> new AppException(ErrorCode.ROOM_NOT_EXISTED));
 
         for(Character character = request.getFirstSeatRow(); character <= request.getLastSeatRow(); character++){
             for(int column = request.getFirstColumnSeatNumber(); column<= request.getLastColumnSeatNumber(); column++){

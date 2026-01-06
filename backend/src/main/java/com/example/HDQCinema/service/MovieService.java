@@ -6,6 +6,8 @@ import com.example.HDQCinema.dto.response.MovieResponse;
 import com.example.HDQCinema.dto.response.ShowTimeResponse;
 import com.example.HDQCinema.entity.Movie;
 import com.example.HDQCinema.entity.ShowTime;
+import com.example.HDQCinema.exception.AppException;
+import com.example.HDQCinema.exception.ErrorCode;
 import com.example.HDQCinema.mapper.MovieMapper;
 import com.example.HDQCinema.mapper.ShowTimeAndRoomMapper;
 import com.example.HDQCinema.mapper.ShowTimeMapper;
@@ -43,7 +45,7 @@ public class MovieService {
         validInput(id);
 
         Movie movie = movieRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("movie not exist"));
+                .orElseThrow(() -> new AppException(ErrorCode.MOVIE_NOT_FOUND));
 
         return movieMapper.toMovieResponse(movie);
     }

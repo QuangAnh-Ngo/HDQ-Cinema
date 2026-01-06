@@ -32,7 +32,7 @@ public class RoomService {
 
     public RoomResponse create(RoomRequest request){
         Cinema cinema = cinemaRepository.findById(request.getCinemaId())
-                .orElseThrow(()-> new RuntimeException("Cinema not found"));
+                .orElseThrow(()-> new AppException(ErrorCode.CINEMA_NOT_FOUND));
 
         Room room = Room.builder()
                 .roomName(request.getRoomName())
