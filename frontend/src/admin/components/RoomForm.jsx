@@ -1,10 +1,12 @@
+// frontend/src/admin/components/RoomForm.jsx
 import { useState, useEffect } from "react";
 import { FiX } from "react-icons/fi";
-import { getCinemas } from "../services/cinemas";
+import { cinemaService } from "../../services"; // ✅ Fixed import
 import "../styles/AdminLayout.scss";
 
-const RoomForm = ({ room, onClose, onSubmit }) => {
-  const [cinemas, setCinemas] = useState([]);
+const RoomForm = ({ room, onClose, onSubmit, cinemas }) => {
+  // ✅ Accept cinemas as prop
+  const [localCinemas, setLocalCinemas] = useState([]);
   const [formData, setFormData] = useState({
     name: "",
     cinemaId: "",
@@ -19,8 +21,13 @@ const RoomForm = ({ room, onClose, onSubmit }) => {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    fetchCinemas();
-  }, []);
+    // ✅ Use cinemas from props if available, otherwise fetch
+    if (cinemas && cinemas.length > 0) {
+      setLocalCinemas(cinemas);
+    } else {
+      fetchCinemas();
+    }
+  }, [cinemas]);
 
   useEffect(() => {
     if (room) {
@@ -31,10 +38,11 @@ const RoomForm = ({ room, onClose, onSubmit }) => {
   const fetchCinemas = async () => {
     try {
       setLoading(true);
-      const data = await getCinemas();
-      setCinemas(data.cinemas || data);
+      const data = await cinemaService.getAll(); // ✅ Fixed
+      setLocalCinemas(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Error fetching cinemas:", error);
+      setLocalCinemas([]);
     } finally {
       setLoading(false);
     }
@@ -99,7 +107,7 @@ const RoomForm = ({ room, onClose, onSubmit }) => {
               disabled={room || loading}
             >
               <option value="">Chọn rạp</option>
-              {cinemas.map((cinema) => (
+              {localCinemas.map((cinema) => (
                 <option key={cinema.id} value={cinema.id}>
                   {cinema.name}
                 </option>

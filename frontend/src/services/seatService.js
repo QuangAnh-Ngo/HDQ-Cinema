@@ -3,18 +3,37 @@ import axiosInstance from "./axiosInstance";
 
 export const seatService = {
   /**
-   * Lấy danh sách ghế theo suất chiếu (GET /seats/showtime/{showtimeId})
-   * @param {string} showtimeId - Showtime ID
-   * @returns {Promise<Array>} Mảng ghế với thông tin trạng thái
+   * ✅ FIX: Lấy seats theo showtime từ room-controller
+   * API: GET /rooms?showtimeId={showtimeId}
+   * Response: { code, message, result: { roomId, showtimeId, roomName, cinemaName, seats: [...] } }
    */
-  getByShowtime: async (showtimeId) => {
+  getSeatsByShowtime: async (showtimeId) => {
     try {
-      const response = await axiosInstance.get(`/seats/showtime/${showtimeId}`);
-      // Response structure: Array of seats
-      // Each seat: { id, seatNumber, seatRow, type, status, price, roomId, showtimeId }
-      return response || [];
+      console.log("🔍 Fetching seats for showtime:", showtimeId);
+
+      const response = await axiosInstance.get("/rooms", {
+        params: { showtimeId },
+      });
+
+      console.log("📦 Raw API response:", response);
+      console.log("📦 Response.result:", response?.result);
+
+      // ✅ Handle response structure
+      if (!response) {
+        console.error("❌ No response from API");
+        return null;
+      }
+
+      // Backend returns: { code, message, result: { roomId, roomName, cinemaName, seats } }
+      const result = response.result || response;
+
+      console.log("✅ Processed result:", result);
+      console.log("💺 Seats count:", result?.seats?.length || 0);
+
+      return result;
     } catch (error) {
-      console.error("Get seats by showtime error:", error);
+      console.error("❌ Get seats by showtime error:", error);
+      console.error("❌ Error response:", error.response?.data);
       throw error;
     }
   },
@@ -36,17 +55,15 @@ export const seatService = {
 
   /**
    * Tạo ghế mới (POST /seats)
-   * @param {Object} data - { seatNumber, seatRow, type, price, roomId }
-   * @returns {Promise<Object>}
    */
   create: async (data) => {
     try {
       const payload = {
-        seatNumber: parseInt(data.seatNumber, 10), // Số ghế (1, 2, 3...)
-        seatRow: data.seatRow, // Hàng ghế (A, B, C...)
-        type: data.type, // STANDARD, VIP, COUPLE
-        price: parseFloat(data.price), // Giá ghế
-        roomId: data.roomId, // Room ID
+        seatNumber: parseInt(data.seatNumber, 10),
+        seatRow: data.seatRow,
+        type: data.type,
+        price: parseFloat(data.price),
+        roomId: data.roomId,
       };
       const response = await axiosInstance.post("/seats", payload);
       return response;
@@ -57,10 +74,7 @@ export const seatService = {
   },
 
   /**
-   * Tạo ghế hàng loạt (Bulk create)
-   * API không có sẵn endpoint bulk create, cần loop create
-   * @param {Object} data - { firstRow, lastRow, firstColumn, lastColumn, type, price, roomId }
-   * @returns {Promise<Array>}
+   * Tạo ghế hàng loạt
    */
   createBulk: async (data) => {
     try {
@@ -68,7 +82,6 @@ export const seatService = {
       const firstRowCode = data.firstRow.charCodeAt(0);
       const lastRowCode = data.lastRow.charCodeAt(0);
 
-      // Tạo từng ghế
       for (let row = firstRowCode; row <= lastRowCode; row++) {
         for (let col = data.firstColumn; col <= data.lastColumn; col++) {
           const seatData = {
@@ -92,10 +105,7 @@ export const seatService = {
   },
 
   /**
-   * Cập nhật ghế (PUT /seats/{seatId})
-   * @param {string} id - Seat ID
-   * @param {Object} data - { seatNumber, seatRow, type, price, roomId }
-   * @returns {Promise<Object>}
+   * Cập nhật ghế
    */
   update: async (id, data) => {
     try {
@@ -115,40 +125,30 @@ export const seatService = {
   },
 
   /**
-   * Kiểm tra ghế có available không (Utility function)
-   * @param {Array} seats - Danh sách ghế từ getByShowtime
-   * @param {string} seatId - Seat ID cần kiểm tra
-   * @returns {boolean}
-   */
-  isAvailable: (seats, seatId) => {
-    const seat = seats.find((s) => s.id === seatId);
-    return seat?.status === "AVAILABLE";
-  },
-
-  /**
-   * Lọc ghế theo trạng thái (Utility function)
-   * @param {Array} seats - Danh sách ghế
-   * @param {string} status - AVAILABLE, BOOKED, RESERVED
-   * @returns {Array}
-   */
-  filterByStatus: (seats, status) => {
-    return seats.filter((seat) => seat.status === status);
-  },
-
-  /**
-   * Nhóm ghế theo hàng (Utility function cho UI)
-   * @param {Array} seats - Danh sách ghế
+   * ✅ Utility: Nhóm ghế theo hàng (dùng seatName thay vì seatRow)
+   * @param {Array} seats - Array of { seatId, seatName, seatType, seatStatus, price }
    * @returns {Object} { "A": [...], "B": [...] }
    */
   groupByRow: (seats) => {
     return seats.reduce((groups, seat) => {
-      const row = seat.seatRow;
+      const row = seat.seatName.charAt(0); // "A1" → "A"
       if (!groups[row]) {
         groups[row] = [];
       }
       groups[row].push(seat);
       return groups;
     }, {});
+  },
+
+  /**
+   * Utility: Sort seats trong row
+   */
+  sortSeatsInRow: (seats) => {
+    return seats.sort((a, b) => {
+      const numA = parseInt(a.seatName.substring(1)) || 0;
+      const numB = parseInt(b.seatName.substring(1)) || 0;
+      return numA - numB;
+    });
   },
 };
 

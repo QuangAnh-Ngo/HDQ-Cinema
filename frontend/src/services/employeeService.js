@@ -2,14 +2,9 @@
 import axiosInstance from "./axiosInstance";
 
 export const employeeService = {
-  /**
-   * Lấy danh sách nhân viên (GET /employees)
-   * @returns {Promise<Array>}
-   */
   getAll: async () => {
     try {
       const response = await axiosInstance.get("/employees");
-      // Response: Array of { position, firstName, lastName, phone, email }
       return response || [];
     } catch (error) {
       console.error("Get employees error:", error);
@@ -17,11 +12,6 @@ export const employeeService = {
     }
   },
 
-  /**
-   * Tạo nhân viên mới (POST /employees)
-   * @param {Object} data - { firstName, lastName, phone, email }
-   * @returns {Promise<Object>}
-   */
   create: async (data) => {
     try {
       const payload = {
@@ -30,9 +20,7 @@ export const employeeService = {
         phone: data.phone || data.phoneNumber,
         email: data.email,
       };
-
       const response = await axiosInstance.post("/employees", payload);
-      // Response: { position, firstName, lastName, phone, email }
       return response;
     } catch (error) {
       console.error("Create employee error:", error);
@@ -41,12 +29,9 @@ export const employeeService = {
   },
 
   /**
-   * Cập nhật thông tin nhân viên (PUT /employees/{employeeAccountId})
-   * @param {string} id - Employee Account ID
-   * @param {Object} data - { firstName, lastName, phone, email }
-   * @returns {Promise<Object>}
+   * ✅ FIX: PUT uses {employeeAccountId} not {employeeId}
    */
-  update: async (id, data) => {
+  update: async (employeeAccountId, data) => {
     try {
       const payload = {
         firstName: data.firstName,
@@ -54,8 +39,10 @@ export const employeeService = {
         phone: data.phone || data.phoneNumber,
         email: data.email,
       };
-
-      const response = await axiosInstance.put(`/employees/${id}`, payload);
+      const response = await axiosInstance.put(
+        `/employees/${employeeAccountId}`,
+        payload
+      );
       return response;
     } catch (error) {
       console.error("Update employee error:", error);
@@ -64,13 +51,11 @@ export const employeeService = {
   },
 
   /**
-   * Xóa nhân viên (DELETE /employees/{employeeId})
-   * @param {string} id - Employee ID
-   * @returns {Promise<void>}
+   * ✅ DELETE uses {employeeId}
    */
-  delete: async (id) => {
+  delete: async (employeeId) => {
     try {
-      await axiosInstance.delete(`/employees/${id}`);
+      await axiosInstance.delete(`/employees/${employeeId}`);
     } catch (error) {
       console.error("Delete employee error:", error);
       throw error;

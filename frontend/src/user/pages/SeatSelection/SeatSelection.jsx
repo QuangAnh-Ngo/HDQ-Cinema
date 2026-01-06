@@ -1,60 +1,84 @@
+// frontend/src/user/pages/SeatSelection/SeatSelection.jsx
 import { useState, useEffect, useMemo } from "react";
-import { useParams, useNavigate, useLocation } from "react-router-dom";
-import { Spin, message, Button, Modal } from "antd";
-import {
-  showtimeService,
-  movieService,
-  cinemaService,
-} from "../../../services";
+import { useNavigate, useLocation } from "react-router-dom";
+import { Spin, message, Button } from "antd";
+import { ArrowLeftOutlined, ArrowRightOutlined } from "@ant-design/icons";
+import { seatService, movieService, cinemaService } from "../../../services";
 import SeatMap from "../../components/SeatMap/SeatMap";
-import Ticket from "../../components/Ticket/Ticket";
 import "./SeatSelection.scss";
 
 const SeatSelection = () => {
-  const { showtimeId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Lấy dữ liệu từ state (truyền từ MovieDetail)
-  const { cinemaId, city } = location.state || {};
+  console.log("🔍 Location state:", location.state);
+
+  // ✅ Lấy dữ liệu từ state (truyền từ ScheduleModal)
+  const { showtimeId, movieId, cinemaId } = location.state || {};
 
   const [selectedSeats, setSelectedSeats] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // State lưu trữ thông tin suất chiếu
-  const [showtime, setShowtime] = useState(null);
+  // State lưu trữ thông tin
   const [movie, setMovie] = useState(null);
-  const [roomInfo, setRoomInfo] = useState(null);
+  const [roomData, setRoomData] = useState(null); // ✅ From API /rooms?showtimeId
 
   /**
-   * Tải thông tin suất chiếu, phim và phòng chiếu
+   * ✅ Tải thông tin phim và room data
    */
   useEffect(() => {
     const fetchData = async () => {
-      if (!showtimeId) return;
+      if (!showtimeId || !movieId || !cinemaId) {
+        console.error("❌ Missing required params:", {
+          showtimeId,
+          movieId,
+          cinemaId,
+        });
+        message.error("Thông tin không đầy đủ để hiển thị trang chọn ghế");
+        navigate("/");
+        return;
+      }
+
       setLoading(true);
       try {
-        // 1. Lấy thông tin suất chiếu (id, showTime, roomId, movieId)
-        const stData = await showtimeService.getById(showtimeId);
-        setShowtime(stData);
-
-        // 2. Lấy thông tin phim và rạp (để lấy danh sách phòng)
-        const [movieData, cinemaData] = await Promise.all([
-          movieService.getById(stData.movieId),
-          cinemaService.getById(cinemaId),
+        // Parallel fetch
+        const [movieData, roomResponse] = await Promise.all([
+          movieService.getById(movieId),
+          seatService.getSeatsByShowtime(showtimeId),
         ]);
 
-        setMovie(movieData);
+        console.log("🎬 Movie data:", movieData);
+        console.log("🏢 Room response:", roomResponse);
 
-        // 3. Tìm thông tin phòng chiếu cụ thể từ danh sách phòng của rạp
-        const currentRoom = cinemaData.rooms?.find(
-          (r) => r.roomId === stData.roomId
+        // ✅ Check if room data exists
+        if (!roomResponse) {
+          message.error(
+            "Không tìm thấy thông tin phòng chiếu cho suất chiếu này"
+          );
+          console.error("❌ Room response is null");
+          navigate("/");
+          return;
+        }
+
+        // ✅ Check if seats exist
+        if (!roomResponse.seats || roomResponse.seats.length === 0) {
+          message.warning(
+            "Suất chiếu này chưa có ghế. Vui lòng chọn suất chiếu khác."
+          );
+          console.warn("⚠️ No seats found for this showtime");
+        }
+
+        setMovie(movieData);
+        setRoomData(roomResponse);
+
+        console.log("✅ Data loaded successfully");
+        console.log(
+          "🏢 Room:",
+          roomResponse.roomName,
+          "-",
+          roomResponse.cinemaName
         );
-        setRoomInfo({
-          ...currentRoom,
-          cinemaName: cinemaData.name,
-          cinemaId: cinemaData.id,
-        });
+        console.log("💺 Seats:", roomResponse.seats?.length || 0);
       } catch (error) {
         console.error("Fetch selection data error:", error);
         message.error("Không thể tải thông tin suất chiếu");
@@ -65,17 +89,13 @@ const SeatSelection = () => {
     };
 
     fetchData();
-  }, [showtimeId, cinemaId, navigate]);
+  }, [showtimeId, movieId, cinemaId, navigate]);
 
   /**
-   * Tính toán tổng tiền dựa trên danh sách ghế đã chọn
-   * Mỗi ghế từ SeatMap đã có sẵn trường 'price'
+   * ✅ Tính toán tổng tiền
    */
   const priceInfo = useMemo(() => {
-    const total = selectedSeats.reduce(
-      (sum, seat) => sum + (seat.price || 0),
-      0
-    );
+    const total = selectedSeats.reduce((sum, seat) => sum + seat.price, 0);
     return {
       totalPrice: total,
       seatCount: selectedSeats.length,
@@ -83,97 +103,193 @@ const SeatSelection = () => {
   }, [selectedSeats]);
 
   /**
-   * Chuyển sang bước xác nhận thanh toán
+   * ✅ Chuyển sang bước xác nhận thanh toán
    */
   const handleContinueToPayment = () => {
     if (selectedSeats.length === 0) {
-      message.warning("Vui lòng chọn ít nhất một chỗ ngồi để tiếp tục");
+      message.warning("Vui lòng chọn ít nhất một ghế để tiếp tục");
       return;
     }
 
-    // Chuyển sang trang ConfirmPayment với đầy đủ thông tin
-    navigate(`/confirm-payment/new`, {
+    // Navigate với đầy đủ thông tin
+    navigate("/confirm-payment", {
       state: {
         showtimeId,
+        movieId,
+        cinemaId,
         selectedSeats,
         priceInfo,
         movie,
-        showtime,
-        roomInfo, // Chứa cinemaName, roomName
+        roomData, // { roomId, roomName, cinemaName, showtimeId, seats }
       },
     });
   };
 
   if (loading) {
     return (
-      <div className="flex h-screen items-center justify-center bg-[#f9f9f9]">
+      <div className="loading-container">
         <Spin size="large" />
+        <p className="loading-text">Đang tải thông tin suất chiếu...</p>
+      </div>
+    );
+  }
+
+  if (!movie || !roomData) {
+    return (
+      <div className="error-container">
+        <Empty
+          description="Không thể tải thông tin suất chiếu"
+          image={Empty.PRESENTED_IMAGE_SIMPLE}
+        >
+          <Button type="primary" onClick={() => navigate("/")}>
+            Về trang chủ
+          </Button>
+        </Empty>
       </div>
     );
   }
 
   return (
-    <div className="seat-selection-page max-w-7xl mx-auto px-4 py-8">
-      {/* KHU VỰC CHỌN GHẾ (BÊN TRÁI) */}
-      <div className="seat-container bg-white rounded-3xl p-8 shadow-sm">
-        <h1 className="text-2xl font-black text-gray-800 uppercase mb-8">
-          Chọn chỗ ngồi
-        </h1>
+    <div className="seat-selection-page">
+      <div className="selection-container">
+        {/* ===== HEADER ===== */}
+        <div className="selection-header">
+          <button className="back-button" onClick={() => navigate(-1)}>
+            <ArrowLeftOutlined /> Quay lại
+          </button>
 
-        {/* Chú thích loại ghế */}
-        <div className="seat-annotation mb-12 border-b border-gray-100 pb-8">
-          <div className="seat-type">
-            <div className="w-6 h-6 bg-gray-200 rounded flex items-center justify-center">
-              <i className="fa-solid fa-couch text-xs text-gray-400"></i>
+          <div className="movie-info">
+            <h1 className="movie-title">{movie?.title}</h1>
+            <div className="movie-meta">
+              <span className="cinema-name">{roomData?.cinemaName}</span>
+              <span className="separator">•</span>
+              <span className="room-name">{roomData?.roomName}</span>
             </div>
-            <span className="text-sm font-medium">Ghế thường</span>
-          </div>
-          <div className="seat-type">
-            <div className="w-6 h-6 bg-amber-100 rounded flex items-center justify-center">
-              <i className="fa-solid fa-couch text-xs text-amber-500"></i>
-            </div>
-            <span className="text-sm font-medium">Ghế VIP</span>
-          </div>
-          <div className="seat-type">
-            <div className="w-6 h-6 bg-[#8864f0] rounded flex items-center justify-center">
-              <i className="fa-solid fa-couch text-xs text-white"></i>
-            </div>
-            <span className="text-sm font-medium">Đang chọn</span>
-          </div>
-          <div className="seat-type opacity-50">
-            <div className="w-6 h-6 bg-gray-400 rounded flex items-center justify-center">
-              <i className="fa-solid fa-couch text-xs text-white"></i>
-            </div>
-            <span className="text-sm font-medium">Đã bán</span>
           </div>
         </div>
 
-        {/* Màn hình */}
-        <div className="screen-wrapper mb-16">
-          <div className="screen-line mx-auto mb-4"></div>
-          <p className="text-[10px] uppercase tracking-[1em] text-gray-400">
-            Màn hình chiếu
-          </p>
+        {/* ===== MAIN CONTENT ===== */}
+        <div className="selection-content">
+          {/* LEFT: Seat map */}
+          <div className="seat-section">
+            <div className="section-header">
+              <h2>Chọn ghế ngồi</h2>
+              <p className="section-subtitle">
+                Chọn tối đa 8 ghế trong một lần đặt
+              </p>
+            </div>
+
+            {/* Seat legend */}
+            <div className="seat-legend">
+              <div className="legend-item">
+                <div className="legend-icon available">
+                  <i className="fa-solid fa-couch"></i>
+                </div>
+                <span>Ghế thường</span>
+              </div>
+              <div className="legend-item">
+                <div className="legend-icon available vip">
+                  <i className="fa-solid fa-couch"></i>
+                </div>
+                <span>Ghế VIP</span>
+              </div>
+              <div className="legend-item">
+                <div className="legend-icon selected">
+                  <i className="fa-solid fa-couch"></i>
+                </div>
+                <span>Đang chọn</span>
+              </div>
+              <div className="legend-item">
+                <div className="legend-icon booked">
+                  <i className="fa-solid fa-couch"></i>
+                </div>
+                <span>Đã đặt</span>
+              </div>
+            </div>
+
+            {/* Seat Map Component */}
+            <SeatMap
+              showtimeId={showtimeId}
+              selectedSeats={selectedSeats}
+              onSeatSelect={setSelectedSeats}
+            />
+          </div>
+
+          {/* RIGHT: Summary */}
+          <div className="summary-section">
+            <div className="summary-card">
+              <h3>Thông tin đặt vé</h3>
+
+              {/* Movie poster */}
+              {movie?.poster && (
+                <div className="summary-poster">
+                  <img src={movie.poster} alt={movie.title} />
+                </div>
+              )}
+
+              {/* Movie info */}
+              <div className="summary-details">
+                <div className="detail-row">
+                  <span className="label">Phim</span>
+                  <span className="value">{movie?.title}</span>
+                </div>
+                <div className="detail-row">
+                  <span className="label">Rạp</span>
+                  <span className="value">{roomData?.cinemaName}</span>
+                </div>
+                <div className="detail-row">
+                  <span className="label">Phòng</span>
+                  <span className="value">{roomData?.roomName}</span>
+                </div>
+              </div>
+
+              {/* Selected seats */}
+              <div className="selected-seats-section">
+                <div className="section-title">Ghế đã chọn</div>
+                {selectedSeats.length > 0 ? (
+                  <>
+                    <div className="seats-list">
+                      {selectedSeats.map((seat) => (
+                        <div key={seat.seatId} className="seat-item">
+                          <span className="seat-name">{seat.seatName}</span>
+                          <span className="seat-price">
+                            {new Intl.NumberFormat("vi-VN").format(seat.price)}đ
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Total */}
+                    <div className="summary-total">
+                      <span className="total-label">Tổng cộng</span>
+                      <span className="total-amount">
+                        {new Intl.NumberFormat("vi-VN").format(
+                          priceInfo.totalPrice
+                        )}
+                        đ
+                      </span>
+                    </div>
+                  </>
+                ) : (
+                  <p className="empty-seats">Chưa chọn ghế nào</p>
+                )}
+              </div>
+
+              {/* Continue button */}
+              <Button
+                type="primary"
+                size="large"
+                block
+                className="continue-button"
+                onClick={handleContinueToPayment}
+                disabled={selectedSeats.length === 0}
+                icon={<ArrowRightOutlined />}
+              >
+                Tiếp tục thanh toán
+              </Button>
+            </div>
+          </div>
         </div>
-
-        {/* Sơ đồ ghế */}
-        <SeatMap
-          showtimeId={showtimeId}
-          selectedSeats={selectedSeats}
-          onSeatSelect={setSelectedSeats}
-        />
-      </div>
-
-      {/* TÓM TẮT VÉ (BÊN PHẢI - COMPONENT TICKET) */}
-      <div className="ticket-summary-panel w-full lg:w-[380px]">
-        <Ticket
-          movie={movie}
-          showtime={showtime}
-          roomInfo={roomInfo}
-          selectedSeats={selectedSeats}
-          priceInfo={priceInfo}
-          onContinue={handleContinueToPayment}
-        />
       </div>
     </div>
   );

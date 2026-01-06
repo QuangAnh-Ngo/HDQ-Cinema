@@ -1,96 +1,109 @@
-import { useState } from "react";
+// frontend/src/admin/components/Common/Sidebar.jsx
 import { Link, useLocation } from "react-router-dom";
-import {
-  FiHome,
-  FiFilm,
-  FiMapPin,
-  FiGrid,
-  FiClock,
-  FiShoppingBag,
-  FiChevronLeft,
-  FiChevronRight,
-  FiUser,
-} from "react-icons/fi";
+import { authService } from "../../../services";
+import PermissionWrapper from "./PermissionWrapper";
 import "../../styles/AdminLayout.scss";
 
 const Sidebar = () => {
-  const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
-
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
-  const userRole = user.role; // 'admin' hoặc 'manager'
+  const userRole = authService.getHighestRole();
+  const userName = authService.getCurrentUser()?.fullName || "User";
 
   const menuItems = [
     {
       path: "/admin/dashboard",
-      icon: FiHome,
       label: "Dashboard",
-      roles: ["admin", "manager"],
+      icon: "fa-chart-line",
+      roles: ["EMPLOYEE", "MANAGER", "ADMIN"],
     },
     {
       path: "/admin/movies",
-      icon: FiFilm,
       label: "Quản lý phim",
-      roles: ["admin", "manager"],
-    },
-    {
-      path: "/admin/cinemas",
-      icon: FiMapPin,
-      label: "Quản lý rạp",
-      roles: ["admin", "manager"],
-    },
-    {
-      path: "/admin/rooms",
-      icon: FiGrid,
-      label: "Quản lý phòng",
-      roles: ["admin", "manager"],
+      icon: "fa-film",
+      roles: ["EMPLOYEE", "MANAGER", "ADMIN"],
     },
     {
       path: "/admin/showtimes",
-      icon: FiClock,
-      label: "Lịch chiếu",
-      roles: ["admin", "manager"],
+      label: "Quản lý suất chiếu",
+      icon: "fa-clock",
+      roles: ["EMPLOYEE", "MANAGER", "ADMIN"],
     },
     {
       path: "/admin/bookings",
-      icon: FiShoppingBag,
-      label: "Đặt vé",
-      roles: ["admin", "manager"],
+      label: "Quản lý đặt vé",
+      icon: "fa-ticket",
+      roles: ["EMPLOYEE", "MANAGER", "ADMIN"],
     },
-    // Mục chỉ dành cho Admin
+    {
+      path: "/admin/cinemas",
+      label: "Quản lý rạp",
+      icon: "fa-building",
+      roles: ["MANAGER", "ADMIN"],
+    },
+    {
+      path: "/admin/rooms",
+      label: "Quản lý phòng",
+      icon: "fa-door-open",
+      roles: ["MANAGER", "ADMIN"],
+    },
     {
       path: "/admin/employees",
-      icon: FiUser,
-      label: "Quản lý nhân sự",
-      roles: ["admin"],
+      label: "Quản lý nhân viên",
+      icon: "fa-users",
+      roles: ["MANAGER", "ADMIN"],
     },
   ];
 
-  const isActive = (path) => location.pathname === path;
+  const getRoleBadgeClass = (role) => {
+    const classes = {
+      ADMIN: "role-admin",
+      MANAGER: "role-manager",
+      EMPLOYEE: "role-employee",
+    };
+    return classes[role] || "role-default";
+  };
 
   return (
-    <div className={`admin-sidebar ${collapsed ? "collapsed" : ""}`}>
+    <div className="admin-sidebar">
+      {/* User Info */}
       <div className="sidebar-header">
-        {!collapsed && <h1>Cinema Admin</h1>}
-        <button onClick={() => setCollapsed(!collapsed)}>
-          {collapsed ? <FiChevronRight /> : <FiChevronLeft />}
-        </button>
+        <div className="user-info">
+          <div className="user-avatar">
+            <i className="fas fa-user-circle"></i>
+          </div>
+          <div className="user-details">
+            <span className="user-name">{userName}</span>
+            <span className={`user-role ${getRoleBadgeClass(userRole)}`}>
+              {userRole}
+            </span>
+          </div>
+        </div>
       </div>
 
-      <nav>
-        {menuItems
-          .filter((item) => item.roles.includes(userRole))
-          .map((item) => (
+      {/* Menu */}
+      <nav className="sidebar-menu">
+        {menuItems.map((item) => (
+          <PermissionWrapper key={item.path} allowedRoles={item.roles}>
             <Link
-              key={item.path}
               to={item.path}
-              className={isActive(item.path) ? "active" : ""}
+              className={`menu-item ${
+                location.pathname === item.path ? "active" : ""
+              }`}
             >
-              <item.icon size={20} />
-              {!collapsed && <span>{item.label}</span>}
+              <i className={`fas ${item.icon}`}></i>
+              <span>{item.label}</span>
             </Link>
-          ))}
+          </PermissionWrapper>
+        ))}
       </nav>
+
+      {/* Logout */}
+      <div className="sidebar-footer">
+        <button className="logout-btn" onClick={() => authService.logout()}>
+          <i className="fas fa-sign-out-alt"></i>
+          <span>Đăng xuất</span>
+        </button>
+      </div>
     </div>
   );
 };

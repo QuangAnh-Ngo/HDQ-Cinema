@@ -1,6 +1,6 @@
 // frontend/src/user/pages/ConfirmPayment/ConfirmPayment.jsx
 import { useState, useEffect } from "react";
-import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Button, Spin, message, Card, Divider } from "antd";
 import { bookingService, paymentService, authService } from "../../../services";
 import Ticket from "../../components/Ticket/Ticket";
@@ -10,72 +10,123 @@ const ConfirmPayment = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Lấy dữ liệu từ SeatSelection truyền qua state
-  const { showtimeId, selectedSeats, priceInfo, showtime, movie, roomInfo } =
-    location.state || {};
+  // ✅ Lấy data từ SeatSelection
+  const {
+    showtimeId,
+    movieId,
+    cinemaId,
+    selectedSeats,
+    priceInfo,
+    movie,
+    roomData,
+  } = location.state || {};
 
   const [loading, setLoading] = useState(false);
 
-  /**
-   * Kiểm tra đăng nhập và dữ liệu đầu vào
-   */
   useEffect(() => {
+    // ✅ Check authentication
     if (!authService.isAuthenticated()) {
       message.warning("Vui lòng đăng nhập để tiến hành thanh toán");
       navigate("/login", { state: { from: location.pathname } });
       return;
     }
 
-    if (!selectedSeats || selectedSeats.length === 0) {
+    // ✅ Validate required data
+    if (
+      !showtimeId ||
+      !selectedSeats ||
+      selectedSeats.length === 0 ||
+      !cinemaId
+    ) {
       message.error("Thông tin đặt vé không hợp lệ");
       navigate("/");
+      return;
     }
-  }, [navigate, selectedSeats, location.pathname]);
+  }, [navigate, showtimeId, selectedSeats, cinemaId, location.pathname]);
 
   /**
-   * Quy trình xử lý thanh toán:
-   * 1. Tạo đơn đặt vé (Booking)
-   * 2. Tạo yêu cầu thanh toán (Payment)
-   * 3. Chuyển hướng sang VNPAY
+   * ✅ Payment flow:
+   * 1. Create booking → Get bookingId
+   * 2. Create payment → Get VNPay URL
+   * 3. Redirect to VNPay
    */
   const handlePayment = async () => {
     setLoading(true);
 
     try {
       const user = authService.getCurrentUser();
+      console.log("👤 Current user:", user);
 
-      // 1. Tạo dữ liệu đơn hàng theo đúng Spec Backend
       const bookingData = {
-        userId: user.id || user.memberId,
+        userId: user.id || user.memberId || user.userId,
         showTimeId: showtimeId,
-        cinemaId: roomInfo.cinemaId,
+        cinemaId: cinemaId,
         seats: selectedSeats.map((seat) => seat.seatId),
       };
 
-      // Gửi yêu cầu tạo booking
+      console.log("📝 Creating booking with data:", bookingData);
+      message.loading("Đang tạo đơn đặt vé...", 0);
+
       const bookingResponse = await bookingService.create(bookingData);
+      console.log("✅ Booking created:", bookingResponse);
 
-      // Lấy bookingId từ kết quả trả về (thường nằm trong response.id hoặc response.result)
-      const bookingId = bookingResponse.id || bookingResponse;
+      const bookingId = bookingResponse.id;
 
-      message.loading("Đang khởi tạo giao dịch...", 1);
+      if (!bookingId) {
+        throw new Error("Không nhận được mã đặt vé từ server");
+      }
 
-      // 2. Tạo yêu cầu thanh toán VNPAY
+      message.destroy();
+      message.loading("Đang khởi tạo thanh toán...", 0);
+
       const paymentResponse = await paymentService.create(bookingId);
+      console.log("✅ Payment created:", paymentResponse);
 
-      // 3. Chuyển hướng người dùng đến cổng thanh toán VNPay
-      if (paymentResponse && paymentResponse.url) {
-        window.location.href = paymentResponse.url;
+      message.destroy();
+
+      if (paymentResponse?.url) {
+        message.success("Chuyển hướng đến cổng thanh toán...", 1);
+        setTimeout(() => {
+          window.location.href = paymentResponse.url;
+        }, 1000);
       } else {
-        throw new Error("Không thể khởi tạo liên kết thanh toán VNPay");
+        throw new Error("Không nhận được URL thanh toán từ VNPay");
       }
     } catch (error) {
-      console.error("Payment flow error:", error);
-      message.error(
-        error.response?.data?.message ||
-          "Quá trình thanh toán thất bại. Vui lòng thử lại."
-      );
-    } finally {
+      console.error("❌ Payment flow error:", error);
+      message.destroy();
+
+      // ✅ Handle mock mode error with detailed message
+      if (error.needRealAuth || error.mockMode) {
+        const errorMsg = error.message || "Backend chưa hỗ trợ mock payment";
+
+        message.error({
+          content: (
+            <div style={{ whiteSpace: "pre-line" }}>
+              <strong>⚠️ Thanh toán yêu cầu đăng nhập thật</strong>
+              <br />
+              <br />
+              {errorMsg}
+              <br />
+              <br />
+              <strong>Giải pháp:</strong>
+              <br />
+              1. Đăng xuất và đăng ký/đăng nhập với tài khoản thật
+              <br />
+              2. Hoặc yêu cầu backend hỗ trợ X-Mock-Mode headers
+            </div>
+          ),
+          duration: 10,
+          style: { maxWidth: 500 },
+        });
+      } else {
+        message.error(
+          error.response?.data?.message ||
+            error.message ||
+            "Không thể tạo đơn thanh toán. Vui lòng thử lại."
+        );
+      }
+
       setLoading(false);
     }
   };
@@ -84,18 +135,24 @@ const ConfirmPayment = () => {
     navigate(-1);
   };
 
-  if (!movie || !showtime || !roomInfo) {
+  // ✅ Loading state
+  if (!movie || !roomData) {
     return (
-      <div className="flex h-screen items-center justify-center">
+      <div className="flex h-screen items-center justify-center bg-gray-50">
         <Spin size="large" />
       </div>
     );
   }
 
+  // ✅ Prepare showtime object for Ticket component
+  const showtimeData = {
+    showTime: roomData.showTime || new Date().toISOString(), // Fallback
+  };
+
   return (
     <div className="confirm-payment-page min-h-screen bg-gray-50 py-10 px-4">
       <div className="payment-container max-w-6xl mx-auto flex flex-col lg:flex-row gap-8 justify-center items-start">
-        {/* PHẦN THÔNG TIN HƯỚNG DẪN (BÊN TRÁI) */}
+        {/* LEFT: Instructions */}
         <div className="flex-1 w-full">
           <Card className="instructions-card rounded-3xl shadow-sm border-none p-4">
             <h2 className="text-2xl font-black text-gray-800 uppercase mb-2">
@@ -117,12 +174,18 @@ const ConfirmPayment = () => {
                   </strong>
                 </li>
                 <li className="flex justify-between items-center">
+                  <span className="text-gray-500">Ghế đã chọn:</span>
+                  <strong className="text-purple-600">
+                    {selectedSeats?.map((s) => s.seatName).join(", ")}
+                  </strong>
+                </li>
+                <li className="flex justify-between items-center">
                   <span className="text-gray-500">Phương thức thanh toán:</span>
                   <div className="flex items-center gap-2">
                     <img
-                      src="https://vnpay.vn/s90/f90/2020/9/vnpay-qr.png"
+                      src="https://vnpay.vn/s1/statics.vnpay.vn/2023/9/06ncktiwd6dc1694418196384.png"
                       alt="VNPay"
-                      className="h-4"
+                      className="h-6"
                     />
                     <strong className="text-blue-600">VNPay</strong>
                   </div>
@@ -130,8 +193,11 @@ const ConfirmPayment = () => {
                 <Divider className="my-2" />
                 <li className="flex justify-between items-center">
                   <span className="text-gray-700 font-bold">Tổng số tiền:</span>
-                  <strong className="total-price text-2xl text-red-600 font-black">
-                    {(priceInfo?.totalPrice || 0).toLocaleString("vi-VN")} VNĐ
+                  <strong className="text-2xl text-red-600 font-black">
+                    {new Intl.NumberFormat("vi-VN").format(
+                      priceInfo?.totalPrice || 0
+                    )}{" "}
+                    VNĐ
                   </strong>
                 </li>
               </ul>
@@ -139,10 +205,9 @@ const ConfirmPayment = () => {
 
             <div className="payment-note mt-8 p-4 bg-amber-50 rounded-xl border border-amber-100">
               <p className="text-amber-800 text-sm leading-relaxed">
-                <strong>Lưu ý:</strong> Sau khi nhấn "Thanh toán", hệ thống sẽ
-                chuyển bạn đến cổng VNPAY an toàn. Giao dịch cần được hoàn tất
-                trong vòng <strong>10 phút</strong> để đảm bảo giữ chỗ thành
-                công.
+                <strong>⚠️ Lưu ý:</strong> Sau khi nhấn "Thanh toán", hệ thống
+                sẽ chuyển bạn đến cổng VNPAY. Giao dịch cần được hoàn tất trong
+                vòng <strong>15 phút</strong> để đảm bảo giữ chỗ thành công.
               </p>
             </div>
 
@@ -151,7 +216,7 @@ const ConfirmPayment = () => {
                 size="large"
                 onClick={handleCancel}
                 disabled={loading}
-                className="flex-1 h-14 rounded-xl font-bold border-gray-200"
+                className="flex-1 h-14 rounded-xl font-bold border-gray-200 hover:bg-gray-50"
               >
                 Quay lại
               </Button>
@@ -161,7 +226,7 @@ const ConfirmPayment = () => {
                 onClick={handlePayment}
                 loading={loading}
                 disabled={!selectedSeats || selectedSeats.length === 0}
-                className="flex-[2] h-14 rounded-xl font-black uppercase tracking-widest bg-blue-600 border-none shadow-lg shadow-blue-100"
+                className="flex-[2] h-14 rounded-xl font-black uppercase tracking-widest bg-blue-600 hover:bg-blue-700 border-none shadow-lg"
               >
                 {loading ? "Đang xử lý..." : "Thanh toán qua VNPAY"}
               </Button>
@@ -169,12 +234,12 @@ const ConfirmPayment = () => {
           </Card>
         </div>
 
-        {/* PHẦN TÓM TẮT VÉ (BÊN PHẢI) */}
+        {/* RIGHT: Ticket summary */}
         <div className="w-full lg:w-[380px]">
           <Ticket
             movie={movie}
-            showtime={showtime}
-            roomInfo={roomInfo}
+            showtime={showtimeData}
+            roomInfo={roomData}
             selectedSeats={selectedSeats}
             priceInfo={priceInfo}
             onContinue={handlePayment}

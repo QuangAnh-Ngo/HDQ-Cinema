@@ -1,3 +1,4 @@
+// frontend/src/admin/pages/Cinemas.jsx
 import { useState, useEffect } from "react";
 import {
   FiPlus,
@@ -11,13 +12,8 @@ import Breadcrumb from "../components/Common/Breadcrumb";
 import Loading from "../components/Common/Loading";
 import ConfirmDialog from "../components/Common/ConfirmDialog";
 import CinemaForm from "../components/CinemaForm";
-import {
-  getCinemas,
-  createCinema,
-  updateCinema,
-  deleteCinema,
-} from "../services/cinemas";
-import { toast } from "react-toastify";
+import { cinemaService } from "../../services";
+import { message } from "antd";
 import "../styles/AdminLayout.scss";
 
 const Cinemas = () => {
@@ -43,11 +39,21 @@ const Cinemas = () => {
   const fetchCinemas = async () => {
     try {
       setLoading(true);
-      const data = await getCinemas();
-      setCinemas(data.cinemas || data);
+      const data = await cinemaService.getAll();
+
+      // ✅ Set default status if missing
+      const cinemasWithStatus = (Array.isArray(data) ? data : []).map(
+        (cinema) => ({
+          ...cinema,
+          status: cinema.status || "active", // ✅ Default to active
+        })
+      );
+
+      setCinemas(cinemasWithStatus);
     } catch (error) {
       console.error("Error fetching cinemas:", error);
-      toast.error(error.message || "Lỗi khi tải danh sách rạp");
+      message.error(error.message || "Lỗi khi tải danh sách rạp");
+      setCinemas([]);
     } finally {
       setLoading(false);
     }
@@ -59,8 +65,8 @@ const Cinemas = () => {
     if (searchTerm) {
       filtered = filtered.filter(
         (cinema) =>
-          cinema.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          cinema.address.toLowerCase().includes(searchTerm.toLowerCase())
+          cinema.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          cinema.address?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
@@ -88,34 +94,37 @@ const Cinemas = () => {
 
   const confirmDelete = async () => {
     try {
-      await deleteCinema(cinemaToDelete.id);
+      await cinemaService.delete(cinemaToDelete.id);
       setCinemas((prev) => prev.filter((c) => c.id !== cinemaToDelete.id));
-      toast.success("Xóa rạp thành công!");
+      message.success("Xóa rạp thành công!");
     } catch (error) {
       console.error("Error deleting cinema:", error);
-      toast.error(error.message || "Có lỗi xảy ra khi xóa rạp!");
+      message.error(error.message || "Có lỗi xảy ra khi xóa rạp!");
     }
   };
 
   const handleSubmitCinema = async (cinemaData) => {
     try {
       if (selectedCinema) {
-        const updated = await updateCinema(selectedCinema.id, cinemaData);
+        const updated = await cinemaService.update(
+          selectedCinema.id,
+          cinemaData
+        );
         setCinemas((prev) =>
           prev.map((c) => (c.id === selectedCinema.id ? updated : c))
         );
-        toast.success("Cập nhật rạp thành công!");
+        message.success("Cập nhật rạp thành công!");
       } else {
-        const newCinema = await createCinema(cinemaData);
+        const newCinema = await cinemaService.create(cinemaData);
         setCinemas((prev) => [...prev, newCinema]);
-        toast.success("Thêm rạp thành công!");
+        message.success("Thêm rạp thành công!");
       }
 
       setShowCinemaForm(false);
       setSelectedCinema(null);
     } catch (error) {
       console.error("Error submitting cinema:", error);
-      toast.error(error.message || "Có lỗi xảy ra!");
+      message.error(error.message || "Có lỗi xảy ra!");
     }
   };
 

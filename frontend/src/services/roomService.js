@@ -1,48 +1,130 @@
 // frontend/src/services/roomService.js
 import axiosInstance from "./axiosInstance";
 
+// ✅ Cache rooms in memory to avoid repeated API calls
+let cachedRooms = null;
+let cacheTimestamp = null;
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
 export const roomService = {
   /**
-   * Lấy danh sách tất cả phòng (GET /rooms)
-   * @returns {Promise<Array>}
+   * ✅ Get all rooms with caching
    */
-  getAll: async () => {
+  getAll: async (forceRefresh = false) => {
     try {
-      const response = await axiosInstance.get("/rooms");
-      return response || [];
+      // Check cache
+      if (!forceRefresh && cachedRooms && cacheTimestamp) {
+        const now = Date.now();
+        if (now - cacheTimestamp < CACHE_DURATION) {
+          console.log("✅ Using cached rooms");
+          return cachedRooms;
+        }
+      }
+
+      // Fetch from API
+      const theaters = await axiosInstance.get("/theaters");
+
+      const allRooms = [];
+      if (Array.isArray(theaters)) {
+        theaters.forEach((theater) => {
+          if (theater.rooms && Array.isArray(theater.rooms)) {
+            theater.rooms.forEach((room) => {
+              allRooms.push({
+                ...room,
+                id: room.roomId,
+                name: room.roomName,
+                cinemaId: theater.id,
+                cinemaName: theater.name || room.cinemaName,
+                cinemaCity: theater.city,
+                capacity: room.capacity || 120,
+                type: room.type || "2D",
+                status: room.status || "active",
+              });
+            });
+          }
+        });
+      }
+
+      // Update cache
+      cachedRooms = allRooms;
+      cacheTimestamp = Date.now();
+
+      console.log("✅ Fetched and cached rooms:", allRooms.length);
+      return allRooms;
     } catch (error) {
       console.error("Get all rooms error:", error);
-      throw error;
+      return cachedRooms || []; // Return cache on error
     }
   },
 
   /**
-   * Lấy chi tiết phòng theo ID (GET /rooms/{roomId})
-   * @param {string} id - Room ID
-   * @returns {Promise<Object>}
+   * ✅ ADD: Get room by ID (from cache)
    */
-  getById: async (id) => {
+  getById: async (roomId) => {
     try {
-      const response = await axiosInstance.get(`/rooms/${id}`);
-      return response;
+      // Get all rooms (will use cache if available)
+      const allRooms = await roomService.getAll();
+
+      // Find room by ID
+      const room = allRooms.find(
+        (r) =>
+          String(r.id) === String(roomId) || String(r.roomId) === String(roomId)
+      );
+
+      if (!room) {
+        console.warn(`Room not found: ${roomId}`);
+        return null;
+      }
+
+      return room;
     } catch (error) {
       console.error("Get room by ID error:", error);
+      return null;
+    }
+  },
+
+  /**
+   * Get room by showtime (original API)
+   */
+  getRoomByShowtime: async (showtimeId) => {
+    try {
+      const response = await axiosInstance.get("/rooms", {
+        params: { showtimeId },
+      });
+      return response;
+    } catch (error) {
+      console.error("Get room by showtime error:", error);
       throw error;
     }
   },
 
   /**
-   * Tạo phòng chiếu mới (POST /rooms)
-   * @param {Object} data - { roomName, cinemaId }
-   * @returns {Promise<Object>}
+   * Get rooms by cinema ID
+   */
+  getByCinema: async (cinemaId) => {
+    try {
+      const allRooms = await roomService.getAll();
+      return allRooms.filter((r) => String(r.cinemaId) === String(cinemaId));
+    } catch (error) {
+      console.error("Get rooms by cinema error:", error);
+      return [];
+    }
+  },
+
+  /**
+   * Create new room
    */
   create: async (data) => {
     try {
       const payload = {
-        roomName: data.roomName,
+        roomName: data.roomName || data.name,
         cinemaId: data.cinemaId,
       };
       const response = await axiosInstance.post("/rooms", payload);
+
+      // Clear cache after creating
+      cachedRooms = null;
+
       return response;
     } catch (error) {
       console.error("Create room error:", error);
@@ -51,53 +133,23 @@ export const roomService = {
   },
 
   /**
-   * Cập nhật phòng (PUT /rooms/{roomId})
-   * @param {string} id - Room ID
-   * @param {Object} data - { roomName, cinemaId }
-   * @returns {Promise<Object>}
+   * Clear cache manually
+   */
+  clearCache: () => {
+    cachedRooms = null;
+    cacheTimestamp = null;
+    console.log("✅ Room cache cleared");
+  },
+
+  /**
+   * Update & Delete not available
    */
   update: async (id, data) => {
-    try {
-      const payload = {
-        roomName: data.roomName,
-        cinemaId: data.cinemaId,
-      };
-      const response = await axiosInstance.put(`/rooms/${id}`, payload);
-      return response;
-    } catch (error) {
-      console.error("Update room error:", error);
-      throw error;
-    }
+    throw new Error("Room update endpoint not implemented in backend");
   },
 
-  /**
-   * Xóa phòng (DELETE /rooms/{roomId})
-   * @param {string} id - Room ID
-   * @returns {Promise<void>}
-   */
   delete: async (id) => {
-    try {
-      await axiosInstance.delete(`/rooms/${id}`);
-    } catch (error) {
-      console.error("Delete room error:", error);
-      throw error;
-    }
-  },
-
-  /**
-   * Lấy danh sách phòng theo rạp (Utility - dùng cinema endpoint)
-   * @param {string} cinemaId - Cinema ID
-   * @returns {Promise<Array>}
-   */
-  getByCinema: async (cinemaId) => {
-    try {
-      // Lấy từ theater endpoint vì nó trả về rooms
-      const cinema = await axiosInstance.get(`/theaters/${cinemaId}`);
-      return cinema.rooms || [];
-    } catch (error) {
-      console.error("Get rooms by cinema error:", error);
-      return [];
-    }
+    throw new Error("Room delete endpoint not implemented in backend");
   },
 };
 

@@ -1,20 +1,48 @@
-import { Navigate, useLocation } from "react-router-dom";
+// frontend/src/admin/AdminProtectedRoute.jsx
+import { Navigate } from "react-router-dom";
+import { authService } from "../services";
 
-const AdminProtectedRoute = ({ children, allowedRoles }) => {
-  const location = useLocation();
-  const token = localStorage.getItem("token");
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
+/**
+ * Protected route for admin pages
+ * Checks authentication and role permissions
+ */
+const AdminProtectedRoute = ({ children, allowedRoles = [] }) => {
+  const isAuthenticated = authService.isAuthenticated();
+  const userRoles = authService.getRoles();
 
-  if (!token)
-    return <Navigate to="/login" state={{ from: location }} replace />;
+  console.log("🔐 AdminProtectedRoute check:", {
+    isAuthenticated,
+    userRoles,
+    allowedRoles,
+  });
 
-  if (allowedRoles && !allowedRoles.includes(user.role)) {
-    if (user.role === "member") {
+  // ✅ Not authenticated → Redirect to login
+  if (!isAuthenticated) {
+    console.log("❌ Not authenticated, redirecting to login");
+    return <Navigate to="/login" replace />;
+  }
+
+  // ✅ No role restriction → Allow if staff
+  if (allowedRoles.length === 0) {
+    const isStaff = authService.isStaff();
+
+    if (!isStaff) {
+      console.log("❌ Not staff, redirecting to home");
       return <Navigate to="/" replace />;
     }
+
+    return children;
+  }
+
+  // ✅ Check if user has any of the allowed roles
+  const hasPermission = allowedRoles.some((role) => userRoles.includes(role));
+
+  if (!hasPermission) {
+    console.log("❌ No permission, redirecting to admin dashboard");
     return <Navigate to="/admin/dashboard" replace />;
   }
 
+  // ✅ All checks passed
   return children;
 };
 

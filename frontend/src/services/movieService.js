@@ -45,28 +45,18 @@ export const movieService = {
    * @returns {Promise<Array>} Mảng unique movies
    */
   getAll: async () => {
-    // 1. Lấy tất cả cinemas
-    const cinemas = await cinemaService.getAll(); // [cinema1, cinema2, ...]
+    try {
+      console.log("🔧 movieService.getAll() - Fetching all movies...");
 
-    // 2. Loop qua từng cinema
-    const allMoviesPromises = cinemas.map(async (cinema) => {
-      const [showing, upcoming] = await Promise.all([
-        movieService.getShowing(cinema.id), // ?c=01
-        movieService.getUpcoming(cinema.id), // ?c=01
-      ]);
-      return [...showing, ...upcoming];
-    });
+      const response = await axiosInstance.get("/movies");
 
-    // 3. Merge tất cả
-    const moviesArrays = await Promise.all(allMoviesPromises);
-    const allMovies = moviesArrays.flat(); // [movie1, movie2, movie1, movie3, ...]
+      console.log("🔧 Total movies:", response?.length || 0);
 
-    // 4. Remove duplicates
-    const uniqueMovies = Array.from(
-      new Map(allMovies.map((m) => [m.id, m])).values()
-    );
-
-    return uniqueMovies;
+      return response || [];
+    } catch (error) {
+      console.error("Get all movies error:", error);
+      return [];
+    }
   },
 
   /**

@@ -1,9 +1,12 @@
+// frontend/src/admin/pages/AdminDashboard.jsx
 import { useState, useEffect } from "react";
 import { FiFilm, FiMapPin, FiGrid, FiShoppingBag } from "react-icons/fi";
-import { getMovies } from "../services/movies";
-import { getCinemas } from "../services/cinemas";
-import { getRooms } from "../services/rooms";
-import { getBookings } from "../services/bookings";
+import {
+  movieService,
+  cinemaService,
+  roomService,
+  bookingService,
+} from "../../services"; // ✅ Fixed
 import Breadcrumb from "../components/Common/Breadcrumb";
 import Loading from "../components/Common/Loading";
 import "../styles/AdminLayout.scss";
@@ -19,42 +22,57 @@ const AdminDashboard = () => {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      // Gọi tất cả API cùng lúc để tối ưu thời gian
-      const [moviesRes, cinemasRes, roomsRes, bookingsRes] = await Promise.all([
-        getMovies(),
-        getCinemas(),
-        getRooms(),
-        getBookings(),
+
+      // ✅ Use proper service methods
+      const [movies, cinemas, rooms, bookings] = await Promise.all([
+        movieService.getAll(),
+        cinemaService.getAll(),
+        roomService.getAll(),
+        bookingService.getAll?.() || Promise.resolve([]), // If method doesn't exist
       ]);
 
-      const allBookings = bookingsRes.bookings || [];
       const today = new Date().toISOString().split("T")[0];
 
-      // Tính toán thống kê từ dữ liệu thật
       setStats({
-        totalMovies: (moviesRes.movies || []).length,
-        totalCinemas: (cinemasRes.cinemas || []).length,
-        totalRooms: (roomsRes.rooms || []).length,
-        totalBookings: allBookings.length,
-        todayRevenue: allBookings
-          .filter(
-            (b) => b.createdAt?.startsWith(today) && b.status === "confirmed"
-          )
-          .reduce((sum, b) => sum + (b.totalAmount || 0), 0),
-        popularMovies: calculateTopMovies(allBookings),
+        totalMovies: movies?.length || 0,
+        totalCinemas: cinemas?.length || 0,
+        totalRooms: rooms?.length || 0,
+        totalBookings: bookings?.length || 0,
+        todayRevenue:
+          bookings
+            ?.filter(
+              (b) => b.createdAt?.startsWith(today) && b.status === "confirmed"
+            )
+            .reduce(
+              (sum, b) => sum + (b.totalAmount || b.totalPrice || 0),
+              0
+            ) || 0,
+        popularMovies: calculateTopMovies(bookings || []),
       });
     } catch (error) {
       console.error("Dashboard error:", error);
+      setStats({
+        totalMovies: 0,
+        totalCinemas: 0,
+        totalRooms: 0,
+        totalBookings: 0,
+        todayRevenue: 0,
+        popularMovies: [],
+      });
     } finally {
       setLoading(false);
     }
   };
 
   const calculateTopMovies = (bookings) => {
+    if (!bookings || bookings.length === 0) return [];
+
     const counts = bookings.reduce((acc, b) => {
-      acc[b.movieTitle] = (acc[b.movieTitle] || 0) + 1;
+      const title = b.movieTitle || "Unknown";
+      acc[title] = (acc[title] || 0) + 1;
       return acc;
     }, {});
+
     return Object.entries(counts)
       .map(([title, count], idx) => ({ id: idx, title, bookings: count }))
       .sort((a, b) => b.bookings - a.bookings)
@@ -130,63 +148,73 @@ const AdminDashboard = () => {
         </div>
       </div>
 
-      <div
-        style={{
-          background: "white",
-          borderRadius: "8px",
-          padding: "24px",
-          boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
-        }}
-      >
-        <h2
-          style={{ fontSize: "20px", fontWeight: "bold", marginBottom: "16px" }}
+      {stats.popularMovies && stats.popularMovies.length > 0 && (
+        <div
+          style={{
+            background: "white",
+            borderRadius: "8px",
+            padding: "24px",
+            boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+          }}
         >
-          Top phim hot
-        </h2>
-        <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-          {stats.popularMovies.map((movie, index) => (
-            <div
-              key={movie.id}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                padding: "16px",
-                backgroundColor: "#f9fafb",
-                borderRadius: "8px",
-              }}
-            >
+          <h2
+            style={{
+              fontSize: "20px",
+              fontWeight: "bold",
+              marginBottom: "16px",
+            }}
+          >
+            Top phim hot
+          </h2>
+          <div
+            style={{ display: "flex", flexDirection: "column", gap: "16px" }}
+          >
+            {stats.popularMovies.map((movie, index) => (
               <div
-                style={{ display: "flex", alignItems: "center", gap: "16px" }}
+                key={movie.id}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  padding: "16px",
+                  backgroundColor: "#f9fafb",
+                  borderRadius: "8px",
+                }}
               >
                 <div
-                  style={{
-                    width: "40px",
-                    height: "40px",
-                    borderRadius: "50%",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontWeight: "bold",
-                    backgroundColor: index === 0 ? "#fef3c7" : "#f3f4f6",
-                    color: index === 0 ? "#92400e" : "#374151",
-                  }}
+                  style={{ display: "flex", alignItems: "center", gap: "16px" }}
                 >
-                  {index + 1}
-                </div>
-                <div>
-                  <p style={{ fontWeight: 600, margin: "0 0 4px 0" }}>
-                    {movie.title}
-                  </p>
-                  <p style={{ fontSize: "14px", color: "#6b7280", margin: 0 }}>
-                    {movie.bookings} vé đã bán
-                  </p>
+                  <div
+                    style={{
+                      width: "40px",
+                      height: "40px",
+                      borderRadius: "50%",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontWeight: "bold",
+                      backgroundColor: index === 0 ? "#fef3c7" : "#f3f4f6",
+                      color: index === 0 ? "#92400e" : "#374151",
+                    }}
+                  >
+                    {index + 1}
+                  </div>
+                  <div>
+                    <p style={{ fontWeight: 600, margin: "0 0 4px 0" }}>
+                      {movie.title}
+                    </p>
+                    <p
+                      style={{ fontSize: "14px", color: "#6b7280", margin: 0 }}
+                    >
+                      {movie.bookings} vé đã bán
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

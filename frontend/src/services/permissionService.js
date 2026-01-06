@@ -2,10 +2,6 @@
 import axiosInstance from "./axiosInstance";
 
 export const permissionService = {
-  /**
-   * Lấy danh sách tất cả permissions (GET /permissions)
-   * @returns {Promise<Array>}
-   */
   getAll: async () => {
     try {
       const response = await axiosInstance.get("/permissions");
@@ -16,33 +12,12 @@ export const permissionService = {
     }
   },
 
-  /**
-   * Lấy chi tiết permission theo ID (GET /permissions/{permissionId})
-   * @param {string} id - Permission ID
-   * @returns {Promise<Object>}
-   */
-  getById: async (id) => {
-    try {
-      const response = await axiosInstance.get(`/permissions/${id}`);
-      return response;
-    } catch (error) {
-      console.error("Get permission by ID error:", error);
-      throw error;
-    }
-  },
-
-  /**
-   * Tạo permission mới (POST /permissions)
-   * @param {Object} data - { name, description }
-   * @returns {Promise<Object>}
-   */
   create: async (data) => {
     try {
       const payload = {
         name: data.name,
         description: data.description,
       };
-
       const response = await axiosInstance.post("/permissions", payload);
       return response;
     } catch (error) {
@@ -52,19 +27,18 @@ export const permissionService = {
   },
 
   /**
-   * Cập nhật permission (PUT /permissions/{permissionId})
-   * @param {string} id - Permission ID
-   * @param {Object} data - { name, description }
-   * @returns {Promise<Object>}
+   * ✅ FIX: PUT uses {employeeAccountId} not {permissionId}
    */
-  update: async (id, data) => {
+  update: async (employeeAccountId, data) => {
     try {
       const payload = {
         name: data.name,
         description: data.description,
       };
-
-      const response = await axiosInstance.put(`/permissions/${id}`, payload);
+      const response = await axiosInstance.put(
+        `/permissions/${employeeAccountId}`,
+        payload
+      );
       return response;
     } catch (error) {
       console.error("Update permission error:", error);
@@ -73,13 +47,11 @@ export const permissionService = {
   },
 
   /**
-   * Xóa permission (DELETE /permissions/{permissionId})
-   * @param {string} id - Permission ID
-   * @returns {Promise<void>}
+   * ✅ FIX: DELETE uses {employeeId} not {permissionId}
    */
-  delete: async (id) => {
+  delete: async (employeeId) => {
     try {
-      await axiosInstance.delete(`/permissions/${id}`);
+      await axiosInstance.delete(`/permissions/${employeeId}`);
     } catch (error) {
       console.error("Delete permission error:", error);
       throw error;

@@ -1,3 +1,4 @@
+// frontend/src/admin/AdminRoutes.jsx
 import { Routes, Route, Navigate } from "react-router-dom";
 import Sidebar from "./components/Common/Sidebar";
 import Header from "./components/Common/Header";
@@ -19,24 +20,89 @@ const AdminRoutes = () => {
         <Header />
         <main>
           <Routes>
+            {/* Default redirect */}
             <Route
               path="/"
               element={<Navigate to="/admin/dashboard" replace />}
             />
-            <Route path="/dashboard" element={<AdminDashboard />} />
-            <Route path="/movies" element={<Movies />} />
-            <Route path="/cinemas" element={<Cinemas />} />
-            <Route path="/rooms" element={<Rooms />} />
-            <Route path="/showtimes" element={<Showtimes />} />
-            <Route path="/bookings" element={<Bookings />} />
 
+            {/* ===== ALL STAFF ===== */}
+            <Route
+              path="/dashboard"
+              element={
+                <AdminProtectedRoute>
+                  <AdminDashboard />
+                </AdminProtectedRoute>
+              }
+            />
+
+            {/* ===== EMPLOYEE, MANAGER, ADMIN ===== */}
+            <Route
+              path="/movies"
+              element={
+                <AdminProtectedRoute
+                  allowedRoles={["EMPLOYEE", "MANAGER", "ADMIN"]}
+                >
+                  <Movies />
+                </AdminProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/showtimes"
+              element={
+                <AdminProtectedRoute
+                  allowedRoles={["EMPLOYEE", "MANAGER", "ADMIN"]}
+                >
+                  <Showtimes />
+                </AdminProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/bookings"
+              element={
+                <AdminProtectedRoute
+                  allowedRoles={["EMPLOYEE", "MANAGER", "ADMIN"]}
+                >
+                  <Bookings />
+                </AdminProtectedRoute>
+              }
+            />
+
+            {/* ===== MANAGER, ADMIN ===== */}
+            <Route
+              path="/cinemas"
+              element={
+                <AdminProtectedRoute allowedRoles={["MANAGER", "ADMIN"]}>
+                  <Cinemas />
+                </AdminProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/rooms"
+              element={
+                <AdminProtectedRoute allowedRoles={["MANAGER", "ADMIN"]}>
+                  <Rooms />
+                </AdminProtectedRoute>
+              }
+            />
+
+            {/* ===== MANAGER, ADMIN - Employee Management ===== */}
             <Route
               path="/employees"
               element={
-                <AdminProtectedRoute allowedRoles={["admin"]}>
+                <AdminProtectedRoute allowedRoles={["MANAGER", "ADMIN"]}>
                   <Employees />
                 </AdminProtectedRoute>
               }
+            />
+
+            {/* 404 - Redirect to dashboard */}
+            <Route
+              path="*"
+              element={<Navigate to="/admin/dashboard" replace />}
             />
           </Routes>
         </main>

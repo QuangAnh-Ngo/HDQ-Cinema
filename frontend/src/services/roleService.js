@@ -2,10 +2,6 @@
 import axiosInstance from "./axiosInstance";
 
 export const roleService = {
-  /**
-   * Lấy danh sách tất cả roles (GET /roles)
-   * @returns {Promise<Array>}
-   */
   getAll: async () => {
     try {
       const response = await axiosInstance.get("/roles");
@@ -16,34 +12,13 @@ export const roleService = {
     }
   },
 
-  /**
-   * Lấy chi tiết role theo ID (GET /roles/{roleId})
-   * @param {string} id - Role ID
-   * @returns {Promise<Object>}
-   */
-  getById: async (id) => {
-    try {
-      const response = await axiosInstance.get(`/roles/${id}`);
-      return response;
-    } catch (error) {
-      console.error("Get role by ID error:", error);
-      throw error;
-    }
-  },
-
-  /**
-   * Tạo role mới (POST /roles)
-   * @param {Object} data - { name, description, permissions }
-   * @returns {Promise<Object>}
-   */
   create: async (data) => {
     try {
       const payload = {
         name: data.name,
         description: data.description,
-        permissions: data.permissions || [], // Array of permission names
+        permissions: data.permissions || [],
       };
-
       const response = await axiosInstance.post("/roles", payload);
       return response;
     } catch (error) {
@@ -53,20 +28,20 @@ export const roleService = {
   },
 
   /**
-   * Cập nhật role (PUT /roles/{roleId})
-   * @param {string} id - Role ID
-   * @param {Object} data - { name, description, permissions }
-   * @returns {Promise<Object>}
+   * ✅ FIX: PUT uses {employeeAccountId} not {roleId}
+   * This seems like a backend API design issue
    */
-  update: async (id, data) => {
+  update: async (employeeAccountId, data) => {
     try {
       const payload = {
         name: data.name,
         description: data.description,
         permissions: data.permissions || [],
       };
-
-      const response = await axiosInstance.put(`/roles/${id}`, payload);
+      const response = await axiosInstance.put(
+        `/roles/${employeeAccountId}`,
+        payload
+      );
       return response;
     } catch (error) {
       console.error("Update role error:", error);
@@ -75,13 +50,12 @@ export const roleService = {
   },
 
   /**
-   * Xóa role (DELETE /roles/{roleId})
-   * @param {string} id - Role ID
-   * @returns {Promise<void>}
+   * ✅ FIX: DELETE uses {employeeId} not {roleId}
+   * This seems like a backend API design issue
    */
-  delete: async (id) => {
+  delete: async (employeeId) => {
     try {
-      await axiosInstance.delete(`/roles/${id}`);
+      await axiosInstance.delete(`/roles/${employeeId}`);
     } catch (error) {
       console.error("Delete role error:", error);
       throw error;

@@ -3,46 +3,71 @@ import axiosInstance from "./axiosInstance";
 
 export const bookingService = {
   /**
-   * Lấy danh sách tất cả booking (GET /bookings)
-   * @returns {Promise<Array>}
+   * ✅ Lấy danh sách booking của member
+   * GET /bookings/member/{memberId}
    */
-  getAll: async () => {
+  getByMember: async (memberId) => {
     try {
-      const response = await axiosInstance.get("/bookings");
+      const response = await axiosInstance.get(`/bookings/member/${memberId}`);
       return response || [];
     } catch (error) {
-      console.error("Get all bookings error:", error);
+      console.error("Get bookings by member error:", error);
       throw error;
     }
   },
 
   /**
-   * Lấy chi tiết booking theo ID (GET /bookings/{bookingId})
-   * @param {string} id - Booking ID
-   * @returns {Promise<Object>}
+   * ✅ Lấy danh sách booking theo ngày
+   * GET /bookings/date/{date}
    */
-  getById: async (id) => {
+  getByDate: async (date) => {
     try {
-      const response = await axiosInstance.get(`/bookings/${id}`);
-      return response;
+      // date format: "YYYY-MM-DD"
+      const response = await axiosInstance.get(`/bookings/date/${date}`);
+      return response || [];
     } catch (error) {
-      console.error("Get booking by ID error:", error);
+      console.error("Get bookings by date error:", error);
       throw error;
     }
   },
 
   /**
-   * Tạo booking mới (POST /bookings)
-   * @param {Object} data - { showtimeId, seatIds }
-   * @returns {Promise<Object>}
+   * ✅ Lấy số lượng booking pending
+   * GET /bookings/pending
+   */
+  getPendingCount: async () => {
+    try {
+      const response = await axiosInstance.get("/bookings/pending");
+      return response?.amount || 0;
+    } catch (error) {
+      console.error("Get pending bookings error:", error);
+      throw error;
+    }
+  },
+
+  /**
+   * ✅ Tạo booking mới
+   * POST /bookings
+   * Request: { userId, showTimeId, cinemaId, bookingDetailRequests: [{ seatId }] }
    */
   create: async (data) => {
     try {
       const payload = {
-        showtimeId: data.showtimeId,
-        seatIds: data.seatIds, // Array of seat IDs
+        userId: data.userId,
+        showTimeId: data.showTimeId,
+        cinemaId: data.cinemaId,
+        bookingDetailRequests: data.seats.map((seatId) => ({
+          seatId: seatId,
+        })),
       };
+
+      console.log("📦 Booking payload:", payload);
+
       const response = await axiosInstance.post("/bookings", payload);
+
+      console.log("✅ Booking response:", response);
+
+      // Response structure: { id, totalPrice, createTime, username, showTime, seats }
       return response;
     } catch (error) {
       console.error("Create booking error:", error);
@@ -51,37 +76,17 @@ export const bookingService = {
   },
 
   /**
-   * Cập nhật booking (PUT /bookings/{bookingId})
-   * @param {string} id - Booking ID
-   * @param {Object} data - { showtimeId, seatIds }
-   * @returns {Promise<Object>}
+   * ✅ Utility: Format booking cho UI
    */
-  update: async (id, data) => {
-    try {
-      const payload = {
-        showtimeId: data.showtimeId,
-        seatIds: data.seatIds,
-      };
-      const response = await axiosInstance.put(`/bookings/${id}`, payload);
-      return response;
-    } catch (error) {
-      console.error("Update booking error:", error);
-      throw error;
-    }
-  },
-
-  /**
-   * Hủy/Xóa booking (DELETE /bookings/{bookingId})
-   * @param {string} id - Booking ID
-   * @returns {Promise<void>}
-   */
-  delete: async (id) => {
-    try {
-      await axiosInstance.delete(`/bookings/${id}`);
-    } catch (error) {
-      console.error("Delete booking error:", error);
-      throw error;
-    }
+  formatBooking: (booking) => {
+    return {
+      ...booking,
+      bookingId: booking.id,
+      formattedPrice:
+        new Intl.NumberFormat("vi-VN").format(booking.totalPrice) + " VNĐ",
+      formattedDate: new Date(booking.createTime).toLocaleString("vi-VN"),
+      formattedShowTime: new Date(booking.showTime).toLocaleString("vi-VN"),
+    };
   },
 };
 

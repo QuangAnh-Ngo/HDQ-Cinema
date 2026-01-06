@@ -3,8 +3,8 @@ import axiosInstance from "./axiosInstance";
 
 export const showtimeService = {
   /**
-   * Lấy danh sách tất cả suất chiếu (GET /showtimes)
-   * @returns {Promise<Array>}
+   * ✅ FIX: Lấy danh sách tất cả suất chiếu
+   * Response: { code, message, result: [{ showtimeId, movieId, showTimeRooms: [...] }] }
    */
   getAll: async () => {
     try {
@@ -17,9 +17,8 @@ export const showtimeService = {
   },
 
   /**
-   * Lấy chi tiết suất chiếu theo ID (GET /showtimes/{showtimeId})
-   * @param {string} id - Showtime ID
-   * @returns {Promise<Object>}
+   * ✅ FIX: Lấy chi tiết suất chiếu theo ID
+   * Response: { code, message, result: { showtimeId, movieId, showTimeRooms: [...] } }
    */
   getById: async (id) => {
     try {
@@ -32,9 +31,7 @@ export const showtimeService = {
   },
 
   /**
-   * Lấy danh sách suất chiếu theo phim (GET /showtimes/movie/{movieId})
-   * @param {string} movieId - Movie ID
-   * @returns {Promise<Array>}
+   * Lấy danh sách suất chiếu theo phim
    */
   getByMovie: async (movieId) => {
     try {
@@ -47,9 +44,7 @@ export const showtimeService = {
   },
 
   /**
-   * Lấy danh sách suất chiếu theo phòng (GET /showtimes/room/{roomId})
-   * @param {string} roomId - Room ID
-   * @returns {Promise<Array>}
+   * Lấy danh sách suất chiếu theo phòng
    */
   getByRoom: async (roomId) => {
     try {
@@ -62,16 +57,19 @@ export const showtimeService = {
   },
 
   /**
-   * Tạo suất chiếu mới (POST /showtimes)
-   * @param {Object} data - { movieId, roomId, showTime }
-   * @returns {Promise<Object>}
+   * ✅ FIX: Tạo suất chiếu mới
+   * Payload: { movieId, showTimeRooms: [{ showTime, roomId }] }
    */
   create: async (data) => {
     try {
       const payload = {
         movieId: data.movieId,
-        roomId: data.roomId,
-        showTime: data.showTime, // ISO datetime: "2026-01-04T14:30:00Z"
+        showTimeRooms: data.showTimeRooms || [
+          {
+            showTime: data.showTime,
+            roomId: data.roomId,
+          },
+        ],
       };
       const response = await axiosInstance.post("/showtimes", payload);
       return response;
@@ -82,17 +80,18 @@ export const showtimeService = {
   },
 
   /**
-   * Cập nhật suất chiếu (PUT /showtimes/{showtimeId})
-   * @param {string} id - Showtime ID
-   * @param {Object} data - { movieId, roomId, showTime }
-   * @returns {Promise<Object>}
+   * ✅ FIX: Cập nhật suất chiếu
    */
   update: async (id, data) => {
     try {
       const payload = {
         movieId: data.movieId,
-        roomId: data.roomId,
-        showTime: data.showTime,
+        showTimeRooms: data.showTimeRooms || [
+          {
+            showTime: data.showTime,
+            roomId: data.roomId,
+          },
+        ],
       };
       const response = await axiosInstance.put(`/showtimes/${id}`, payload);
       return response;
@@ -103,9 +102,7 @@ export const showtimeService = {
   },
 
   /**
-   * Xóa suất chiếu (DELETE /showtimes/{showtimeId})
-   * @param {string} id - Showtime ID
-   * @returns {Promise<void>}
+   * Xóa suất chiếu
    */
   delete: async (id) => {
     try {
@@ -117,31 +114,37 @@ export const showtimeService = {
   },
 
   /**
-   * Phân nhóm suất chiếu theo ngày (Utility function cho UI)
-   * @param {Array} showtimes - Mảng showtimes
-   * @returns {Object} { "YYYY-MM-DD": [...showtimes] }
+   * ✅ Utility: Phân nhóm suất chiếu theo ngày
+   * Input: [{ showtimeId, movieId, showTimeRooms: [{ showTime, roomId }] }]
    */
   groupByDate: (showtimes) => {
     if (!Array.isArray(showtimes)) return {};
 
-    return showtimes.reduce((groups, showtime) => {
-      const date = showtime.showTime.split("T")[0]; // Lấy YYYY-MM-DD
-      if (!groups[date]) {
-        groups[date] = [];
-      }
-      groups[date].push(showtime);
-      return groups;
-    }, {});
+    const grouped = {};
+
+    showtimes.forEach((showtime) => {
+      showtime.showTimeRooms?.forEach((str) => {
+        const date = str.showTime.split("T")[0];
+        if (!grouped[date]) {
+          grouped[date] = [];
+        }
+        grouped[date].push({
+          ...showtime,
+          showTime: str.showTime,
+          roomId: str.roomId,
+        });
+      });
+    });
+
+    return grouped;
   },
 
   /**
-   * Format thời gian hiển thị (Utility function)
-   * @param {string} isoDateTime - "2026-01-04T14:30:00Z"
-   * @returns {string} "14:30"
+   * Format thời gian hiển thị
    */
   formatTime: (isoDateTime) => {
     const time = isoDateTime.split("T")[1];
-    return time.substring(0, 5); // "HH:mm"
+    return time.substring(0, 5);
   },
 };
 

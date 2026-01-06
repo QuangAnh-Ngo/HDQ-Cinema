@@ -1,0 +1,142 @@
+// frontend/src/user/components/MovieFilter/MovieFilter.scss
+
+.movie-filter-container {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  padding: 20px;
+  margin-bottom: 30px;
+
+  .filter-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+
+    .filter-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 18px;
+      font-weight: 700;
+      color: #1a1a1a;
+
+      .filter-icon {
+        font-size: 20px;
+        color: #0a64a7;
+      }
+
+      .movie-count {
+        font-size: 13px;
+        font-weight: 600;
+        margin: 0;
+      }
+    }
+
+    .toggle-btn {
+      color: #0a64a7;
+      font-weight: 600;
+
+      &:hover {
+        color: #258dcf;
+      }
+    }
+  }
+
+  .filter-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+
+    &.expanded {
+      max-height: 300px;
+    }
+
+    .filter-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 16px;
+
+      .filter-item {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+
+        label {
+          font-size: 13px;
+          font-weight: 600;
+          color: #666;
+        }
+
+        .filter-select {
+          width: 100%;
+
+          .ant-select-selector {
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+            transition: all 0.2s;
+
+            &:hover {
+              border-color: #0a64a7;
+            }
+          }
+
+          &.ant-select-focused {
+            .ant-select-selector {
+              border-color: #0a64a7;
+              box-shadow: 0 0 0 2px rgba(10, 100, 167, 0.1);
+            }
+          }
+        }
+
+        .reset-btn {
+          border-radius: 8px;
+          font-weight: 600;
+          height: 40px;
+
+          &:hover {
+            background: #fff1f0;
+          }
+        }
+      }
+    }
+
+    .active-filters {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      padding-top: 12px;
+      border-top: 1px solid #f0f0f0;
+
+      .active-filters-label {
+        font-size: 13px;
+        font-weight: 600;
+        color: #666;
+      }
+
+      .ant-tag {
+        margin: 0;
+        padding: 4px 12px;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 500;
+      }
+    }
+  }
+}
+
+// Responsive
+@media (max-width: 768px) {
+  .movie-filter-container {
+    padding: 16px;
+
+    .filter-content {
+      .filter-row {
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+    }
+  }
+}

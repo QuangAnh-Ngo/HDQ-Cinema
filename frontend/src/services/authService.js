@@ -15,7 +15,8 @@ const mockUsers = {
       email: "member1@cinema.com",
       fullName: "Nguyễn Văn Member",
       phone: "0123456789",
-      roles: ["ROLE_MEMBER"], // Backend format
+      role: "MEMBER", // ✅ Add role field
+      roles: ["ROLE_MEMBER"],
     },
   },
   employee1: {
@@ -28,6 +29,7 @@ const mockUsers = {
       email: "employee1@cinema.com",
       fullName: "Trần Thị Employee",
       phone: "0987654321",
+      role: "EMPLOYEE", // ✅ Add role field
       roles: ["ROLE_EMPLOYEE"],
     },
   },
@@ -41,6 +43,7 @@ const mockUsers = {
       email: "manager1@cinema.com",
       fullName: "Lê Văn Manager",
       phone: "0369852147",
+      role: "MANAGER", // ✅ Add role field
       roles: ["ROLE_MANAGER"],
     },
   },
@@ -54,6 +57,7 @@ const mockUsers = {
       email: "admin1@cinema.com",
       fullName: "Phạm Thị Admin",
       phone: "0258963147",
+      role: "ADMIN", // ✅ Add role field
       roles: ["ROLE_ADMIN"],
     },
   },
@@ -253,19 +257,82 @@ export const authService = {
 
   getRoles: () => {
     const user = authService.getCurrentUser();
-    if (!user || !user.roles) return [];
+    if (!user) return [];
 
-    return user.roles
-      .map((role) => {
-        const name = typeof role === "string" ? role : role.name;
-        return name?.replace(/^ROLE_/, "") || "";
-      })
-      .filter(Boolean);
+    // Backend có thể trả về roles dạng:
+    // 1. Array of strings: ["EMPLOYEE", "MANAGER"]
+    // 2. Array of objects: [{ name: "EMPLOYEE", ... }]
+    // 3. Simple string: "EMPLOYEE" (for mock)
+
+    if (!user.roles) return [];
+
+    if (Array.isArray(user.roles)) {
+      return user.roles
+        .map((role) => {
+          if (typeof role === "string") {
+            // "ROLE_EMPLOYEE" → "EMPLOYEE"
+            return role.replace(/^ROLE_/, "");
+          }
+          // { name: "EMPLOYEE" } → "EMPLOYEE"
+          return role.name?.replace(/^ROLE_/, "") || "";
+        })
+        .filter(Boolean);
+    }
+
+    // Single role string
+    if (typeof user.roles === "string") {
+      return [user.roles.replace(/^ROLE_/, "")];
+    }
+
+    return [];
   },
 
   hasRole: (roleName) => {
     const roles = authService.getRoles();
     return roles.includes(roleName);
+  },
+
+  /**
+   * ✅ Check if user has ANY of the roles
+   */
+  hasAnyRole: (...roleNames) => {
+    const roles = authService.getRoles();
+    return roleNames.some((role) => roles.includes(role));
+  },
+
+  /**
+   * ✅ Get highest role for display
+   */
+  getHighestRole: () => {
+    const roles = authService.getRoles();
+    const hierarchy = ["ADMIN", "MANAGER", "EMPLOYEE", "MEMBER"];
+
+    for (const role of hierarchy) {
+      if (roles.includes(role)) return role;
+    }
+
+    return "GUEST";
+  },
+
+  /**
+   * ✅ Check if user is admin
+   */
+  isAdmin: () => {
+    return authService.hasRole("ADMIN");
+  },
+
+  /**
+   * ✅ Check if user is manager or above
+   */
+  isManagerOrAbove: () => {
+    return authService.hasAnyRole("ADMIN", "MANAGER");
+  },
+
+  /**
+   * ✅ Check if user is staff (employee/manager/admin)
+   */
+  isStaff: () => {
+    return authService.hasAnyRole("ADMIN", "MANAGER", "EMPLOYEE");
   },
 };
 

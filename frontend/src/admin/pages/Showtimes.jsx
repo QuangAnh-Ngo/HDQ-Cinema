@@ -1,3 +1,4 @@
+// frontend/src/admin/pages/Showtimes.jsx
 import { useState, useEffect } from "react";
 import {
   FiPlus,
@@ -12,12 +13,12 @@ import Loading from "../components/Common/Loading";
 import ConfirmDialog from "../components/Common/ConfirmDialog";
 import ShowtimeForm from "../components/ShowtimeForm";
 import {
-  getShowtimes,
-  createShowtime,
-  updateShowtime,
-  deleteShowtime,
-} from "../services/showtimes";
-import { toast } from "react-toastify";
+  showtimeService,
+  movieService,
+  roomService,
+  cinemaService,
+} from "../../services";
+import { message } from "antd";
 import "../styles/AdminLayout.scss";
 
 const Showtimes = () => {
@@ -44,14 +45,68 @@ const Showtimes = () => {
   const fetchShowtimes = async () => {
     try {
       setLoading(true);
-      const data = await getShowtimes();
-      setShowtimes(data.showtimes || data);
+      const data = await showtimeService.getAll();
+
+      // ✅ Pre-fetch all movies and rooms ONCE
+      const [allMovies, allRooms] = await Promise.all([
+        movieService.getAll().catch(() => []),
+        roomService.getAll().catch(() => []),
+      ]);
+
+      console.log("📦 Pre-fetched movies:", allMovies.length);
+      console.log("📦 Pre-fetched rooms:", allRooms.length);
+
+      // ✅ Create lookup maps for faster access
+      const movieMap = new Map(allMovies.map((m) => [m.id, m]));
+      const roomMap = new Map(allRooms.map((r) => [r.id || r.roomId, r]));
+
+      // ✅ Transform data using maps (no additional API calls)
+      const transformed = Array.isArray(data)
+        ? data.map((st) => {
+            const roomId = st.showTimeRooms?.[0]?.roomId;
+            const room = roomMap.get(roomId);
+            const movie = movieMap.get(st.movieId);
+
+            return {
+              ...st,
+              movieTitle: movie?.title || "N/A",
+              roomId: roomId,
+              roomName: room?.name || room?.roomName || "N/A",
+              cinemaName: room?.cinemaName || "N/A",
+              date: st.showTimeRooms?.[0]?.showTime?.split("T")[0],
+              startTime: st.showTimeRooms?.[0]?.showTime
+                ?.split("T")[1]
+                ?.substring(0, 5),
+              price: "(Không cố định)",
+              status: calculateShowtimeStatus(st.showTimeRooms?.[0]?.showTime),
+            };
+          })
+        : [];
+
+      console.log("✅ Transformed showtimes:", transformed.length);
+      setShowtimes(transformed);
     } catch (error) {
       console.error("Error fetching showtimes:", error);
-      toast.error("Lỗi khi tải danh sách lịch chiếu");
+      message.error("Lỗi khi tải danh sách lịch chiếu");
+      setShowtimes([]);
     } finally {
       setLoading(false);
     }
+  };
+
+  const calculateShowtimeStatus = (showTimeISO) => {
+    if (!showTimeISO) return "upcoming";
+
+    const showDate = new Date(showTimeISO);
+    const now = new Date();
+
+    if (showDate > now) return "upcoming";
+
+    // Check if within 3 hours after start time
+    const threeHoursLater = new Date(showDate.getTime() + 3 * 60 * 60 * 1000);
+    if (now >= showDate && now <= threeHoursLater) return "active";
+
+    return "ended";
   };
 
   const filterShowtimes = () => {
@@ -76,9 +131,9 @@ const Showtimes = () => {
 
     // Sort by date and time
     filtered.sort((a, b) => {
-      const dateCompare = new Date(a.date) - new Date(b.date);
+      const dateCompare = new Date(a.date || 0) - new Date(b.date || 0);
       if (dateCompare !== 0) return dateCompare;
-      return a.startTime.localeCompare(b.startTime);
+      return (a.startTime || "").localeCompare(b.startTime || "");
     });
 
     setFilteredShowtimes(filtered);
@@ -101,36 +156,41 @@ const Showtimes = () => {
 
   const confirmDelete = async () => {
     try {
-      await deleteShowtime(showtimeToDelete.id);
+      await showtimeService.delete(
+        showtimeToDelete.showtimeId || showtimeToDelete.id
+      );
       setShowtimes((prev) =>
         prev.filter((st) => st.id !== showtimeToDelete.id)
       );
-      toast.success("Xóa lịch chiếu thành công!");
+      message.success("Xóa lịch chiếu thành công!");
     } catch (error) {
       console.error("Error deleting showtime:", error);
-      toast.error(error.message || "Có lỗi xảy ra khi xóa lịch chiếu!");
+      message.error(error.message || "Có lỗi xảy ra khi xóa lịch chiếu!");
     }
   };
 
   const handleSubmitShowtime = async (showtimeData) => {
     try {
       if (selectedShowtime) {
-        const updated = await updateShowtime(selectedShowtime.id, showtimeData);
+        const updated = await showtimeService.update(
+          selectedShowtime.showtimeId || selectedShowtime.id,
+          showtimeData
+        );
         setShowtimes((prev) =>
           prev.map((st) => (st.id === selectedShowtime.id ? updated : st))
         );
-        toast.success("Cập nhật lịch chiếu thành công!");
+        message.success("Cập nhật lịch chiếu thành công!");
       } else {
-        const newShowtime = await createShowtime(showtimeData);
-        setShowtimes((prev) => [...prev, newShowtime]);
-        toast.success("Tạo lịch chiếu thành công!");
+        const newShowtime = await showtimeService.create(showtimeData);
+        message.success("Tạo lịch chiếu thành công!");
+        fetchShowtimes(); // Reload to get full data
       }
 
       setShowShowtimeForm(false);
       setSelectedShowtime(null);
     } catch (error) {
       console.error("Error submitting showtime:", error);
-      toast.error(error.message || "Có lỗi xảy ra!");
+      message.error(error.message || "Có lỗi xảy ra!");
     }
   };
 
@@ -147,6 +207,7 @@ const Showtimes = () => {
   };
 
   const formatDate = (dateString) => {
+    if (!dateString) return "N/A";
     const date = new Date(dateString);
     return date.toLocaleDateString("vi-VN", {
       weekday: "short",
@@ -267,7 +328,7 @@ const Showtimes = () => {
             </thead>
             <tbody>
               {filteredShowtimes.map((showtime) => (
-                <tr key={showtime.id}>
+                <tr key={showtime.showtimeId || showtime.id}>
                   <td>
                     <strong>{showtime.movieTitle || "N/A"}</strong>
                   </td>
@@ -283,10 +344,10 @@ const Showtimes = () => {
                   <td>
                     <div className="time-cell">
                       <FiClock size={14} />
-                      <span>{showtime.startTime}</span>
+                      <span>{showtime.startTime || "N/A"}</span>
                     </div>
                   </td>
-                  <td>{showtime.price?.toLocaleString()}đ</td>
+                  <td>{showtime.price?.toLocaleString() || "N/A"} VNĐ</td>
                   <td>{getStatusBadge(showtime.status)}</td>
                   <td>
                     <div className="actions">

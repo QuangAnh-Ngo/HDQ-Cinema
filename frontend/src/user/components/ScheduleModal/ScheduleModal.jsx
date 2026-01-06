@@ -2,7 +2,11 @@
 import { useState, useEffect, useMemo } from "react";
 import PropTypes from "prop-types";
 import { Modal, Tabs, Spin, message, Empty } from "antd";
-import { movieService, cinemaService } from "../../../services";
+import {
+  movieService,
+  cinemaService,
+  showtimeService,
+} from "../../../services"; // ✅ Import showtimeService
 import "./ScheduleModal.scss";
 
 const ScheduleModal = ({
@@ -16,25 +20,37 @@ const ScheduleModal = ({
   const [movie, setMovie] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState(null);
+  const [showtimesMap, setShowtimesMap] = useState({}); // ✅ Map showTime+roomId -> showtimeId
 
-  /**
-   * Tải thông tin rạp (để lấy tên phòng) và thông tin phim (để lấy suất chiếu)
-   */
   useEffect(() => {
     if (!visible || !movieId || !cinemaId) {
-      return; // Skip fetch nếu không đủ điều kiện
+      return;
     }
 
     const fetchData = async () => {
       setLoading(true);
       try {
-        const [movieData, cinemaData] = await Promise.all([
+        const [movieData, cinemaData, allShowtimes] = await Promise.all([
           movieService.getById(movieId),
           cinemaService.getById(cinemaId),
+          showtimeService.getAll(), // ✅ Fetch all showtimes để lấy ID
         ]);
 
         setMovie(movieData);
         setCinema(cinemaData);
+
+        // ✅ Tạo map từ showTime+roomId -> showtimeId
+        const stMap = {};
+        allShowtimes.forEach((st) => {
+          if (st.movieId === movieId) {
+            st.showTimeRooms?.forEach((str) => {
+              const key = `${str.showTime}_${str.roomId}`;
+              stMap[key] = st.showtimeId;
+            });
+          }
+        });
+        setShowtimesMap(stMap);
+        console.log("🗺️ Showtimes map:", stMap);
 
         // Lấy danh sách ngày có suất chiếu tại rạp này
         if (movieData.showtimes && cinemaData.rooms) {
@@ -94,6 +110,27 @@ const ScheduleModal = ({
     return `${day}/${month} - ${weekdays[date.getDay()]}`;
   };
 
+  /**
+   * ✅ Handle showtime selection
+   */
+  const handleShowtimeClick = (showtime) => {
+    console.log("🔘 Clicked showtime:", showtime);
+
+    // ✅ Tạo key để lookup showtimeId
+    const key = `${showtime.showTime}_${showtime.roomId}`;
+    const showtimeId = showtimesMap[key];
+
+    console.log("🔑 Looking up key:", key);
+    console.log("🎯 Found showtimeId:", showtimeId);
+
+    if (!showtimeId) {
+      message.error("Không tìm thấy suất chiếu này");
+      return;
+    }
+
+    onSelectShowtime(showtimeId);
+  };
+
   const dateTabs = availableDates.map((date) => ({
     key: date,
     label: formatDate(date),
@@ -104,15 +141,13 @@ const ScheduleModal = ({
           .map((st, idx) => (
             <button
               key={idx}
-              className="show-time flex flex-col items-center justify-center h-auto py-2 group"
-              onClick={() => onSelectShowtime(st.id || st.showTime)}
+              className="show-time"
+              onClick={() => handleShowtimeClick(st)} // ✅ Call handler
             >
-              <span className="text-lg font-bold group-hover:text-blue-600 transition-colors">
+              <span className="time-text">
                 {st.showTime.split("T")[1].substring(0, 5)}
               </span>
-              <span className="text-[10px] text-gray-400 uppercase mt-1">
-                {st.roomName}
-              </span>
+              <span className="room-text"> - {st.roomName}</span>
             </button>
           ))}
       </div>
@@ -124,13 +159,11 @@ const ScheduleModal = ({
   return (
     <Modal
       title={
-        <div className="modal-title border-b pb-4">
-          <h3 className="text-2xl font-black uppercase text-gray-800">
-            Lịch chiếu phim
-          </h3>
+        <div className="modal-title">
+          <h3>Lịch chiếu phim</h3>
           {cinema && (
-            <p className="text-blue-600 font-bold flex items-center gap-2">
-              <span className="w-2 h-2 bg-blue-600 rounded-full"></span>
+            <p className="cinema-info">
+              <span className="cinema-dot"></span>
               Rạp {cinema.name}
             </p>
           )}
@@ -142,14 +175,12 @@ const ScheduleModal = ({
       width={800}
       centered
       className="schedule-modal-custom"
-      destroyOnClose
+      destroyOnHidden // ✅ Fix warning
     >
       {loading ? (
-        <div className="flex flex-col items-center py-20">
+        <div className="modal-loading">
           <Spin size="large" />
-          <p className="mt-4 text-gray-400 italic font-medium">
-            Đang kiểm tra lịch chiếu...
-          </p>
+          <p>Đang kiểm tra lịch chiếu...</p>
         </div>
       ) : availableDates.length > 0 ? (
         <Tabs
@@ -160,7 +191,7 @@ const ScheduleModal = ({
           className="week-schedule-tabs"
         />
       ) : (
-        <div className="py-12">
+        <div className="modal-empty">
           <Empty description="Rạp này hiện chưa có suất chiếu cho phim đã chọn" />
         </div>
       )}

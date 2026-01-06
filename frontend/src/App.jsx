@@ -12,6 +12,7 @@ import "react-toastify/dist/ReactToastify.css";
 
 import Header from "./user/components/Header/Header";
 import Footer from "./user/components/Footer/Footer";
+import ScrollToTop from "./user/components/ScrollToTop";
 
 import HomePage from "./user/pages/HomePage/HomePage";
 import MovieDetail from "./user/pages/MovieDetail/MovieDetail";
@@ -50,6 +51,7 @@ const AppLayout = () => {
           minHeight: `calc(100vh - ${HEADER_HEIGHT}px)`,
         }}
       >
+        <ScrollToTop />
         <Routes>
           <Route path="/login" element={<LogIn />} />
           <Route path="/register" element={<Register />} />
@@ -72,7 +74,7 @@ const AppLayout = () => {
           />
 
           <Route
-            path="/seat-selection/:showtimeId"
+            path="/seat-selection"
             element={
               <UserProtectedRoute requireAuth={true}>
                 <SeatSelection />
@@ -80,7 +82,7 @@ const AppLayout = () => {
             }
           />
           <Route
-            path="/confirm-payment/:bookingId"
+            path="/confirm-payment"
             element={
               <UserProtectedRoute requireAuth={true}>
                 <ConfirmPayment />

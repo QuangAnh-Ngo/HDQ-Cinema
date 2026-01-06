@@ -1,16 +1,12 @@
+// frontend/src/admin/pages/Movies.jsx
 import { useState, useEffect } from "react";
 import { FiPlus, FiSearch, FiEdit, FiTrash2, FiCalendar } from "react-icons/fi";
-import {
-  getMovies,
-  createMovie,
-  updateMovie,
-  deleteMovie,
-} from "../services/movies";
+import { movieService } from "../../services"; // ✅ Fixed
 import Breadcrumb from "../components/Common/Breadcrumb";
 import Loading from "../components/Common/Loading";
 import ConfirmDialog from "../components/Common/ConfirmDialog";
 import MovieForm from "../components/MovieForm";
-import { toast } from "react-toastify";
+import { message } from "antd";
 import "../styles/MoviesPage.scss";
 
 const Movies = () => {
@@ -36,14 +32,37 @@ const Movies = () => {
   const fetchMovies = async () => {
     try {
       setLoading(true);
-      const data = await getMovies();
-      // Data trả về từ service có dạng { movies: [...] }
-      setMovies(data.movies || []);
+      const data = await movieService.getAll();
+
+      // ✅ Add status field based on dates
+      const moviesWithStatus = (Array.isArray(data) ? data : []).map(
+        (movie) => ({
+          ...movie,
+          status: calculateMovieStatus(movie), // ✅ Add this
+        })
+      );
+
+      setMovies(moviesWithStatus);
     } catch (error) {
-      toast.error("Không thể lấy danh sách phim thực tế");
+      console.error("Error fetching movies:", error);
+      message.error("Không thể lấy danh sách phim");
+      setMovies([]);
     } finally {
       setLoading(false);
     }
+  };
+
+  // ✅ Add this helper function
+  const calculateMovieStatus = (movie) => {
+    if (!movie.dayStart || !movie.dayEnd) return "ended";
+
+    const today = new Date();
+    const startDate = new Date(movie.dayStart);
+    const endDate = new Date(movie.dayEnd);
+
+    if (today < startDate) return "coming_soon";
+    if (today >= startDate && today <= endDate) return "now_showing";
+    return "ended";
   };
 
   const filterMovies = () => {
@@ -52,8 +71,8 @@ const Movies = () => {
     if (searchTerm) {
       filtered = filtered.filter(
         (movie) =>
-          movie.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          movie.director.toLowerCase().includes(searchTerm.toLowerCase())
+          movie.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          movie.director?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
@@ -81,40 +100,34 @@ const Movies = () => {
 
   const confirmDelete = async () => {
     try {
-      console.log("Deleting movie:", movieToDelete.id);
+      await movieService.delete(movieToDelete.id);
       setMovies((prev) => prev.filter((m) => m.id !== movieToDelete.id));
-      alert("Xóa phim thành công!");
+      message.success("Xóa phim thành công!");
     } catch (error) {
       console.error("Error deleting movie:", error);
-      alert("Có lỗi xảy ra khi xóa phim!");
+      message.error("Có lỗi xảy ra khi xóa phim!");
     }
   };
 
   const handleSubmitMovie = async (movieData) => {
     try {
       if (selectedMovie) {
-        console.log("Updating movie:", movieData);
+        const updated = await movieService.update(selectedMovie.id, movieData);
         setMovies((prev) =>
-          prev.map((m) =>
-            m.id === selectedMovie.id ? { ...m, ...movieData } : m
-          )
+          prev.map((m) => (m.id === selectedMovie.id ? updated : m))
         );
-        alert("Cập nhật phim thành công!");
+        message.success("Cập nhật phim thành công!");
       } else {
-        const newMovie = {
-          ...movieData,
-          id: Date.now(),
-        };
-        console.log("Adding movie:", newMovie);
+        const newMovie = await movieService.create(movieData);
         setMovies((prev) => [...prev, newMovie]);
-        alert("Thêm phim thành công!");
+        message.success("Thêm phim thành công!");
       }
 
       setShowMovieForm(false);
       setSelectedMovie(null);
     } catch (error) {
       console.error("Error submitting movie:", error);
-      alert("Có lỗi xảy ra!");
+      message.error("Có lỗi xảy ra!");
     }
   };
 
@@ -221,6 +234,9 @@ const Movies = () => {
                       src={movie.poster}
                       alt={movie.title}
                       className="movie-poster"
+                      onError={(e) => {
+                        e.target.src = "/placeholder-poster.jpg";
+                      }}
                     />
                   </td>
                   <td>

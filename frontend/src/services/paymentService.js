@@ -3,9 +3,10 @@ import axiosInstance from "./axiosInstance";
 
 export const paymentService = {
   /**
-   * Tạo yêu cầu thanh toán VNPay (POST /payment/create_payment)
-   * @param {string} bookingId - Booking ID
-   * @returns {Promise<Object>} Response chứa payment URL
+   * ✅ Tạo payment URL
+   * POST /payment/create_payment
+   * Request: { bookingId }
+   * Response: { status, message, url }
    */
   create: async (bookingId) => {
     try {
@@ -13,12 +14,16 @@ export const paymentService = {
         bookingId: bookingId,
       };
 
+      console.log("💳 Creating payment for booking:", bookingId);
+
       const response = await axiosInstance.post(
         "/payment/create_payment",
         payload
       );
 
-      // Response có thể chứa paymentUrl để redirect user
+      console.log("✅ Payment response:", response);
+
+      // Response structure: { status, message, url }
       return response;
     } catch (error) {
       console.error("Create payment error:", error);
@@ -27,18 +32,26 @@ export const paymentService = {
   },
 
   /**
-   * Xử lý callback từ VNPay (GET /payment/payment_infor)
-   * VNPay sẽ redirect về URL này với query params
-   * @param {Object} vnpayParams - Query params từ VNPay callback
-   * @returns {Promise<Object>} Thông tin kết quả thanh toán
+   * ✅ Xử lý VNPay callback
+   * GET /payment/payment_infor
+   * Query params: vnp_Amount, vnp_BankCode, vnp_OrderInfo, vnp_ResponseCode, vnp_TxnRef
    */
   handleCallback: async (vnpayParams) => {
     try {
+      console.log("🔄 Processing VNPay callback:", vnpayParams);
+
       const response = await axiosInstance.get("/payment/payment_infor", {
-        params: vnpayParams,
+        params: {
+          vnp_Amount: vnpayParams.vnp_Amount,
+          vnp_BankCode: vnpayParams.vnp_BankCode,
+          vnp_OrderInfo: vnpayParams.vnp_OrderInfo,
+          vnp_ResponseCode: vnpayParams.vnp_ResponseCode,
+          vnp_TxnRef: vnpayParams.vnp_TxnRef,
+        },
       });
 
-      // Response chứa thông tin: success/failure, transactionId, amount, etc.
+      console.log("✅ Callback response:", response);
+
       return response;
     } catch (error) {
       console.error("Payment callback error:", error);
@@ -47,15 +60,12 @@ export const paymentService = {
   },
 
   /**
-   * Lấy lịch sử payment URLs của member (GET /paymenturls/{memberId})
-   * @param {string} memberId - Member ID
-   * @returns {Promise<Array>} Array of payment history
+   * ✅ Lấy lịch sử payment của member
+   * GET /paymenturls/{memberId}
    */
   getHistoryByMember: async (memberId) => {
     try {
       const response = await axiosInstance.get(`/paymenturls/${memberId}`);
-
-      // Response structure: Array of { createdAt, amount, url }
       return response || [];
     } catch (error) {
       console.error("Get payment history error:", error);
@@ -64,45 +74,33 @@ export const paymentService = {
   },
 
   /**
-   * Parse VNPay return URL params (Utility function)
-   * @param {string} url - Full callback URL from VNPay
-   * @returns {Object} Parsed query params
+   * Utility: Kiểm tra payment thành công
+   */
+  isPaymentSuccessful: (responseCode) => {
+    return responseCode === "00";
+  },
+
+  /**
+   * Utility: Parse callback URL
    */
   parseVNPayCallback: (url) => {
     const urlObj = new URL(url);
     const params = {};
-
     urlObj.searchParams.forEach((value, key) => {
       params[key] = value;
     });
-
     return params;
   },
 
   /**
-   * Kiểm tra trạng thái thanh toán thành công (Utility function)
-   * @param {Object} callbackResponse - Response từ handleCallback
-   * @returns {boolean}
-   */
-  isPaymentSuccessful: (callbackResponse) => {
-    // VNPay thường trả về vnp_ResponseCode
-    // "00" = Success, khác "00" = Failed
-    return callbackResponse?.vnp_ResponseCode === "00";
-  },
-
-  /**
-   * Format payment history cho UI (Utility function)
-   * @param {Array} history - Array từ getHistoryByMember
-   * @returns {Array} Formatted array
+   * Utility: Format payment history
    */
   formatHistory: (history) => {
     return history.map((payment) => ({
       ...payment,
-      createdAt: new Date(payment.createdAt).toLocaleString("vi-VN"),
-      amount: new Intl.NumberFormat("vi-VN", {
-        style: "currency",
-        currency: "VND",
-      }).format(payment.amount),
+      formattedDate: new Date(payment.createdAt).toLocaleString("vi-VN"),
+      formattedAmount:
+        new Intl.NumberFormat("vi-VN").format(payment.amount) + " VNĐ",
     }));
   },
 };

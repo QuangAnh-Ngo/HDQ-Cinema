@@ -3,13 +3,11 @@ import axiosInstance from "./axiosInstance";
 
 export const accountService = {
   /**
-   * Lấy danh sách tất cả tài khoản nhân viên (GET /accounts)
-   * @returns {Promise<Array>}
+   * Get all employee accounts (GET /accounts)
    */
   getAll: async () => {
     try {
       const response = await axiosInstance.get("/accounts");
-      // Response: Array of { employeeAccountId, username, email, roles }
       return response || [];
     } catch (error) {
       console.error("Get accounts error:", error);
@@ -18,35 +16,31 @@ export const accountService = {
   },
 
   /**
-   * Lấy thông tin tài khoản đang đăng nhập (GET /accounts/my-info)
-   * @returns {Promise<Object>}
+   * Get current user info (GET /accounts/my-info)
    */
   getMyInfo: async () => {
     try {
       const response = await axiosInstance.get("/accounts/my-info");
-      // Response: { employeeAccountId, username, email, roles: [{ id, name, description, permissions }] }
       return response;
     } catch (error) {
-      console.error("Get my account info error:", error);
+      console.error("Get my info error:", error);
       throw error;
     }
   },
 
   /**
-   * Tạo tài khoản nhân viên mới (POST /accounts)
-   * @param {Object} data - { username, password, email, roles, employee }
-   * @returns {Promise<Object>}
+   * Create employee account (POST /accounts)
+   * @param {Object} data - { username, password, email, roles[], employee }
    */
   create: async (data) => {
     try {
       const payload = {
         username: data.username,
-        password: data.password,
+        password: data.password, // Min 8 chars
         email: data.email,
-        roles: data.roles || [], // Array of role names (strings)
-        employee: data.employee, // Employee ID
+        roles: data.roles || [], // Array of role names: ["ADMIN", "MANAGER", "EMPLOYEE"]
+        employee: data.employeeId || data.employee, // Employee ID to link
       };
-
       const response = await axiosInstance.post("/accounts", payload);
       return response;
     } catch (error) {
@@ -56,20 +50,21 @@ export const accountService = {
   },
 
   /**
-   * Cập nhật tài khoản (PUT /accounts/{employeeAccountId})
-   * @param {string} id - Employee Account ID
-   * @param {Object} data - { password, roles, employee }
-   * @returns {Promise<Object>}
+   * Update employee account (PUT /accounts/{employeeAccountId})
+   * @param {string} employeeAccountId - Account ID
+   * @param {Object} data - { password?, roles[], employee? }
    */
-  update: async (id, data) => {
+  update: async (employeeAccountId, data) => {
     try {
       const payload = {
-        password: data.password,
+        ...(data.password && { password: data.password }),
         roles: data.roles || [],
-        employee: data.employee,
+        ...(data.employee && { employee: data.employee }),
       };
-
-      const response = await axiosInstance.put(`/accounts/${id}`, payload);
+      const response = await axiosInstance.put(
+        `/accounts/${employeeAccountId}`,
+        payload
+      );
       return response;
     } catch (error) {
       console.error("Update account error:", error);
@@ -78,17 +73,42 @@ export const accountService = {
   },
 
   /**
-   * Xóa tài khoản (DELETE /accounts/{employeeAccountId})
-   * @param {string} id - Employee Account ID
-   * @returns {Promise<void>}
+   * Delete employee account (DELETE /accounts/{employeeAccountId})
    */
-  delete: async (id) => {
+  delete: async (employeeAccountId) => {
     try {
-      await axiosInstance.delete(`/accounts/${id}`);
+      await axiosInstance.delete(`/accounts/${employeeAccountId}`);
     } catch (error) {
       console.error("Delete account error:", error);
       throw error;
     }
+  },
+
+  /**
+   * Extract roles from account object
+   */
+  extractRoles: (account) => {
+    if (!account || !account.roles) return [];
+    return account.roles.map((role) => role.name || role);
+  },
+
+  /**
+   * Check if account has specific role
+   */
+  hasRole: (account, roleName) => {
+    const roles = accountService.extractRoles(account);
+    return roles.includes(roleName);
+  },
+
+  /**
+   * Get highest role (ADMIN > MANAGER > EMPLOYEE)
+   */
+  getHighestRole: (account) => {
+    const roles = accountService.extractRoles(account);
+    if (roles.includes("ADMIN")) return "ADMIN";
+    if (roles.includes("MANAGER")) return "MANAGER";
+    if (roles.includes("EMPLOYEE")) return "EMPLOYEE";
+    return null;
   },
 };
 

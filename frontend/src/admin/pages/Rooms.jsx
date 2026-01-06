@@ -1,3 +1,4 @@
+// frontend/src/admin/pages/Rooms.jsx
 import { useState, useEffect } from "react";
 import { FiPlus, FiSearch, FiEdit, FiTrash2, FiGrid } from "react-icons/fi";
 import Breadcrumb from "../components/Common/Breadcrumb";
@@ -5,15 +6,8 @@ import Loading from "../components/Common/Loading";
 import ConfirmDialog from "../components/Common/ConfirmDialog";
 import RoomForm from "../components/RoomForm";
 import SeatEditor from "../components/SeatEditor";
-import {
-  getRooms,
-  createRoom,
-  updateRoom,
-  deleteRoom,
-  updateSeatLayout,
-} from "../services/rooms";
-import { getCinemas } from "../services/cinemas";
-import { toast } from "react-toastify";
+import { roomService, cinemaService } from "../../services"; // ✅ Fixed
+import { message } from "antd";
 import "../styles/AdminLayout.scss";
 
 const Rooms = () => {
@@ -43,14 +37,17 @@ const Rooms = () => {
     try {
       setLoading(true);
       const [roomsData, cinemasData] = await Promise.all([
-        getRooms(),
-        getCinemas(),
+        roomService.getAll(),
+        cinemaService.getAll(),
       ]);
-      setRooms(roomsData.rooms || roomsData);
-      setCinemas(cinemasData.cinemas || cinemasData);
+
+      setRooms(Array.isArray(roomsData) ? roomsData : []);
+      setCinemas(Array.isArray(cinemasData) ? cinemasData : []);
     } catch (error) {
       console.error("Error fetching data:", error);
-      toast.error("Lỗi khi tải dữ liệu");
+      message.error("Lỗi khi tải dữ liệu");
+      setRooms([]);
+      setCinemas([]);
     } finally {
       setLoading(false);
     }
@@ -61,13 +58,13 @@ const Rooms = () => {
 
     if (searchTerm) {
       filtered = filtered.filter((room) =>
-        room.name.toLowerCase().includes(searchTerm.toLowerCase())
+        room.name?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
     if (cinemaFilter !== "all") {
       filtered = filtered.filter(
-        (room) => room.cinemaId === parseInt(cinemaFilter)
+        (room) => String(room.cinemaId) === String(cinemaFilter)
       );
     }
 
@@ -98,49 +95,47 @@ const Rooms = () => {
     setShowDeleteDialog(true);
   };
 
-  const confirmDelete = async () => {
-    try {
-      await deleteRoom(roomToDelete.id);
-      setRooms((prev) => prev.filter((r) => r.id !== roomToDelete.id));
-      toast.success("Xóa phòng thành công!");
-    } catch (error) {
-      console.error("Error deleting room:", error);
-      toast.error(error.message || "Có lỗi xảy ra khi xóa phòng!");
-    }
-  };
-
   const handleSubmitRoom = async (roomData) => {
     try {
       if (selectedRoom) {
-        const updated = await updateRoom(selectedRoom.id, roomData);
-        setRooms((prev) =>
-          prev.map((r) => (r.id === selectedRoom.id ? updated : r))
-        );
-        toast.success("Cập nhật phòng thành công!");
+        message.warning("Chức năng sửa phòng chưa được hỗ trợ bởi backend");
+        return;
       } else {
-        const newRoom = await createRoom(roomData);
-        setRooms((prev) => [...prev, newRoom]);
-        toast.success("Thêm phòng thành công!");
+        const newRoom = await roomService.create(roomData);
+        message.success("Thêm phòng thành công!");
+        fetchData(); // Reload data
       }
 
       setShowRoomForm(false);
       setSelectedRoom(null);
     } catch (error) {
       console.error("Error submitting room:", error);
-      toast.error(error.message || "Có lỗi xảy ra!");
+      message.error(error.message || "Có lỗi xảy ra!");
     }
+  };
+
+  const confirmDelete = async () => {
+    message.warning("Chức năng xóa phòng chưa được hỗ trợ bởi backend");
+    setShowDeleteDialog(false);
   };
 
   const handleSaveSeatLayout = async (seatData) => {
     try {
-      await updateSeatLayout(seatData.roomId, seatData);
-      toast.success("Lưu sơ đồ ghế thành công!");
+      // If roomService has updateSeatLayout method
+      if (roomService.updateSeatLayout) {
+        await roomService.updateSeatLayout(seatData.roomId, seatData);
+      } else {
+        // Alternative: update room with seat data
+        await roomService.update(seatData.roomId, { seats: seatData.seats });
+      }
+
+      message.success("Lưu sơ đồ ghế thành công!");
       setShowSeatEditor(false);
       setSelectedRoom(null);
       fetchData();
     } catch (error) {
       console.error("Error saving seat layout:", error);
-      toast.error(error.message || "Có lỗi xảy ra khi lưu sơ đồ ghế!");
+      message.error(error.message || "Có lỗi xảy ra khi lưu sơ đồ ghế!");
     }
   };
 
@@ -262,16 +257,16 @@ const Rooms = () => {
             </thead>
             <tbody>
               {filteredRooms.map((room) => (
-                <tr key={room.id}>
+                <tr key={room.roomId || room.id}>
                   <td>
-                    <strong>{room.name}</strong>
+                    <strong>{room.roomName || room.name}</strong>
                   </td>
                   <td>{getCinemaName(room.cinemaId)}</td>
                   <td>
-                    <span className="badge info">{room.type}</span>
+                    <span className="badge info">{room.type || "2D"}</span>
                   </td>
-                  <td>{room.capacity} ghế</td>
-                  <td>{getStatusBadge(room.status)}</td>
+                  <td>{room.capacity || "N/A"} ghế</td>
+                  <td>{getStatusBadge(room.status || "active")}</td>
                   <td>
                     <div className="actions">
                       <button
@@ -285,6 +280,7 @@ const Rooms = () => {
                         onClick={() => handleEditRoom(room)}
                         className="edit"
                         title="Chỉnh sửa"
+                        disabled
                       >
                         <FiEdit size={18} />
                       </button>
@@ -292,6 +288,7 @@ const Rooms = () => {
                         onClick={() => handleDeleteRoom(room)}
                         className="delete"
                         title="Xóa"
+                        disabled
                       >
                         <FiTrash2 size={18} />
                       </button>
@@ -309,6 +306,7 @@ const Rooms = () => {
       {showRoomForm && (
         <RoomForm
           room={selectedRoom}
+          cinemas={cinemas}
           onClose={() => {
             setShowRoomForm(false);
             setSelectedRoom(null);

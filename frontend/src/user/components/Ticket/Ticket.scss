@@ -1,77 +1,373 @@
-.ticket-container {
-  position: sticky;
-  top: 100px; // Cách Header một khoảng
-  width: 100%;
-  border-radius: 24px;
-  background: white;
+// frontend/src/user/components/Ticket/Ticket.scss
 
-  .dashed-line {
-    border: 0;
-    border-top: 2px dashed #e2e8f0;
-    margin: 20px -24px; // Đẩy ra sát mép card
+.ticket-container {
+  background: white;
+  border-radius: 24px;
+  overflow: hidden;
+
+  .ant-card-body {
+    padding: 0;
   }
 
   .ticket-detail {
-    .movie-detail {
-      .movie-poster {
-        margin-top: -20px;
-        margin-bottom: 20px;
-        img {
-          aspect-ratio: 2/3;
-          object-fit: cover;
+    padding: 24px;
+  }
+
+  // Movie Section
+  .movie-detail {
+    text-align: center;
+    margin-bottom: 24px;
+
+    .movie-poster {
+      position: relative;
+      width: 100%;
+      height: 280px;
+      border-radius: 16px;
+      overflow: hidden;
+      margin-bottom: 16px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s;
+      }
+
+      .poster-overlay {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(to top, rgba(0, 0, 0, 0.6), transparent);
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+        padding: 20px;
+        opacity: 0;
+        transition: opacity 0.3s;
+
+        .poster-icon {
+          font-size: 48px;
+          color: white;
         }
       }
 
-      h3 {
-        font-size: 20px;
-        font-weight: 800;
-        text-align: center;
-        margin-bottom: 10px;
-        color: #1e293b;
+      &:hover {
+        img {
+          transform: scale(1.05);
+        }
+        .poster-overlay {
+          opacity: 1;
+        }
       }
     }
 
-    ul {
-      list-style: none;
-      padding: 0;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
+    .movie-title {
+      font-size: 20px;
+      font-weight: 800;
+      color: #1e293b;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: -0.5px;
+    }
 
-      li {
+    .movie-badges {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+
+      .ant-tag {
+        margin: 0;
+        padding: 4px 12px;
+        font-size: 12px;
+        font-weight: 600;
+        border-radius: 6px;
+      }
+
+      .age-badge {
+        border: none;
+      }
+
+      .duration-badge {
+        background: #f1f5f9;
+        color: #64748b;
+        border: none;
+      }
+    }
+  }
+
+  // Divider
+  .divider {
+    height: 1px;
+    background: linear-gradient(
+      to right,
+      transparent,
+      #e2e8f0 20%,
+      #e2e8f0 80%,
+      transparent
+    );
+    margin: 20px 0;
+
+    &.thick {
+      height: 2px;
+      background: #e2e8f0;
+    }
+  }
+
+  // Showtime Info
+  .showtime-info {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+
+    .info-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      background: #f8fafc;
+      border-radius: 12px;
+      transition: all 0.2s;
+
+      &:hover {
+        background: #f1f5f9;
+      }
+
+      .info-icon {
+        font-size: 20px;
+        color: #0a64a7;
+        flex-shrink: 0;
+      }
+
+      .info-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+
+        .info-label {
+          font-size: 11px;
+          color: #64748b;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          font-weight: 600;
+        }
+
+        .info-value {
+          font-size: 14px;
+          color: #1e293b;
+          font-weight: 700;
+
+          &.highlight {
+            color: #0a64a7;
+            font-size: 16px;
+          }
+        }
+      }
+    }
+  }
+
+  // Selected Seats
+  .selected-seats-section {
+    .section-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #1e293b;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .seat-group {
+      margin-bottom: 16px;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+
+      .seat-type-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        font-size: 14px;
+        padding: 8px 12px;
+        background: #f8fafc;
+        border-radius: 8px 8px 0 0;
+        border-bottom: 2px solid #e2e8f0;
 
-        span {
-          color: #64748b;
-          font-weight: 500;
+        .seat-type-label {
+          font-size: 13px;
+          font-weight: 700;
+          color: #475569;
         }
 
-        strong {
-          color: #1e293b;
-          font-weight: 700;
-          text-align: right;
+        .seat-count {
+          font-size: 12px;
+          color: #64748b;
+        }
+      }
+
+      .seat-list {
+        background: #fafbfc;
+        border-radius: 0 0 8px 8px;
+        padding: 4px;
+
+        .seat-item {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 10px 12px;
+          background: white;
+          margin-bottom: 4px;
+          border-radius: 6px;
+          transition: all 0.2s;
+
+          &:last-child {
+            margin-bottom: 0;
+          }
+
+          &:hover {
+            background: #f1f5f9;
+          }
+
+          .seat-name {
+            font-size: 14px;
+            font-weight: 700;
+            color: #8864f0;
+          }
+
+          .seat-price {
+            font-size: 13px;
+            font-weight: 600;
+            color: #64748b;
+          }
+        }
+      }
+    }
+
+    .empty-seats {
+      padding: 40px 20px;
+      text-align: center;
+      background: #f8fafc;
+      border-radius: 12px;
+      border: 2px dashed #e2e8f0;
+
+      p {
+        color: #94a3b8;
+        font-size: 14px;
+        margin: 0;
+      }
+    }
+  }
+
+  // Price Summary
+  .price-summary {
+    padding: 16px;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border-radius: 12px;
+    margin-bottom: 20px;
+
+    .price-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+
+      &.subtotal {
+        font-size: 14px;
+        color: #64748b;
+        font-weight: 600;
+      }
+
+      &.total {
+        padding-top: 12px;
+        border-top: 2px solid #e2e8f0;
+        margin-top: 12px;
+        font-size: 15px;
+        font-weight: 700;
+        color: #1e293b;
+
+        .total-amount {
+          font-size: 24px;
+          font-weight: 900;
+          color: #ef4444;
         }
       }
     }
   }
 
-  // Hiệu ứng đổ bóng khi Hover
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  &:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1),
-      0 8px 10px -6px rgb(0 0 0 / 0.1);
+  // Action Button
+  .button-container {
+    .payment-btn {
+      height: 56px;
+      font-size: 16px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #8864f0 0%, #6b46c1 100%);
+      border: none;
+      box-shadow: 0 8px 24px rgba(136, 100, 240, 0.3);
+      transition: all 0.3s;
+
+      &:hover:not(:disabled) {
+        background: linear-gradient(135deg, #9d7ff7 0%, #7c3aed 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 12px 32px rgba(136, 100, 240, 0.4);
+      }
+
+      &:active:not(:disabled) {
+        transform: translateY(0);
+      }
+
+      &:disabled {
+        background: #cbd5e1;
+        color: #94a3b8;
+        cursor: not-allowed;
+        box-shadow: none;
+      }
+    }
   }
 }
 
-// Mobile Responsive
-@media (max-width: 1024px) {
+// Responsive
+@media (max-width: 768px) {
   .ticket-container {
-    position: relative;
-    top: 0;
-    margin-top: 20px;
+    .ticket-detail {
+      padding: 20px;
+    }
+
+    .movie-detail {
+      .movie-poster {
+        height: 240px;
+      }
+
+      .movie-title {
+        font-size: 18px;
+      }
+    }
+
+    .showtime-info {
+      .info-row {
+        padding: 10px;
+
+        .info-icon {
+          font-size: 18px;
+        }
+
+        .info-content {
+          .info-value {
+            font-size: 13px;
+
+            &.highlight {
+              font-size: 15px;
+            }
+          }
+        }
+      }
+    }
   }
 }
