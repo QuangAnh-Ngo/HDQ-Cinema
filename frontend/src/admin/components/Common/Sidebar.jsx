@@ -52,6 +52,12 @@ const Sidebar = () => {
       icon: "fa-users",
       roles: ["MANAGER", "ADMIN"],
     },
+    {
+      path: "/admin/members",
+      label: "Quản lý thành viên",
+      icon: "fa-user-friends",
+      roles: ["ADMIN", "MANAGER", "EMPLOYEE"],
+    },
   ];
 
   const getRoleBadgeClass = (role) => {

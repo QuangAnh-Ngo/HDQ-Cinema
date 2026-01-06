@@ -24,6 +24,7 @@ const ADMIN_ENDPOINT_PATTERNS = [
   { path: "/showtimes", methods: ["POST", "PUT", "DELETE"] },
   { path: "/theaters", methods: ["POST", "PUT", "DELETE"] },
   { path: "/bookings", methods: ["GET", "POST", "PUT", "DELETE"] },
+  { path: "/members", methods: ["GET", "DELETE"] },
 ];
 
 /**

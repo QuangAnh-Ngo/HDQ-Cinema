@@ -3,8 +3,7 @@ import axiosInstance from "./axiosInstance";
 
 export const memberService = {
   /**
-   * Lấy danh sách tất cả thành viên (GET /members)
-   * @returns {Promise<Array>}
+   * Get all members (GET /members)
    */
   getAll: async () => {
     try {
@@ -17,13 +16,11 @@ export const memberService = {
   },
 
   /**
-   * Lấy thông tin thành viên đang đăng nhập (GET /members/my-info)
-   * @returns {Promise<Object>}
+   * Get current logged-in member info (GET /members/my-info)
    */
   getMyInfo: async () => {
     try {
       const response = await axiosInstance.get("/members/my-info");
-      // Response: { username, email, phoneNumber, firstName, lastName, dob, roles }
       return response;
     } catch (error) {
       console.error("Get current member info error:", error);
@@ -32,65 +29,95 @@ export const memberService = {
   },
 
   /**
-   * Đăng ký thành viên mới (POST /members)
-   * @param {Object} data - { username, password, email, phoneNumber, firstName, lastName, dob }
-   * @returns {Promise<Object>}
+   * Register new member (POST /members)
    */
-  register: async (data) => {
+  create: async (data) => {
     try {
       const payload = {
         username: data.username,
-        password: data.password,
+        password: data.password, // Min 8 chars
         email: data.email,
-        phoneNumber: data.phoneNumber || data.phone,
+        phoneNumber: data.phoneNumber || data.phone, // Min 10 chars
         firstName: data.firstName,
         lastName: data.lastName,
         dob: data.dob, // Format: "YYYY-MM-DD"
       };
 
+      console.log("📤 Creating member:", payload);
       const response = await axiosInstance.post("/members", payload);
+      console.log("✅ Member created:", response);
+
       return response;
     } catch (error) {
-      console.error("Register member error:", error);
+      console.error("❌ Create member error:", error);
+      console.error("Response:", error.response?.data);
       throw error;
     }
   },
 
   /**
-   * Cập nhật thông tin thành viên (PUT /members/{employeeAccountId})
-   * ⚠️ Lưu ý: Swagger dùng path param {employeeAccountId} nhưng đây là member update
-   * @param {string} id - Member ID
-   * @param {Object} data - { username, password, email, phoneNumber, dob }
-   * @returns {Promise<Object>}
+   * Update member (PUT /members/{memberId})
+   * Note: API uses {employeeAccountId} in path but this is for members
    */
-  update: async (id, data) => {
+  update: async (memberId, data) => {
     try {
       const payload = {
         username: data.username,
-        password: data.password,
         email: data.email,
         phoneNumber: data.phoneNumber || data.phone,
         dob: data.dob,
       };
 
-      const response = await axiosInstance.put(`/members/${id}`, payload);
+      // Only include password if provided
+      if (data.password && data.password.trim()) {
+        payload.password = data.password;
+      }
+
+      console.log("📤 Updating member:", memberId, payload);
+      const response = await axiosInstance.put(`/members/${memberId}`, payload);
+      console.log("✅ Member updated:", response);
+
       return response;
     } catch (error) {
-      console.error("Update member error:", error);
+      console.error("❌ Update member error:", error);
+      console.error("Response:", error.response?.data);
       throw error;
     }
   },
 
   /**
-   * Xóa thành viên (DELETE /members/{employeeId})
-   * @param {string} id - Member ID
-   * @returns {Promise<void>}
+   * Delete member (DELETE /members/{memberId})
    */
-  delete: async (id) => {
+  delete: async (memberId) => {
     try {
-      await axiosInstance.delete(`/members/${id}`);
+      console.log("📤 Deleting member:", memberId);
+      await axiosInstance.delete(`/members/${memberId}`);
+      console.log("✅ Member deleted:", memberId);
     } catch (error) {
-      console.error("Delete member error:", error);
+      console.error("❌ Delete member error:", error);
+      console.error("Response:", error.response?.data);
+      throw error;
+    }
+  },
+
+  /**
+   * Search members by keyword
+   */
+  search: async (keyword) => {
+    try {
+      const allMembers = await memberService.getAll();
+      const lowerKeyword = keyword.toLowerCase();
+
+      return allMembers.filter(
+        (member) =>
+          member.username?.toLowerCase().includes(lowerKeyword) ||
+          member.email?.toLowerCase().includes(lowerKeyword) ||
+          member.phoneNumber?.includes(keyword) ||
+          member.firstName?.toLowerCase().includes(lowerKeyword) ||
+          member.lastName?.toLowerCase().includes(lowerKeyword)
+      );
+    } catch (error) {
+      console.error("Search members error:", error);
       throw error;
     }
   },
