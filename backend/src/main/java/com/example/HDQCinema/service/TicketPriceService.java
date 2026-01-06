@@ -60,7 +60,7 @@ public class TicketPriceService {
             ticket.setDayType((DayType) dayType);
         }
 
-        ticket.setPrice(request.getPrice());
+        if(request.getPrice() > 0) ticket.setPrice(request.getPrice());
         if(request.getSeatType() != null && !request.getSeatType().isEmpty()) ticket.setSeatType(SeatType.valueOf(request.getSeatType()));
 
         ticketPriceRepository.save(ticket);
