@@ -1,18 +1,17 @@
 // frontend/src/services/roomService.js
 import axiosInstance from "./axiosInstance";
 
-// ✅ Cache rooms in memory to avoid repeated API calls
+// ✅ Cache rooms in memory
 let cachedRooms = null;
 let cacheTimestamp = null;
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
 export const roomService = {
   /**
-   * ✅ Get all rooms with caching
+   * ✅ Get all rooms with caching (from /theaters)
    */
   getAll: async (forceRefresh = false) => {
     try {
-      // Check cache
       if (!forceRefresh && cachedRooms && cacheTimestamp) {
         const now = Date.now();
         if (now - cacheTimestamp < CACHE_DURATION) {
@@ -21,7 +20,6 @@ export const roomService = {
         }
       }
 
-      // Fetch from API
       const theaters = await axiosInstance.get("/theaters");
 
       const allRooms = [];
@@ -45,7 +43,6 @@ export const roomService = {
         });
       }
 
-      // Update cache
       cachedRooms = allRooms;
       cacheTimestamp = Date.now();
 
@@ -53,19 +50,17 @@ export const roomService = {
       return allRooms;
     } catch (error) {
       console.error("Get all rooms error:", error);
-      return cachedRooms || []; // Return cache on error
+      return cachedRooms || [];
     }
   },
 
   /**
-   * ✅ ADD: Get room by ID (from cache)
+   * ✅ Get room by ID (from cache)
    */
   getById: async (roomId) => {
     try {
-      // Get all rooms (will use cache if available)
       const allRooms = await roomService.getAll();
 
-      // Find room by ID
       const room = allRooms.find(
         (r) =>
           String(r.id) === String(roomId) || String(r.roomId) === String(roomId)
@@ -84,16 +79,34 @@ export const roomService = {
   },
 
   /**
-   * Get room by showtime (original API)
+   * ✅ Get room with seats by showtime
+   * API: GET /rooms?showtimeId={id}
+   * Response: { roomId, roomName, cinemaName, showtimeId, seats: [...] }
    */
   getRoomByShowtime: async (showtimeId) => {
     try {
+      console.log("🔍 Fetching room for showtime:", showtimeId);
+
       const response = await axiosInstance.get("/rooms", {
         params: { showtimeId },
       });
-      return response;
+
+      console.log("📦 Room response:", response);
+
+      if (!response) {
+        console.error("❌ No response from API");
+        return null;
+      }
+
+      // Handle response structure
+      const result = response.result || response;
+
+      console.log("✅ Room with seats:", result);
+      console.log("💺 Seats count:", result?.seats?.length || 0);
+
+      return result;
     } catch (error) {
-      console.error("Get room by showtime error:", error);
+      console.error("❌ Get room by showtime error:", error);
       throw error;
     }
   },
@@ -112,7 +125,7 @@ export const roomService = {
   },
 
   /**
-   * Create new room
+   * Create new room (POST /rooms)
    */
   create: async (data) => {
     try {
@@ -120,14 +133,19 @@ export const roomService = {
         roomName: data.roomName || data.name,
         cinemaId: data.cinemaId,
       };
+
+      console.log("📤 Creating room:", payload);
+
       const response = await axiosInstance.post("/rooms", payload);
 
       // Clear cache after creating
       cachedRooms = null;
 
+      console.log("✅ Room created:", response);
+
       return response;
     } catch (error) {
-      console.error("Create room error:", error);
+      console.error("❌ Create room error:", error);
       throw error;
     }
   },
@@ -139,17 +157,6 @@ export const roomService = {
     cachedRooms = null;
     cacheTimestamp = null;
     console.log("✅ Room cache cleared");
-  },
-
-  /**
-   * Update & Delete not available
-   */
-  update: async (id, data) => {
-    throw new Error("Room update endpoint not implemented in backend");
-  },
-
-  delete: async (id) => {
-    throw new Error("Room delete endpoint not implemented in backend");
   },
 };
 
