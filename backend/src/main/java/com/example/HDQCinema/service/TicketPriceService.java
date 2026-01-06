@@ -34,7 +34,7 @@ public class TicketPriceService {
                 .orElseThrow(() -> new AppException(ErrorCode.CINEMA_NOT_FOUND));
 
         var dayType = dayTypeRepository.findDayTypeByDayType(request.getDayType())
-                .orElseThrow(() -> new RuntimeException("have to create day type first"));
+                .orElseThrow(() -> new AppException(ErrorCode.DAYTYPE_NOT_FOUND));
         ticket.setDayType((DayType) dayType);
         ticket.setCinema(cinema);
 
@@ -58,7 +58,7 @@ public class TicketPriceService {
 
         if(request.getDayType() != null && !request.getDayType().isEmpty()) {
             var dayType = dayTypeRepository.findDayTypeByDayType(request.getDayType())
-                    .orElseThrow(() -> new RuntimeException("day not exist"));
+                    .orElseThrow(() -> new AppException(ErrorCode.DAYTYPE_NOT_FOUND));
             ticket.setDayType((DayType) dayType);
         }
 

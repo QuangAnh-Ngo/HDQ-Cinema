@@ -21,7 +21,7 @@ public enum ErrorCode {
     SHOWTIME_NOT_FOUND(1007, "showtime not found",  HttpStatus.NOT_FOUND),
     BOOKING_NOT_FOUND(1008, "booking not found",  HttpStatus.NOT_FOUND),
     MOVIE_NOT_FOUND(1010, "movie not found",  HttpStatus.NOT_FOUND),
-    DAYTYPE_NOT_FOUND(1011, "have to create day type first",  HttpStatus.NOT_FOUND),
+    DAYTYPE_NOT_FOUND(1011, "day type not found",  HttpStatus.NOT_FOUND),
 
     USER_NOT_FOUND(2001, "user not found", HttpStatus.NOT_FOUND),
     USER_EXISTED(2002, "user already existed", HttpStatus.CONFLICT),
