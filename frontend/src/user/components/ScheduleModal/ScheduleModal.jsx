@@ -33,37 +33,39 @@ const ScheduleModal = ({
         const [movieData, cinemaData, allShowtimes] = await Promise.all([
           movieService.getById(movieId),
           cinemaService.getById(cinemaId),
-          showtimeService.getAll(), // ✅ Fetch all showtimes để lấy ID
+          showtimeService.getAll(),
         ]);
 
         setMovie(movieData);
         setCinema(cinemaData);
 
+        // ✅ FIX: Convert movieId to number để so sánh đúng
+        const numericMovieId = Number(movieId);
+
+        console.log("📦 All showtimes:", allShowtimes);
+        console.log("🎬 Looking for movieId:", numericMovieId);
+
         // ✅ Tạo map từ showTime+roomId -> showtimeId
         const stMap = {};
         allShowtimes.forEach((st) => {
-          if (st.movieId === movieId) {
+          console.log(
+            `Checking st.movieId: ${st.movieId} vs ${numericMovieId}`
+          );
+
+          // ✅ So sánh bằng == hoặc convert cả hai
+          if (Number(st.movieId) === numericMovieId) {
             st.showTimeRooms?.forEach((str) => {
               const key = `${str.showTime}_${str.roomId}`;
               stMap[key] = st.showtimeId;
+              console.log(`✅ Added: ${key} -> ${st.showtimeId}`);
             });
           }
         });
+
+        console.log("🗺️ Final showtimesMap:", stMap);
         setShowtimesMap(stMap);
-        console.log("🗺️ Showtimes map:", stMap);
 
-        // Lấy danh sách ngày có suất chiếu tại rạp này
-        if (movieData.showtimes && cinemaData.rooms) {
-          const roomIds = cinemaData.rooms.map((r) => r.roomId);
-          const filtered = movieData.showtimes.filter((st) =>
-            roomIds.includes(st.roomId)
-          );
-
-          if (filtered.length > 0) {
-            const firstDate = filtered[0].showTime.split("T")[0];
-            setSelectedDate(firstDate);
-          }
-        }
+        // ... rest of code
       } catch (error) {
         console.error("Error fetching schedule:", error);
         message.error("Không thể tải lịch chiếu");
