@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { FiX, FiUpload } from "react-icons/fi";
+import { FiX } from "react-icons/fi";
 import "../styles/AdminLayout.scss";
 import "../styles/MovieForm.scss";
 
@@ -10,7 +10,6 @@ const MovieForm = ({ movie, onClose, onSubmit }) => {
     duration: "",
     releaseDate: "",
     director: "",
-    cast: "",
     genre: "",
     language: "Tiếng Việt",
     rating: "",
@@ -19,13 +18,11 @@ const MovieForm = ({ movie, onClose, onSubmit }) => {
     status: "coming_soon",
   });
 
-  const [posterPreview, setPosterPreview] = useState("");
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
     if (movie) {
       setFormData(movie);
-      setPosterPreview(movie.poster);
     }
   }, [movie]);
 
@@ -34,26 +31,6 @@ const MovieForm = ({ movie, onClose, onSubmit }) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: "" }));
-    }
-  };
-
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        setErrors((prev) => ({
-          ...prev,
-          poster: "Kích thước file không được vượt quá 5MB",
-        }));
-        return;
-      }
-
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPosterPreview(reader.result);
-        setFormData((prev) => ({ ...prev, poster: reader.result }));
-      };
-      reader.readAsDataURL(file);
     }
   };
 
@@ -67,7 +44,16 @@ const MovieForm = ({ movie, onClose, onSubmit }) => {
     if (!formData.releaseDate)
       newErrors.releaseDate = "Vui lòng chọn ngày khởi chiếu";
     if (!formData.genre.trim()) newErrors.genre = "Vui lòng chọn thể loại";
-    if (!posterPreview) newErrors.poster = "Vui lòng tải lên poster";
+    if (!formData.poster.trim()) newErrors.poster = "Vui lòng nhập URL poster";
+
+    // ✅ Validate URL format
+    if (formData.poster.trim()) {
+      try {
+        new URL(formData.poster);
+      } catch {
+        newErrors.poster = "URL poster không hợp lệ";
+      }
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -156,17 +142,6 @@ const MovieForm = ({ movie, onClose, onSubmit }) => {
               </div>
 
               <div className="form-group">
-                <label>Diễn viên</label>
-                <input
-                  type="text"
-                  name="cast"
-                  value={formData.cast}
-                  onChange={handleChange}
-                  placeholder="Tên diễn viên (cách nhau bởi dấu phẩy)"
-                />
-              </div>
-
-              <div className="form-group">
                 <label>
                   Thể loại <span className="required">*</span>
                 </label>
@@ -191,46 +166,6 @@ const MovieForm = ({ movie, onClose, onSubmit }) => {
                   <p className="error-message">{errors.genre}</p>
                 )}
               </div>
-            </div>
-
-            {/* Right Column */}
-            <div>
-              <div className="form-group">
-                <label>
-                  Poster <span className="required">*</span>
-                </label>
-                <div className="poster-upload">
-                  {posterPreview ? (
-                    <div className="preview-container">
-                      <img src={posterPreview} alt="Preview" />
-                      <button
-                        type="button"
-                        className="remove-button"
-                        onClick={() => {
-                          setPosterPreview("");
-                          setFormData((prev) => ({ ...prev, poster: "" }));
-                        }}
-                      >
-                        <FiX size={16} />
-                      </button>
-                    </div>
-                  ) : (
-                    <label className="upload-area">
-                      <FiUpload size={48} />
-                      <span className="upload-text">Click để tải poster</span>
-                      <span className="upload-hint">PNG, JPG (Max 5MB)</span>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleFileChange}
-                      />
-                    </label>
-                  )}
-                </div>
-                {errors.poster && (
-                  <p className="error-message">{errors.poster}</p>
-                )}
-              </div>
 
               <div className="form-group">
                 <label>Ngôn ngữ</label>
@@ -244,6 +179,58 @@ const MovieForm = ({ movie, onClose, onSubmit }) => {
                   <option value="Phụ đề Việt">Phụ đề Việt</option>
                   <option value="Lồng tiếng">Lồng tiếng</option>
                 </select>
+              </div>
+            </div>
+
+            {/* Right Column */}
+            <div>
+              <div className="form-group">
+                <label>
+                  URL Poster <span className="required">*</span>
+                </label>
+                <input
+                  type="url"
+                  name="poster"
+                  value={formData.poster}
+                  onChange={handleChange}
+                  className={errors.poster ? "error" : ""}
+                  placeholder="https://example.com/poster.jpg"
+                />
+                {errors.poster && (
+                  <p className="error-message">{errors.poster}</p>
+                )}
+
+                {/* ✅ Preview poster if URL is valid */}
+                {formData.poster && !errors.poster && (
+                  <div className="poster-preview" style={{ marginTop: 12 }}>
+                    <img
+                      src={formData.poster}
+                      alt="Poster preview"
+                      style={{
+                        width: "100%",
+                        maxHeight: 300,
+                        objectFit: "cover",
+                        borderRadius: 8,
+                        border: "1px solid #e5e7eb",
+                      }}
+                      onError={(e) => {
+                        e.target.style.display = "none";
+                        setErrors((prev) => ({
+                          ...prev,
+                          poster: "Không thể tải ảnh từ URL này",
+                        }));
+                      }}
+                      onLoad={(e) => {
+                        e.target.style.display = "block";
+                        setErrors((prev) => {
+                          const newErrors = { ...prev };
+                          delete newErrors.poster;
+                          return newErrors;
+                        });
+                      }}
+                    />
+                  </div>
+                )}
               </div>
 
               <div className="form-group">
@@ -283,7 +270,7 @@ const MovieForm = ({ movie, onClose, onSubmit }) => {
                   name="trailer"
                   value={formData.trailer}
                   onChange={handleChange}
-                  placeholder="https://youtube.com/..."
+                  placeholder="https://youtube.com/watch?v=..."
                 />
               </div>
             </div>

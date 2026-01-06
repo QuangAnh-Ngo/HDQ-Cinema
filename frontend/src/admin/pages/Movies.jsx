@@ -1,7 +1,7 @@
 // frontend/src/admin/pages/Movies.jsx
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { FiPlus, FiSearch, FiEdit, FiTrash2, FiCalendar } from "react-icons/fi";
-import { movieService } from "../../services"; // ✅ Fixed
+import { movieService } from "../../services";
 import Breadcrumb from "../components/Common/Breadcrumb";
 import Loading from "../components/Common/Loading";
 import ConfirmDialog from "../components/Common/ConfirmDialog";
@@ -11,7 +11,6 @@ import "../styles/MoviesPage.scss";
 
 const Movies = () => {
   const [movies, setMovies] = useState([]);
-  const [filteredMovies, setFilteredMovies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -21,27 +20,43 @@ const Movies = () => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [movieToDelete, setMovieToDelete] = useState(null);
 
-  useEffect(() => {
-    fetchMovies();
+  // ✅ Memoize calculateMovieStatus to prevent unnecessary recalculations
+  const calculateMovieStatus = useCallback((movie) => {
+    if (!movie.dayStart || !movie.dayEnd) return "ended";
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Reset time for accurate date comparison
+
+    const startDate = new Date(movie.dayStart);
+    startDate.setHours(0, 0, 0, 0);
+
+    const endDate = new Date(movie.dayEnd);
+    endDate.setHours(0, 0, 0, 0);
+
+    if (today < startDate) return "coming_soon";
+    if (today >= startDate && today <= endDate) return "now_showing";
+    return "ended";
   }, []);
 
+  // ✅ Fetch movies only once on mount
   useEffect(() => {
-    filterMovies();
-  }, [movies, searchTerm, statusFilter]);
+    fetchMovies();
+  }, []); // Empty dependency array - only run once
 
   const fetchMovies = async () => {
     try {
       setLoading(true);
       const data = await movieService.getAll();
 
-      // ✅ Add status field based on dates
+      // ✅ Process data once and set state
       const moviesWithStatus = (Array.isArray(data) ? data : []).map(
         (movie) => ({
           ...movie,
-          status: calculateMovieStatus(movie), // ✅ Add this
+          status: calculateMovieStatus(movie),
         })
       );
 
+      console.log("✅ Movies loaded:", moviesWithStatus.length);
       setMovies(moviesWithStatus);
     } catch (error) {
       console.error("Error fetching movies:", error);
@@ -52,27 +67,16 @@ const Movies = () => {
     }
   };
 
-  // ✅ Add this helper function
-  const calculateMovieStatus = (movie) => {
-    if (!movie.dayStart || !movie.dayEnd) return "ended";
-
-    const today = new Date();
-    const startDate = new Date(movie.dayStart);
-    const endDate = new Date(movie.dayEnd);
-
-    if (today < startDate) return "coming_soon";
-    if (today >= startDate && today <= endDate) return "now_showing";
-    return "ended";
-  };
-
-  const filterMovies = () => {
+  // ✅ Use useMemo to calculate filtered movies
+  const filteredMovies = useMemo(() => {
     let filtered = [...movies];
 
     if (searchTerm) {
+      const lowerSearch = searchTerm.toLowerCase();
       filtered = filtered.filter(
         (movie) =>
-          movie.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          movie.director?.toLowerCase().includes(searchTerm.toLowerCase())
+          movie.title?.toLowerCase().includes(lowerSearch) ||
+          movie.director?.toLowerCase().includes(lowerSearch)
       );
     }
 
@@ -80,29 +84,43 @@ const Movies = () => {
       filtered = filtered.filter((movie) => movie.status === statusFilter);
     }
 
-    setFilteredMovies(filtered);
-  };
+    return filtered;
+  }, [movies, searchTerm, statusFilter]);
 
-  const handleAddMovie = () => {
+  // ✅ Memoize stats to prevent recalculation
+  const stats = useMemo(() => {
+    return {
+      total: movies.length,
+      nowShowing: movies.filter((m) => m.status === "now_showing").length,
+      comingSoon: movies.filter((m) => m.status === "coming_soon").length,
+    };
+  }, [movies]);
+
+  const handleAddMovie = useCallback(() => {
     setSelectedMovie(null);
     setShowMovieForm(true);
-  };
+  }, []);
 
-  const handleEditMovie = (movie) => {
+  const handleEditMovie = useCallback((movie) => {
     setSelectedMovie(movie);
     setShowMovieForm(true);
-  };
+  }, []);
 
-  const handleDeleteMovie = (movie) => {
+  const handleDeleteMovie = useCallback((movie) => {
     setMovieToDelete(movie);
     setShowDeleteDialog(true);
-  };
+  }, []);
 
   const confirmDelete = async () => {
     try {
       await movieService.delete(movieToDelete.id);
+
+      // ✅ Update state efficiently
       setMovies((prev) => prev.filter((m) => m.id !== movieToDelete.id));
+
       message.success("Xóa phim thành công!");
+      setShowDeleteDialog(false);
+      setMovieToDelete(null);
     } catch (error) {
       console.error("Error deleting movie:", error);
       message.error("Có lỗi xảy ra khi xóa phim!");
@@ -112,14 +130,28 @@ const Movies = () => {
   const handleSubmitMovie = async (movieData) => {
     try {
       if (selectedMovie) {
+        // ✅ Update existing movie
         const updated = await movieService.update(selectedMovie.id, movieData);
+        const updatedWithStatus = {
+          ...updated,
+          status: calculateMovieStatus(updated),
+        };
+
         setMovies((prev) =>
-          prev.map((m) => (m.id === selectedMovie.id ? updated : m))
+          prev.map((m) => (m.id === selectedMovie.id ? updatedWithStatus : m))
         );
+
         message.success("Cập nhật phim thành công!");
       } else {
+        // ✅ Add new movie
         const newMovie = await movieService.create(movieData);
-        setMovies((prev) => [...prev, newMovie]);
+        const newMovieWithStatus = {
+          ...newMovie,
+          status: calculateMovieStatus(newMovie),
+        };
+
+        setMovies((prev) => [...prev, newMovieWithStatus]);
+
         message.success("Thêm phim thành công!");
       }
 
@@ -127,11 +159,11 @@ const Movies = () => {
       setSelectedMovie(null);
     } catch (error) {
       console.error("Error submitting movie:", error);
-      message.error("Có lỗi xảy ra!");
+      message.error(error.message || "Có lỗi xảy ra!");
     }
   };
 
-  const getStatusBadge = (status) => {
+  const getStatusBadge = useCallback((status) => {
     const badges = {
       now_showing: { label: "Đang chiếu", className: "success" },
       coming_soon: { label: "Sắp chiếu", className: "info" },
@@ -140,6 +172,30 @@ const Movies = () => {
 
     const badge = badges[status] || badges.ended;
     return <span className={`badge ${badge.className}`}>{badge.label}</span>;
+  }, []);
+
+  const ImageWithFallback = ({ src, alt, className }) => {
+    const [imgSrc, setImgSrc] = useState(src);
+    const [hasError, setHasError] = useState(false);
+
+    useEffect(() => {
+      setImgSrc(src);
+      setHasError(false);
+    }, [src]);
+
+    const handleError = () => {
+      if (!hasError) {
+        setHasError(true);
+        // ✅ Use a data URI as fallback to prevent network request
+        setImgSrc(
+          "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjMwMCIgZmlsbD0iI2UwZTBlMCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTYiIGZpbGw9IiM5OTk5OTkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5ObyBJbWFnZTwvdGV4dD48L3N2Zz4="
+        );
+      }
+    };
+
+    return (
+      <img src={imgSrc} alt={alt} className={className} onError={handleError} />
+    );
   };
 
   if (loading) {
@@ -163,7 +219,7 @@ const Movies = () => {
           <div className="stat-content">
             <div className="stat-info">
               <p>Tổng số phim</p>
-              <h3>{movies.length}</h3>
+              <h3>{stats.total}</h3>
             </div>
           </div>
         </div>
@@ -171,9 +227,7 @@ const Movies = () => {
           <div className="stat-content">
             <div className="stat-info">
               <p>Đang chiếu</p>
-              <h3 style={{ color: "#10b981" }}>
-                {movies.filter((m) => m.status === "now_showing").length}
-              </h3>
+              <h3 style={{ color: "#10b981" }}>{stats.nowShowing}</h3>
             </div>
           </div>
         </div>
@@ -181,9 +235,7 @@ const Movies = () => {
           <div className="stat-content">
             <div className="stat-info">
               <p>Sắp chiếu</p>
-              <h3 style={{ color: "#2563eb" }}>
-                {movies.filter((m) => m.status === "coming_soon").length}
-              </h3>
+              <h3 style={{ color: "#2563eb" }}>{stats.comingSoon}</h3>
             </div>
           </div>
         </div>
@@ -230,7 +282,7 @@ const Movies = () => {
               {filteredMovies.map((movie) => (
                 <tr key={movie.id}>
                   <td>
-                    <img
+                    <ImageWithFallback
                       src={movie.poster}
                       alt={movie.title}
                       className="movie-poster"
@@ -291,7 +343,10 @@ const Movies = () => {
 
       <ConfirmDialog
         isOpen={showDeleteDialog}
-        onClose={() => setShowDeleteDialog(false)}
+        onClose={() => {
+          setShowDeleteDialog(false);
+          setMovieToDelete(null);
+        }}
         onConfirm={confirmDelete}
         title="Xác nhận xóa phim"
         message={`Bạn có chắc chắn muốn xóa phim "${movieToDelete?.title}"? Hành động này không thể hoàn tác.`}
