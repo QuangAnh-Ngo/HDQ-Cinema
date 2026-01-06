@@ -56,8 +56,8 @@ const Register = () => {
       return false;
     }
 
-    if (password.length < 6) {
-      message.warning("Mật khẩu phải có ít nhất 6 ký tự");
+    if (password.length < 8) {
+      message.warning("Mật khẩu phải có ít nhất 8 ký tự");
       return false;
     }
 
@@ -72,16 +72,14 @@ const Register = () => {
       return false;
     }
 
-    // Kiểm tra định dạng số điện thoại Việt Nam (10 số)
     if (!/^0\d{9}$/.test(phone)) {
       message.warning("Số điện thoại không hợp lệ (10 số, bắt đầu bằng 0)");
       return false;
     }
 
-    // Kiểm tra tuổi (phải >= 13)
     const age = new Date().getFullYear() - new Date(dob).getFullYear();
-    if (age < 13) {
-      message.warning("Bạn phải từ 13 tuổi trở lên để đăng ký");
+    if (age < 16) {
+      message.warning("Bạn phải từ 16 tuổi trở lên để đăng ký");
       return false;
     }
 
@@ -94,36 +92,49 @@ const Register = () => {
 
     setLoading(true);
     try {
-      // Định dạng lại ngày sinh từ YYYY-MM-DD sang dd/MM/yyyy nếu backend yêu cầu
-      const [year, month, day] = formData.dob.split("-");
-      const dobFormatted = `${day}/${month}/${year}`;
-
-      // Gửi dữ liệu đăng ký tới backend
-      await memberService.register({
+      // ✅ FIX: Keep date in YYYY-MM-DD format (backend expects this)
+      const registerPayload = {
         username: formData.username,
         password: formData.password,
         firstName: formData.firstName,
         lastName: formData.lastName,
         email: formData.email,
         phoneNumber: formData.phone,
-        dob: dobFormatted,
-      });
+        dob: formData.dob, // ✅ Don't convert - keep as YYYY-MM-DD
+      };
+
+      console.log("📤 Register payload:", registerPayload);
+
+      // Register
+      await memberService.register(registerPayload);
 
       message.success("Đăng ký tài khoản thành công!");
 
-      // Tự động đăng nhập sau khi đăng ký
+      // Auto login after register
       try {
+        console.log("🔄 Auto-login after register...");
+
         await authService.login(formData.username, formData.password);
+
+        message.success("Đăng nhập tự động thành công!");
         navigate("/", { replace: true });
       } catch (loginError) {
+        console.error("❌ Auto-login failed:", loginError);
+
+        // Navigate to login page with success message
         navigate("/login", {
-          state: { message: "Đăng ký thành công! Mời bạn đăng nhập." },
+          state: {
+            message: "Đăng ký thành công! Vui lòng đăng nhập.",
+            username: formData.username,
+          },
         });
       }
     } catch (error) {
-      console.error("Register error:", error);
+      console.error("❌ Register error:", error);
+
       message.error(
-        error.response?.data?.message ||
+        error.message ||
+          error.response?.data?.message ||
           "Đăng ký thất bại. Tên đăng nhập hoặc email có thể đã tồn tại."
       );
     } finally {
@@ -202,7 +213,7 @@ const Register = () => {
           <input
             type="password"
             name="password"
-            placeholder="Mật khẩu (tối thiểu 6 ký tự)"
+            placeholder="Mật khẩu (tối thiểu 8 ký tự)"
             className="focus:ring-2 focus:ring-[#8864f0] outline-none"
             value={formData.password}
             onChange={handleChange}
