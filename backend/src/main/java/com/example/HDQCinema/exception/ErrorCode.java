@@ -15,11 +15,13 @@ public enum ErrorCode {
     ROOM_NOT_EXISTED(1002, "room is not existed", HttpStatus.BAD_REQUEST),
     SHOWTIME_NOT_EXISTED(1003, "showtime is not existed", HttpStatus.BAD_REQUEST),
     BOOKING_FAIL(1004, "booking failed", HttpStatus.BAD_REQUEST),
+    PRICE_NOT_EXITED(1009, "can't get price", HttpStatus.NOT_FOUND),
     SEAT_NOT_FOUND(1005, "seat not found", HttpStatus.NOT_FOUND),
     CINEMA_NOT_FOUND(1006, "cinema not found", HttpStatus.NOT_FOUND),
     SHOWTIME_NOT_FOUND(1007, "showtime not found",  HttpStatus.NOT_FOUND),
-    BOOKING_NOT_FOUND(1008, "booking not found", HttpStatus.NOT_FOUND),
-
+    BOOKING_NOT_FOUND(1008, "booking not found",  HttpStatus.NOT_FOUND),
+    MOVIE_NOT_FOUND(1010, "movie not found",  HttpStatus.NOT_FOUND),
+    DAYTYPE_NOT_FOUND(1011, "day type not found",  HttpStatus.NOT_FOUND),
 
     USER_NOT_FOUND(2001, "user not found", HttpStatus.NOT_FOUND),
     USER_EXISTED(2002, "user already existed", HttpStatus.CONFLICT),

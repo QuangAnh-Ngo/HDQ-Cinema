@@ -12,7 +12,7 @@ import lombok.experimental.FieldDefaults;
 public class TicketPriceUpdateRequest {
     double price;
     @NonNull
-    String cinemaId;
+    Long cinemaId;
     String dayType;
     String seatType;
 }

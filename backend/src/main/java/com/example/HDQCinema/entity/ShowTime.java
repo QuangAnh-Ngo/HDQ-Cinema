@@ -22,9 +22,9 @@ import java.util.Set;
 )
 public class ShowTime {
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "showtime_id")
-    String id;
+    Long id;
 
     private LocalDateTime startTime; // ngày + giờ chiếu
 

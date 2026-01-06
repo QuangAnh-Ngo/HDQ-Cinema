@@ -16,7 +16,7 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Builder
 public class ShowTimeResponse {
-    String showtimeId;
-    String movieId;
+    Long showtimeId;
+    Long movieId;
     List<ShowTimeAndRoom> showTimeRooms;
 }

@@ -7,28 +7,40 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+
 
 @Repository
-public interface TicketPriceRepository extends JpaRepository<TicketPrice, String> {
+public interface TicketPriceRepository extends JpaRepository<TicketPrice, Long> {
     @Query(value = """
             SELECT tp.price
             FROM ticket_price tp
-            JOIN show_time st ON st.showtime_id = :showtimeId
-            JOIN cinema c ON c.cinema_id = :cinemaId
-            LEFT JOIN day_type dt ON st.start_time::date BETWEEN dt.day_start AND dt.day_end
+            JOIN cinema c ON c.cinema_id = tp.cinema_id --:cinemaId
+            JOIN room r ON r.cinema_id = c.cinema_id
+            JOIN show_time st ON st.room_id = r.room_id --st.showtime_id = :showtimeId
+            LEFT JOIN day_type dt ON (st.start_time::date BETWEEN dt.day_start AND dt.day_end)
             WHERE tp.seat_type = :seatType
-            AND tp.day_type = COALESCE(dt.day_type, UPPER(TO_CHAR(st.start_time, 'DAY')))
+            AND c.cinema_id = :cinemaId
+            AND st.showtime_id = :showtimeId
+            AND tp.day_type = 
+                CASE
+                   WHEN dt.day_type IS NOT NULL THEN dt.day_type
+                   WHEN EXTRACT(ISODOW FROM st.start_time) IN (6, 7) THEN 'WEEKEND'
+                   ELSE 'WEEKDAY'
+                 END
+            LIMIT 1
+            --COALESCE(dt.day_type, UPPER(TRIM(TO_CHAR(st.start_time, 'DAY'))))
             ;
             """,
     nativeQuery = true) // COALESCE là hàm SQL trả về giá trị đầu tiên không NULL trong danh sách các giá trị được đưa vào.
-    Double toPrice(@Param("seatType") String seatType,
-                   @Param("showtimeId") String showtimeId,
-                   @Param("cinemaId") String cinemaId);
+    Optional<Double> toPrice(@Param("seatType") String seatType,
+                   @Param("showtimeId") Long showtimeId,
+                   @Param("cinemaId") Long cinemaId);
 
 
-    TicketPrice findTicketPriceById(String id);
+    TicketPrice findTicketPriceById(Long id);
 
-    void deleteTicketPriceById(String id);
+    void deleteTicketPriceById(Long id);
 
     //SELECT tp.price
     //FROM ticket_price tp

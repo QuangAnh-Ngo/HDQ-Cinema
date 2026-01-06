@@ -16,7 +16,7 @@
       </jdbc-additional-properties>
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
-    <data-source source="LOCAL" name="hdqcinema@localhost [2]" uuid="71862973-73d0-4d83-ab6f-66bbd06933f6">
+    <data-source source="LOCAL" name="hdq" uuid="a9ff2022-e83a-4a91-ab8f-ce454c53e53e">
       <driver-ref>postgresql</driver-ref>
       <synchronize>true</synchronize>
       <jdbc-driver>org.postgresql.Driver</jdbc-driver>

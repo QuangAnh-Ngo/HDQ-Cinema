@@ -1,5 +1,5 @@
 # --- Logs ---
-# Chặn các file log phát sinh trong quá trình chạy 
+# Chặn các file log phát sinh trong quá trình chạy
 logs
 *.log
 npm-debug.log*
@@ -7,20 +7,20 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
-debug.log 
+debug.log
 
 # --- Dependencies ---
-# Không đẩy thư mục thư viện cực nặng lên Git 
-node_modules/ 
+# Không đẩy thư mục thư viện cực nặng lên Git
+node_modules/
 dist/
 dist-ssr/
 *.local
 
 # --- Editor / IDE ---
-# Chặn các file cấu hình riêng của trình soạn thảo 
+# Chặn các file cấu hình riêng của trình soạn thảo
 .vscode/*
 !.vscode/extensions.json
-.idea/ 
+.idea/
 .DS_Store
 *.suo
 *.ntvs*
@@ -29,8 +29,8 @@ dist-ssr/
 *.sw?
 
 # --- Environment Variables ---
-# CHẶN TUYỆT ĐỐI các file chứa thông tin nhạy cảm của frontend 
-.env 
+# CHẶN TUYỆT ĐỐI các file chứa thông tin nhạy cảm của frontend
+.env
 .env.local
 .env.development.local
 .env.test.local

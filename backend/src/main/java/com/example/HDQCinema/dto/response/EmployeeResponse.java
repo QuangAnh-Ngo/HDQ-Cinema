@@ -14,6 +14,8 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Builder
 public class EmployeeResponse {
+    Long id;
+
     @JsonView(Views.Public.class)
     Position position;
 

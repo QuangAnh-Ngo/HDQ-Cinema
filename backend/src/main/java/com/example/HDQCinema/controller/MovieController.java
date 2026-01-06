@@ -20,7 +20,7 @@ public class MovieController {
     private MovieService movieService;
 
     @PostMapping
-    @PreAuthorize("hasAuthority('MANAGE_MOVIE')")
+    @PreAuthorize("hasAuthority('MANAGE_MOVIES')")
     ApiResponse<MovieResponse> createMovie(@RequestBody MovieCreationRequest request){
         var movie = movieService.create(request);
         return ApiResponse.<MovieResponse>builder()
@@ -29,7 +29,7 @@ public class MovieController {
     }
 
     @GetMapping("/{movieId}")
-    ApiResponse<MovieResponse> getMovie(@PathVariable("movieId") String id){
+    ApiResponse<MovieResponse> getMovie(@PathVariable("movieId") Long id){
         var response = movieService.get(id);
 
         return ApiResponse.<MovieResponse>builder()
@@ -38,7 +38,7 @@ public class MovieController {
     }
 
     @GetMapping("/upcoming")
-    ApiResponse<List<MovieResponse>> getMoviesUpComing(@RequestParam(value = "c") String cinemaId){
+    ApiResponse<List<MovieResponse>> getMoviesUpComing(@RequestParam(value = "c") Long cinemaId){
         var response = movieService.getMovieUpComing(cinemaId);
         return ApiResponse.<List<MovieResponse>>builder()
                 .result(response)
@@ -46,7 +46,7 @@ public class MovieController {
     }
 
     @GetMapping("/showing")
-    ApiResponse<List<MovieResponse>> getMoviesShowing(@RequestParam(value = "c") String cinemaId){
+    ApiResponse<List<MovieResponse>> getMoviesShowing(@RequestParam(value = "c") Long cinemaId){
         var response = movieService.getMoviesShowing(cinemaId);
         return ApiResponse.<List<MovieResponse>>builder()
                 .result(response)
@@ -61,15 +61,15 @@ public class MovieController {
     }
 
     @PutMapping("/{movieId}")
-    @PreAuthorize("hasAuthority('MANAGE_MOVIE')")
-    ApiResponse<MovieResponse> updateMovie(@PathVariable("movieId") String movieId, @RequestBody MovieUpdateRequest request){
+    @PreAuthorize("hasAuthority('MANAGE_MOVIES')")
+    ApiResponse<MovieResponse> updateMovie(@PathVariable("movieId") Long movieId, @RequestBody MovieUpdateRequest request){
         return ApiResponse.<MovieResponse>builder()
                 .result(movieService.update(movieId,request))
                 .build();
     }
     @DeleteMapping("/{movieId}")
-    @PreAuthorize("hasAuthority('MANAGE_MOVIE')")
-    ApiResponse<String> deleteMovie(@PathVariable("movieId") String movieId){
+    @PreAuthorize("hasAuthority('MANAGE_MOVIES')")
+    ApiResponse<String> deleteMovie(@PathVariable("movieId") Long movieId){
         movieService.deleteMovie(movieId);
         return ApiResponse.<String>builder()
                 .result("deleted").build();

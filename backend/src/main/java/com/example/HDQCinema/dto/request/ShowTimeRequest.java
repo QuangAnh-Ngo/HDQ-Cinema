@@ -15,7 +15,5 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ShowTimeRequest {
     List<ShowTimeAndRoom> showTimeRooms;
-    String movieId;
+    Long movieId;
 }
-
-

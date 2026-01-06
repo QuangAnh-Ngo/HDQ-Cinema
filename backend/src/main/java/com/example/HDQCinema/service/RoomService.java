@@ -32,7 +32,7 @@ public class RoomService {
 
     public RoomResponse create(RoomRequest request){
         Cinema cinema = cinemaRepository.findById(request.getCinemaId())
-                .orElseThrow(()-> new RuntimeException("Cinema not found"));
+                .orElseThrow(()-> new AppException(ErrorCode.CINEMA_NOT_FOUND));
 
         Room room = Room.builder()
                 .roomName(request.getRoomName())
@@ -46,7 +46,7 @@ public class RoomService {
         return response;
     }
 
-    public RoomForShowTimeResponse get(String showTimeId){
+    public RoomForShowTimeResponse get(Long showTimeId){
         ShowTime showTime = showTimeRepository.findById(showTimeId).orElseThrow(() -> new AppException(ErrorCode.SHOWTIME_NOT_EXISTED));
         Room room = showTime.getRoom();
 

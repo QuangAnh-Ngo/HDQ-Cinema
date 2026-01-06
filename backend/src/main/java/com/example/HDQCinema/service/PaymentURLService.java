@@ -25,7 +25,7 @@ public class PaymentURLService {
     BookingRepository bookingRepository;
     MemberRepository memberRepository;
 
-    public void create(String bookingId, String url){
+    public void create(Long bookingId, String url){
         // sử dụng trong khi tạo paymentUrl
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new RuntimeException("booking not exist"));
@@ -49,7 +49,7 @@ public class PaymentURLService {
     }
 
     @Transactional
-    public void deleteURL(String bookingId){
+    public void deleteURL(Long bookingId){
         // sử dụng sau khi thanh toán thành công hoặc hủy thanh toán
         paymentURLRepository.deleteByBooking_Id(bookingId);
     }

@@ -20,5 +20,5 @@ import java.time.LocalDateTime;
 public class ShowTimeAndRoom {
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss") // format ISO 8601
     LocalDateTime showTime;
-    String roomId;
+    Long roomId;
 }

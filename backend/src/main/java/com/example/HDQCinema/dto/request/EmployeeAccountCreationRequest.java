@@ -25,5 +25,5 @@ public class EmployeeAccountCreationRequest {
     //LocalDate dayCreated = LocalDate.now();
 
     List<String> roles;
-    String employee;
+    Long employeeId;
 }

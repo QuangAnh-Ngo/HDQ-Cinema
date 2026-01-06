@@ -1,6 +1,7 @@
 services:
   # Backend Spring Boot
   backend:
+#    image: hung07195/hdqcinema-backend:0.0.1 #sửa để có thể build image hoặc compose up
     build: ./backend
     container_name: hdq-cinema-backend
     restart: on-failure
@@ -19,8 +20,9 @@ services:
     networks:
       - cinema-network
 
-  # Frontend
+  # Frontend React
   frontend:
+#    image: hung07195/hdqcinema-frontend:0.0.1
     build: ./frontend
     container_name: hdq-cinema-frontend
     restart: unless-stopped
@@ -62,6 +64,20 @@ services:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - cinema-network
+
+#  nginx:
+#    image: nginx:latest
+#    container_name: hdq-cinema-nginx
+#    restart: unless-stopped
+#    ports:
+#      - "80:80"
+#    volumes:
+#      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+#    depends_on:
+#      - frontend
+#      - backend
+#    networks:
+#      - cinema-network
 
 volumes:
   postgres_data:
