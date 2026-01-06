@@ -187,22 +187,3 @@ FROM cinema c
          CROSS JOIN day_type d
     ON CONFLICT DO NOTHING;
 
--- ========================================================
--- 1. BẢNG TICKET_PRICE (ID TỰ TĂNG)
--- ========================================================
-INSERT INTO ticket_price (price, seat_type, cinema_id, day_type)
-SELECT
-    CASE
-        WHEN TRIM(st) = 'VIP' AND TRIM(dt) = 'WEEKEND' THEN 120000
-        WHEN TRIM(st) = 'VIP' AND TRIM(dt) = 'WEEKDAY' THEN 100000
-        WHEN TRIM(st) = 'CLASSIC' AND TRIM(dt) = 'WEEKEND' THEN 80000
-        ELSE 60000
-        END,
-    st,
-    c.cinema_id,
-    dt
-FROM cinema c
-         CROSS JOIN (VALUES ('VIP'), ('CLASSIC')) AS s(st)
-         CROSS JOIN (VALUES ('WEEKDAY'), ('WEEKEND')) AS d(dt)
-    ON CONFLICT DO NOTHING;
-
