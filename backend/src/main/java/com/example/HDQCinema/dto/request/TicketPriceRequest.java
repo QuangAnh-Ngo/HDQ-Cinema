@@ -14,7 +14,7 @@ import org.hibernate.annotations.SecondaryRow;
 public class TicketPriceRequest {
     double price;
     @NonNull
-    String cinemaId;
+    Long cinemaId;
     String dayType;
     String seatType;
 }

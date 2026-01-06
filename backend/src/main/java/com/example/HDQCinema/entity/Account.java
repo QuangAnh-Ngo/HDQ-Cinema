@@ -39,4 +39,6 @@ public abstract class Account {
 
     @ManyToMany(fetch = FetchType.EAGER)
     Set<Role> roles;
+
+    public abstract String getId();
 }

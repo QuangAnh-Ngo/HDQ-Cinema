@@ -17,5 +17,5 @@ public class EmployeeAccountUpdateRequest {
     String password;
 
     List<String> roles;
-    String employee;
+    Long employeeId;
 }

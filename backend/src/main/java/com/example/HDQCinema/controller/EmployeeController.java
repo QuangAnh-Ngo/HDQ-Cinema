@@ -37,15 +37,15 @@ public class EmployeeController {
     }
 
     @DeleteMapping("/{employeeId}")
-    ApiResponse<String> deleteEmployee(@PathVariable String employeeId){
+    ApiResponse<String> deleteEmployee(@PathVariable Long employeeId){
         employeeService.deleteEmployee(employeeId);
         return ApiResponse.<String>builder()
                 .result("Delete user successfully")
                 .build();
     }
 
-    @PutMapping("/{employeeAccountId}")
-    ApiResponse<EmployeeResponse> updateEmployee(@PathVariable String employeeId, @RequestBody EmployeeUpdateRequest request){
+    @PutMapping("/{employeeId}")
+    ApiResponse<EmployeeResponse> updateEmployee(@PathVariable Long employeeId, @RequestBody EmployeeUpdateRequest request){
         return ApiResponse.<EmployeeResponse>builder()
                 .result(employeeService.updateEmployee(employeeId, request))
                 .build();

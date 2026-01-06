@@ -19,7 +19,7 @@ RUN npm install
 COPY . .
 
 # Expose port 3000
-EXPOSE 3000
+EXPOSE 5173
 
 
 # Healthcheck (Docker biết container còn sống hay không)
@@ -28,4 +28,4 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
 
 
 # Start development server
-CMD ["npm", "start"]
+CMD ["npm", "run", "dev", "--", "--host"]

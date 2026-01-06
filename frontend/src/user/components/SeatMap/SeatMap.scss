@@ -1,0 +1,88 @@
+.seat-map {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+
+  .map {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+
+    .row {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+
+      .row-label {
+        width: 20px;
+        font-weight: bold;
+        color: #67666e;
+      }
+
+      .row-seats {
+        display: flex;
+        gap: 10px;
+      }
+
+      .seat {
+        width: 40px;
+        height: 40px;
+        background-color: lightgray;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        font-size: 10px;
+        font-weight: 300;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        position: relative;
+        color: white;
+        border-radius: 4px;
+
+        &:hover {
+          background-color: gray;
+        }
+
+        i {
+          color: black;
+          font-size: 25px;
+          margin-bottom: -21px;
+        }
+
+        &.vip {
+          i {
+            color: darkgoldenrod;
+          }
+        }
+
+        &.selected {
+          background-color: #8864f0; // Đổi sang màu primary của bạn
+          i {
+            color: white;
+          }
+        }
+
+        &.held {
+          cursor: not-allowed;
+          background-color: darkblue;
+          i {
+            color: blue;
+          }
+        }
+
+        &.booked {
+          cursor: not-allowed;
+          background-color: #3c364c;
+          opacity: 0.5;
+          i {
+            color: #67666e;
+          }
+        }
+      }
+    }
+  }
+}

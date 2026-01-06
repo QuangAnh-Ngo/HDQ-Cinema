@@ -16,7 +16,7 @@ import java.util.Set;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Builder
 public class MovieResponse {
-    String id;
+    Long id;
     String title, poster;
     Integer duration;
     Integer limitAge;

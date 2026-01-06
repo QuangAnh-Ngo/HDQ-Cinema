@@ -5,97 +5,67 @@ import com.example.HDQCinema.entity.Employee;
 import com.example.HDQCinema.entity.EmployeeAccount;
 import com.example.HDQCinema.entity.Role;
 import com.example.HDQCinema.enums.Position;
+import com.example.HDQCinema.exception.AppException;
+import com.example.HDQCinema.exception.ErrorCode;
 import com.example.HDQCinema.repository.EmployeeAccountRepository;
 import com.example.HDQCinema.repository.EmployeeRepository;
 import com.example.HDQCinema.repository.RoleRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationRunner;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.HashSet;
-import java.util.Optional;
 import java.util.Set;
 
 @Configuration
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Slf4j
-public class ApplicationInitConfig{
-
-    @NonFinal
-    static String ADMIN_USER_NAME = "admin";
-
-    @NonFinal
-    static String ADMIN_PASSWORD = "admin";
-
-    @NonFinal
-    static String ADMIN_EMAIL = "admin@gmail.com";
+public class ApplicationInitConfig {
 
     PasswordEncoder passwordEncoder;
 
     @Bean
-    @ConditionalOnProperty(
-            prefix = "spring",
-            value = "datasource.driver-class-name",
-            havingValue = "org.postgresql.Driver")
+    @Transactional
     ApplicationRunner applicationRunner(EmployeeAccountRepository employeeAccountRepository,
                                         RoleRepository roleRepository,
                                         EmployeeRepository employeeRepository) {
         return args -> {
-            log.info("Đang tạo employee");
-            Optional<Employee> existing = employeeRepository.findByEmail(ADMIN_EMAIL);
-            Employee employee = existing.orElseGet(() -> {
-                Employee e = Employee.builder()
-                        .firstName("a")
-                        .lastName("b")
-                        .email(ADMIN_EMAIL)
-                        .position(Position.ADMIN)
-                        .phone("0")
-                        .build();
-                return employeeRepository.save(e);
-            });
+            if (employeeAccountRepository.findByUsername("admin").isEmpty()) {
+                log.info("---- Khởi tạo tài khoản Admin mặc định ----");
 
-            log.info("Đang tạo employeeAccount");
+                Role adminRole = roleRepository.findByName(PredefinedRole.ADMIN_ROLE)
+                        .orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_FOUND));
 
-            if (employeeAccountRepository.findByUsername(ADMIN_USER_NAME).isEmpty()) {
+                Employee employee = employeeRepository.findByEmail("admin@gmail.com")
+                        .orElseGet(() -> employeeRepository.save(Employee.builder()
+                                .firstName("Super")
+                                .lastName("Admin")
+                                .email("admin@gmail.com")
+                                .position(Position.ADMIN)
+                                .phone("0999999999")
+                                .build()));
 
-                roleRepository.findByName(PredefinedRole.MEMBER_ROLE).orElseGet(() ->
-                        roleRepository.save(Role.builder()
-                                .name(PredefinedRole.MEMBER_ROLE)
-                                .description("Member role")
-                                .build())
-                );
-
-                Role adminRole = roleRepository.findByName(PredefinedRole.ADMIN_ROLE).orElseGet(() ->
-                        roleRepository.save(Role.builder()
-                                .name(PredefinedRole.ADMIN_ROLE)
-                                .description("Admin role")
-                                .build())
-                );
-
-                var roles = new HashSet<Role>();
+                Set<Role> roles = new HashSet<>();
                 roles.add(adminRole);
 
-                EmployeeAccount employeeAccount = EmployeeAccount.builder()
-                        .username(ADMIN_USER_NAME)
-                        .password(passwordEncoder.encode(ADMIN_PASSWORD))
-                        .email(ADMIN_EMAIL)
+                EmployeeAccount adminAccount = EmployeeAccount.builder()
+                        .username("admin")
+                        .password(passwordEncoder.encode("admin"))
+                        .email("admin@gmail.com")
                         .roles(roles)
-                        //.dayCreated(LocalDateTime.now())
                         .employee(employee)
                         .build();
-                employeeAccountRepository.save(employeeAccount);
+
+                employeeAccountRepository.save(adminAccount);
+                log.info("---- Đã tạo user: admin / pass: admin ----");
             }
         };
     }
-
 }

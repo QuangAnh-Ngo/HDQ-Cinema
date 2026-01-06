@@ -1,0 +1,163 @@
+.movieitem_container {
+  width: calc(25% - 24px);
+  margin: 0 12px 25px;
+
+  .ant-card {
+    width: 100%;
+    border-radius: 16px;
+    overflow: hidden;
+    background: #fff;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+    &:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1),
+        0 8px 10px -6px rgb(0 0 0 / 0.1);
+    }
+  }
+
+  .ant-card-cover img {
+    height: 380px;
+    width: 100%;
+    object-fit: cover;
+  }
+
+  .ant-card-meta-title {
+    overflow: hidden;
+    margin-bottom: 12px;
+    padding-top: 5px;
+  }
+
+  .movie-title {
+    font-size: 17px !important;
+    color: #1a1a1a;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: -0.3px;
+    white-space: nowrap;
+
+    &:hover {
+      color: #0a64a7;
+      cursor: pointer;
+    }
+
+    &:not(.marquee) {
+      text-overflow: ellipsis;
+    }
+  }
+
+  .marquee {
+    position: relative;
+    .marquee-content {
+      display: inline-block;
+      animation: marquee 10s linear infinite;
+      white-space: nowrap;
+      padding-left: 20px;
+
+      .marquee-separator {
+        padding: 0 15px;
+        opacity: 0.3;
+      }
+    }
+    &:hover .marquee-content {
+      animation-play-state: paused;
+    }
+  }
+
+  @keyframes marquee {
+    0% {
+      transform: translateX(0);
+    }
+    100% {
+      transform: translateX(-50%);
+    }
+  }
+
+  .movie-info {
+    // ✅ THÊM: Layout cho info section
+    display: flex;
+    flex-direction: column;
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 16px 0; // ✅ THÊM margin bottom
+      font-size: 13px;
+      color: #666;
+
+      li {
+        // ✅ THÊM: Flexbox cho li
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 6px 0;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+
+        &:last-child {
+          border-bottom: none;
+        }
+
+        strong {
+          color: #333;
+          font-weight: 600;
+        }
+
+        span {
+          color: #999;
+          text-align: right;
+        }
+      }
+    }
+
+    // ✅ FIX: Button full width + centered
+    .buy-button {
+      width: 100%; // ✅ Full width
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px; // ✅ Space between icon and text
+      height: 44px; // ✅ Fixed height
+      background-color: #0a64a7;
+      border-radius: 8px;
+      border: none;
+      color: white;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-weight: 700;
+      transition: all 0.2s ease;
+
+      &:hover {
+        background-color: #258dcf !important;
+        transform: scale(1.02);
+      }
+
+      &:active {
+        transform: scale(0.98);
+      }
+
+      // ✅ Icon alignment
+      .anticon {
+        font-size: 16px;
+      }
+    }
+  }
+}
+
+// Responsive
+@media (max-width: 1024px) {
+  .movieitem_container {
+    width: calc(33.33% - 24px);
+  }
+}
+
+@media (max-width: 768px) {
+  .movieitem_container {
+    width: calc(50% - 24px);
+  }
+}
+
+@media (max-width: 480px) {
+  .movieitem_container {
+    width: calc(100% - 24px);
+  }
+}

@@ -13,7 +13,7 @@ import java.util.Set;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class CinemaResponse {
-    String id;
+    Long id;
     String name;
     String city;
     String district;

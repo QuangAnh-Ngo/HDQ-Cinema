@@ -1,6 +1,7 @@
 package com.example.HDQCinema.repository;
 
 import com.example.HDQCinema.entity.Booking;
+import com.example.HDQCinema.entity.Member;
 import com.example.HDQCinema.enums.BookingStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -16,7 +17,7 @@ import java.util.List;
 import java.time.LocalDate;
 
 @Repository
-public interface BookingRepository extends JpaRepository<Booking, String> {
+public interface BookingRepository extends JpaRepository<Booking, Long> {
 
 
 
@@ -26,7 +27,7 @@ public interface BookingRepository extends JpaRepository<Booking, String> {
             FROM booking b 
             WHERE b.booking_id = :bookingId;
             """, nativeQuery = true)
-    double findTotalPriceByBookingId(@Param("bookingId") String bookingId);
+    double findTotalPriceByBookingId(@Param("bookingId") Long bookingId);
 
     List<Booking> findAllByCreateTimeBeforeAndBookingStatus(LocalDateTime createTimeBefore, BookingStatus bookingStatus);
 
@@ -44,4 +45,6 @@ public interface BookingRepository extends JpaRepository<Booking, String> {
             WHERE create_time::date = :selected_date;
             """, nativeQuery = true)
     List<Booking> findBookingsByCreateTime_Date(@Param("selected_date") LocalDate date);
+
+    List<Booking> findAllByMemberId(String memberId);
 }

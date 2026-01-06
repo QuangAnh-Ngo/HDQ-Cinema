@@ -7,6 +7,7 @@ import com.example.HDQCinema.dto.response.RoomResponse;
 import com.example.HDQCinema.service.RoomService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.repository.query.Param;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -16,6 +17,7 @@ public class RoomController {
     private RoomService roomService;
 
     @PostMapping
+    @PreAuthorize("hasAuthority('MANAGE_ROOMS')")
     ApiResponse<RoomResponse> createRoom(@RequestBody RoomRequest request){
         var cinema = roomService.create(request);
 
@@ -25,7 +27,7 @@ public class RoomController {
     }
 
     @GetMapping
-    ApiResponse<RoomForShowTimeResponse> getRoom(@RequestParam String showtimeId){
+    ApiResponse<RoomForShowTimeResponse> getRoom(@RequestParam Long showtimeId){
         return ApiResponse.<RoomForShowTimeResponse>builder()
                 .result(roomService.get(showtimeId))
                 .build();
