@@ -49,7 +49,7 @@
 
       button,
       input {
-        height: 44px;
+        height: 32px;
         border-radius: 6px;
         border: none;
         color: inherit;
@@ -70,6 +70,17 @@
 
         &::placeholder {
           color: #7f7990;
+        }
+      }
+
+      .name-row {
+        display: flex !important;
+        flex-direction: row !important;
+        gap: 8px;
+        width: 100%;
+
+        input {
+          flex: 1;
         }
       }
 
