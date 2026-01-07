@@ -1,24 +1,29 @@
 // File: com/example/HDQCinema/service/MemberService.java
 package com.example.HDQCinema.service;
 
-import com.example.HDQCinema.constant.PredefinedRole; // Giả sử bạn có class hằng số này
+import com.example.HDQCinema.constant.PredefinedRole;
 import com.example.HDQCinema.dto.request.MemberCreationRequest;
 import com.example.HDQCinema.dto.request.MemberUpdateRequest;
 import com.example.HDQCinema.dto.response.MemberResponse;
+import com.example.HDQCinema.dto.response.PageResponse;
 import com.example.HDQCinema.entity.Member;
 import com.example.HDQCinema.entity.Role;
 import com.example.HDQCinema.exception.AppException;
 import com.example.HDQCinema.exception.ErrorCode;
 import com.example.HDQCinema.mapper.MemberMapper;
 import com.example.HDQCinema.repository.MemberRepository;
-import com.example.HDQCinema.repository.RoleRepository; // Cần thêm repo này
+import com.example.HDQCinema.repository.RoleRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.password.PasswordEncoder; // Cần thêm cái này
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
@@ -63,6 +68,27 @@ public class MemberService {
         return memberRepository.findAll().stream()
                 .map(memberMapper::toMemberResponse)
                 .toList();
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    public PageResponse<MemberResponse> getMembersPaged(int page, int size, String keyword, String sortBy, String sortDir) {
+        Sort sort = Sort.by(sortDir.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC,
+                sortBy != null ? sortBy : "id");
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        Page<Member> memberPage = memberRepository.searchMembers(keyword, pageable);
+
+        List<MemberResponse> memberResponses = memberPage.getContent().stream()
+                .map(memberMapper::toMemberResponse)
+                .toList();
+
+        return PageResponse.<MemberResponse>builder()
+                .currentPage(page)
+                .pageSize(size)
+                .totalElements(memberPage.getTotalElements())
+                .totalPages(memberPage.getTotalPages())
+                .data(memberResponses)
+                .build();
     }
 
     @PreAuthorize("hasRole('ADMIN')")

@@ -7,6 +7,8 @@ import {
   FiTrash2,
   FiClock,
   FiCalendar,
+  FiChevronLeft,
+  FiChevronRight,
 } from "react-icons/fi";
 import Breadcrumb from "../components/Common/Breadcrumb";
 import Loading from "../components/Common/Loading";
@@ -15,7 +17,6 @@ import ShowtimeForm from "../components/ShowtimeForm";
 import {
   showtimeService,
   movieService,
-  roomService,
   cinemaService,
 } from "../../services";
 import { message } from "antd";
@@ -23,92 +24,81 @@ import "../styles/AdminLayout.scss";
 
 const Showtimes = () => {
   const [showtimes, setShowtimes] = useState([]);
-  const [filteredShowtimes, setFilteredShowtimes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [dateFilter, setDateFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
+  const pageSize = 50;
 
   const [showShowtimeForm, setShowShowtimeForm] = useState(false);
   const [selectedShowtime, setSelectedShowtime] = useState(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showtimeToDelete, setShowtimeToDelete] = useState(null);
 
-  // ✅ Store lookup maps
-  const [movieMap, setMovieMap] = useState(new Map());
-  const [roomMap, setRoomMap] = useState(new Map());
-  const [cinemaMap, setCinemaMap] = useState(new Map());
+  // Store for form dropdowns
+  const [movies, setMovies] = useState([]);
+  const [cinemas, setCinemas] = useState([]);
 
   useEffect(() => {
-    fetchShowtimes();
+    fetchInitialData();
   }, []);
 
   useEffect(() => {
-    filterShowtimes();
-  }, [showtimes, searchTerm, dateFilter, statusFilter]);
+    fetchShowtimes();
+  }, [currentPage, searchTerm]);
 
+  // Fetch movies and cinemas once for form dropdowns
+  const fetchInitialData = async () => {
+    try {
+      const [moviesData, cinemasData] = await Promise.all([
+        movieService.getAll().catch(() => []),
+        cinemaService.getAll().catch(() => []),
+      ]);
+      setMovies(moviesData);
+      setCinemas(cinemasData);
+    } catch (error) {
+      console.error("Error fetching initial data:", error);
+    }
+  };
+
+  // ✅ SỬA: Sử dụng API phân trang thay vì getAll()
   const fetchShowtimes = async () => {
     try {
       setLoading(true);
 
-      // ✅ Fetch all data in parallel
-      const [showtimesData, moviesData, cinemasData] = await Promise.all([
-        showtimeService.getAll(),
-        movieService.getAll().catch(() => []),
-        cinemaService.getAll().catch(() => []),
-      ]);
+      // Gọi API phân trang
+      const response = await showtimeService.getPaged(
+        currentPage,
+        pageSize,
+        searchTerm,
+        "startTime",
+        "desc"
+      );
 
-      // ✅ Create lookup maps
-      const mMap = new Map(moviesData.map((m) => [m.id, m]));
-      setMovieMap(mMap);
+      // Transform data
+      const transformed = (response.data || []).map((st) => ({
+        id: st.showtimeId,
+        showtimeId: st.showtimeId,
+        movieId: st.movieId,
+        movieTitle: st.movieTitle || "N/A",
+        roomId: st.roomId,
+        roomName: st.roomName || "N/A",
+        cinemaId: st.cinemaId,
+        cinemaName: st.cinemaName || "N/A",
+        showTimeISO: st.startTime,
+        date: st.startTime?.split("T")[0],
+        startTime: st.startTime?.split("T")[1]?.substring(0, 5),
+        status: calculateShowtimeStatus(st.startTime),
+      }));
 
-      const cMap = new Map(cinemasData.map((c) => [c.id, c]));
-      setCinemaMap(cMap);
-
-      // ✅ Create room map from cinemas
-      const rMap = new Map();
-      cinemasData.forEach((cinema) => {
-        cinema.rooms?.forEach((room) => {
-          rMap.set(room.roomId, {
-            ...room,
-            cinemaId: cinema.id,
-            cinemaName: cinema.name,
-          });
-        });
-      });
-      setRoomMap(rMap);
-
-      // ✅ Transform showtimes data
-      const transformed = Array.isArray(showtimesData)
-        ? showtimesData.flatMap((st) => {
-            // Each showtime can have multiple showTimeRooms
-            return (st.showTimeRooms || []).map((str, index) => {
-              const room = rMap.get(str.roomId);
-              const movie = mMap.get(st.movieId);
-              const showTimeISO = str.showTime;
-
-              return {
-                id: `${st.showtimeId}-${index}`,
-                showtimeId: st.showtimeId,
-                movieId: st.movieId,
-                movieTitle: movie?.title || "N/A",
-                roomId: str.roomId,
-                roomName: room?.roomName || "N/A",
-                cinemaId: room?.cinemaId,
-                cinemaName: room?.cinemaName || "N/A",
-                showTimeISO: showTimeISO,
-                date: showTimeISO?.split("T")[0],
-                startTime: showTimeISO?.split("T")[1]?.substring(0, 5),
-                status: calculateShowtimeStatus(showTimeISO),
-                // Keep original data for edit
-                showTimeRooms: st.showTimeRooms,
-              };
-            });
-          })
-        : [];
-
-      console.log("✅ Transformed showtimes:", transformed.length);
       setShowtimes(transformed);
+      setTotalPages(response.totalPages || 0);
+      setTotalElements(response.totalElements || 0);
     } catch (error) {
       console.error("Error fetching showtimes:", error);
       message.error("Lỗi khi tải danh sách lịch chiếu");
@@ -132,36 +122,28 @@ const Showtimes = () => {
     return "ended";
   };
 
-  const filterShowtimes = () => {
-    let filtered = [...showtimes];
-
-    if (searchTerm) {
-      const search = searchTerm.toLowerCase();
-      filtered = filtered.filter(
-        (st) =>
-          st.movieTitle?.toLowerCase().includes(search) ||
-          st.cinemaName?.toLowerCase().includes(search) ||
-          st.roomName?.toLowerCase().includes(search)
-      );
-    }
+  // ✅ Filter locally cho dateFilter và statusFilter (vì đã có data từ server)
+  const filteredShowtimes = showtimes.filter((st) => {
+    let matches = true;
 
     if (dateFilter) {
-      filtered = filtered.filter((st) => st.date === dateFilter);
+      matches = matches && st.date === dateFilter;
     }
 
     if (statusFilter !== "all") {
-      filtered = filtered.filter((st) => st.status === statusFilter);
+      matches = matches && st.status === statusFilter;
     }
 
-    // Sort by date and time (newest first)
-    filtered.sort((a, b) => {
-      const dateCompare =
-        new Date(b.showTimeISO || 0) - new Date(a.showTimeISO || 0);
-      return dateCompare;
-    });
+    return matches;
+  });
 
-    setFilteredShowtimes(filtered);
-  };
+  // Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setCurrentPage(0); // Reset to first page when search changes
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
   const handleAddShowtime = () => {
     setSelectedShowtime(null);
@@ -169,15 +151,12 @@ const Showtimes = () => {
   };
 
   const handleEditShowtime = (showtime) => {
-    // ✅ Pass full data for editing
     setSelectedShowtime({
-      ...showtime,
-      showTimeRooms: [
-        {
-          showTime: showtime.showTimeISO,
-          roomId: showtime.roomId,
-        },
-      ],
+      showtimeId: showtime.showtimeId,
+      movieId: showtime.movieId,
+      roomId: showtime.roomId,
+      cinemaId: showtime.cinemaId,
+      showTime: showtime.showTimeISO,
     });
     setShowShowtimeForm(true);
   };
@@ -191,7 +170,7 @@ const Showtimes = () => {
     try {
       await showtimeService.delete(showtimeToDelete.showtimeId);
       message.success("Xóa lịch chiếu thành công!");
-      fetchShowtimes(); // Reload data
+      fetchShowtimes();
       setShowDeleteDialog(false);
     } catch (error) {
       console.error("Error deleting showtime:", error);
@@ -211,7 +190,7 @@ const Showtimes = () => {
 
       setShowShowtimeForm(false);
       setSelectedShowtime(null);
-      fetchShowtimes(); // Reload data
+      fetchShowtimes();
     } catch (error) {
       console.error("Error submitting showtime:", error);
       message.error(error.message || "Có lỗi xảy ra!");
@@ -240,19 +219,20 @@ const Showtimes = () => {
     });
   };
 
-  const getDateRangeStats = () => {
-    const today = new Date().toISOString().split("T")[0];
-    return {
-      total: showtimes.length,
-      today: showtimes.filter((st) => st.date === today).length,
-      upcoming: showtimes.filter((st) => st.status === "upcoming").length,
-      ended: showtimes.filter((st) => st.status === "ended").length,
-    };
+  // Pagination handlers
+  const handlePrevPage = () => {
+    if (currentPage > 0) {
+      setCurrentPage(currentPage - 1);
+    }
   };
 
-  const stats = getDateRangeStats();
+  const handleNextPage = () => {
+    if (currentPage < totalPages - 1) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
 
-  if (loading) {
+  if (loading && showtimes.length === 0) {
     return <Loading text="Đang tải lịch chiếu..." />;
   }
 
@@ -273,31 +253,7 @@ const Showtimes = () => {
           <div className="stat-content">
             <div className="stat-info">
               <p>Tổng lịch chiếu</p>
-              <h3>{stats.total}</h3>
-            </div>
-          </div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-content">
-            <div className="stat-info">
-              <p>Hôm nay</p>
-              <h3 style={{ color: "#2563eb" }}>{stats.today}</h3>
-            </div>
-          </div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-content">
-            <div className="stat-info">
-              <p>Sắp chiếu</p>
-              <h3 style={{ color: "#10b981" }}>{stats.upcoming}</h3>
-            </div>
-          </div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-content">
-            <div className="stat-info">
-              <p>Đã kết thúc</p>
-              <h3 style={{ color: "#6b7280" }}>{stats.ended}</h3>
+              <h3>{totalElements}</h3>
             </div>
           </div>
         </div>
@@ -347,7 +303,11 @@ const Showtimes = () => {
       </div>
 
       <div className="admin-table">
-        {filteredShowtimes.length > 0 ? (
+        {loading ? (
+          <div className="loading-overlay">
+            <Loading text="Đang tải..." />
+          </div>
+        ) : filteredShowtimes.length > 0 ? (
           <table>
             <thead>
               <tr>
@@ -405,6 +365,31 @@ const Showtimes = () => {
           </table>
         ) : (
           <div className="empty">Không tìm thấy lịch chiếu nào</div>
+        )}
+
+        {/* ✅ Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="pagination">
+            <button
+              onClick={handlePrevPage}
+              disabled={currentPage === 0}
+              className="btn secondary"
+            >
+              <FiChevronLeft size={18} />
+              Trước
+            </button>
+            <span className="page-info">
+              Trang {currentPage + 1} / {totalPages} ({totalElements} bản ghi)
+            </span>
+            <button
+              onClick={handleNextPage}
+              disabled={currentPage >= totalPages - 1}
+              className="btn secondary"
+            >
+              Sau
+              <FiChevronRight size={18} />
+            </button>
+          </div>
         )}
       </div>
 

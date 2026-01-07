@@ -5,7 +5,7 @@ export const employeeService = {
   getAll: async () => {
     try {
       const response = await axiosInstance.get("/employees");
-      return response || [];
+      return response?.result || [];
     } catch (error) {
       console.error("Get employees error:", error);
       throw error;

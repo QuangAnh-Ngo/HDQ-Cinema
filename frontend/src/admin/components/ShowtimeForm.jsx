@@ -27,15 +27,14 @@ const ShowtimeForm = ({ showtime, onClose, onSubmit }) => {
 
   useEffect(() => {
     if (showtime) {
-      // ✅ Parse existing showtime data
-      const firstShowTimeRoom = showtime.showTimeRooms?.[0];
-      const showTimeISO = firstShowTimeRoom?.showTime || "";
+      // ✅ Parse existing showtime data - cấu trúc mới: showtime có trực tiếp các field
+      const showTimeISO = showtime.showTime || "";
       const [date, time] = showTimeISO.split("T");
 
       setFormData({
         movieId: showtime.movieId || "",
         cinemaId: showtime.cinemaId || "",
-        roomId: firstShowTimeRoom?.roomId || showtime.roomId || "",
+        roomId: showtime.roomId || "",
         date: date || "",
         startTime: time?.substring(0, 5) || "",
       });

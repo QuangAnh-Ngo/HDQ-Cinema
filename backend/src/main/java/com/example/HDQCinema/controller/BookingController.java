@@ -3,6 +3,8 @@ package com.example.HDQCinema.controller;
 import com.example.HDQCinema.dto.request.BookingRequest;
 import com.example.HDQCinema.dto.response.ApiResponse;
 import com.example.HDQCinema.dto.response.BookingResponse;
+import com.example.HDQCinema.dto.response.PageResponse;
+import com.example.HDQCinema.enums.BookingStatus;
 import com.example.HDQCinema.service.BookingService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -40,6 +42,21 @@ public class BookingController {
                 .result(response)
                 .build();
     }
+
+    @GetMapping("/paged")
+    @PreAuthorize("hasAuthority('MANAGE_BOOKING') or hasRole('ADMIN')")
+    ApiResponse<PageResponse<BookingResponse>> getBookingsPaged(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "50") int size,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) BookingStatus status,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDir) {
+        return ApiResponse.<PageResponse<BookingResponse>>builder()
+                .result(bookingService.getBookingsPaged(page, size, keyword, status, sortBy, sortDir))
+                .build();
+    }
+
     @GetMapping("/member/{memberId}")
     @PreAuthorize("hasAuthority('MANAGE_BOOKING') or #memberId == principal.claims['accountId']")
     ApiResponse<List<BookingResponse>> getBookingsByMember(@PathVariable("memberId") String memberId){

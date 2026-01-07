@@ -1,13 +1,10 @@
 package com.example.HDQCinema.dto.response;
 
-import com.example.HDQCinema.dto.request.ShowTimeAndRoom;
-import com.example.HDQCinema.entity.ShowTime;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Set;
 
 @Getter
 @Setter
@@ -22,5 +19,5 @@ public class MovieResponse {
     Integer limitAge;
     LocalDate dayStart, dayEnd;
     String director, genre, description, trailer_url;
-    List<ShowTimeAndRoom> showtimes;
+    List<ShowTimeResponse> showtimes;  // Danh sách suất chiếu với đầy đủ ID
 }

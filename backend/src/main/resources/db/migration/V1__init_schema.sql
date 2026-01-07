@@ -14,9 +14,9 @@ CREATE TABLE movie (
                        genre varchar(255),
                        duration integer,
                        limit_age integer,
-                       poster varchar(255),
-                       trailer_url varchar(255),
-                       description varchar(255),
+                       poster varchar(2048),
+                       trailer_url varchar(2048),
+                       description varchar(2048),
                        day_start date,
                        day_end date
 );

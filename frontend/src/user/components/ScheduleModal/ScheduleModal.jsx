@@ -20,7 +20,7 @@ const ScheduleModal = ({
   const [movie, setMovie] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState(null);
-  const [showtimesMap, setShowtimesMap] = useState({});
+  const [showtimes, setShowtimes] = useState([]);
 
   // ✅ Tạo danh sách 7 ngày từ hôm nay
   const next7Days = useMemo(() => {
@@ -44,28 +44,16 @@ const ScheduleModal = ({
     const fetchData = async () => {
       setLoading(true);
       try {
-        const [movieData, cinemaData, allShowtimes] = await Promise.all([
+        // ✅ Gọi API mới - lấy suất chiếu 7 ngày tới theo cinema và movie
+        const [movieData, cinemaData, showtimesData] = await Promise.all([
           movieService.getById(movieId),
           cinemaService.getById(cinemaId),
-          showtimeService.getAll(),
+          showtimeService.getNext7Days(cinemaId, movieId),
         ]);
 
         setMovie(movieData);
         setCinema(cinemaData);
-
-        const numericMovieId = Number(movieId);
-
-        const stMap = {};
-        allShowtimes.forEach((st) => {
-          if (Number(st.movieId) === numericMovieId) {
-            st.showTimeRooms?.forEach((str) => {
-              const key = `${str.showTime}_${str.roomId}`;
-              stMap[key] = st.showtimeId;
-            });
-          }
-        });
-
-        setShowtimesMap(stMap);
+        setShowtimes(showtimesData || []);
         setSelectedDate(next7Days[0]);
       } catch (error) {
         console.error("Error fetching schedule:", error);
@@ -79,61 +67,52 @@ const ScheduleModal = ({
   }, [visible, movieId, cinemaId, next7Days]);
 
   /**
-   * Nhóm suất chiếu theo ngày
+   * ✅ Nhóm suất chiếu theo ngày - sử dụng startTime thay vì showTime
    */
   const groupedShowtimes = useMemo(() => {
-    if (!movie?.showtimes || !cinema?.rooms) return {};
+    if (!showtimes || showtimes.length === 0) return {};
 
-    const roomMap = {};
-    cinema.rooms.forEach((r) => {
-      roomMap[r.roomId] = r.roomName;
-    });
-    const roomIds = cinema.rooms.map((r) => r.roomId);
+    return showtimes.reduce((acc, st) => {
+      const date = st.startTime?.split("T")[0];
+      if (!date) return acc;
 
-    return movie.showtimes
-      .filter((st) => roomIds.includes(st.roomId))
-      .reduce((acc, st) => {
-        const date = st.showTime.split("T")[0];
-        if (!acc[date]) acc[date] = [];
-        acc[date].push({
-          ...st,
-          roomName: roomMap[st.roomId] || "Phòng chiếu",
-        });
-        return acc;
-      }, {});
-  }, [movie, cinema]);
+      if (!acc[date]) acc[date] = [];
+      acc[date].push(st);
+      return acc;
+    }, {});
+  }, [showtimes]);
 
   // ✅ Lấy showtimes cho ngày đang chọn + filter suất đã qua
   const currentShowtimes = useMemo(() => {
     if (!selectedDate) return [];
 
-    const showtimes = groupedShowtimes[selectedDate] || [];
+    const dayShowtimes = groupedShowtimes[selectedDate] || [];
     const today = new Date().toISOString().split("T")[0];
 
     // ✅ Nếu là ngày hôm nay → filter bỏ suất đã qua
     if (selectedDate === today) {
       const now = new Date();
 
-      return showtimes.filter((st) => {
-        const showDateTime = new Date(st.showTime);
+      return dayShowtimes.filter((st) => {
+        const showDateTime = new Date(st.startTime);
         return showDateTime > now;
       });
     }
 
-    return showtimes;
+    return dayShowtimes;
   }, [selectedDate, groupedShowtimes]);
 
   // ✅ Kiểm tra ngày có suất chiếu còn lại không (cho styling tab)
   const getAvailableShowtimesCount = (date) => {
-    const showtimes = groupedShowtimes[date] || [];
+    const dayShowtimes = groupedShowtimes[date] || [];
     const today = new Date().toISOString().split("T")[0];
 
     if (date === today) {
       const now = new Date();
-      return showtimes.filter((st) => new Date(st.showTime) > now).length;
+      return dayShowtimes.filter((st) => new Date(st.startTime) > now).length;
     }
 
-    return showtimes.length;
+    return dayShowtimes.length;
   };
 
   const formatDateTab = (dateStr, index) => {
@@ -149,16 +128,14 @@ const ScheduleModal = ({
     return { day: weekdays[date.getDay()], date: `${day}/${month}` };
   };
 
+  // ✅ Click vào showtime - giờ có showtimeId trực tiếp, không cần lookup
   const handleShowtimeClick = (showtime) => {
-    const key = `${showtime.showTime}_${showtime.roomId}`;
-    const showtimeId = showtimesMap[key];
-
-    if (!showtimeId) {
+    if (!showtime.showtimeId) {
       message.error("Không tìm thấy suất chiếu này");
       return;
     }
 
-    onSelectShowtime(showtimeId);
+    onSelectShowtime(showtime.showtimeId);
   };
 
   if (!visible) return null;
@@ -196,7 +173,6 @@ const ScheduleModal = ({
             {next7Days.map((date, index) => {
               const { day, date: dateStr } = formatDateTab(date, index);
               const isActive = selectedDate === date;
-              // ✅ Dùng function mới để check có suất còn lại không
               const hasShowtimes = getAvailableShowtimesCount(date) > 0;
 
               return (
@@ -219,15 +195,15 @@ const ScheduleModal = ({
             {currentShowtimes.length > 0 ? (
               <div className="day-schedule">
                 {currentShowtimes
-                  .sort((a, b) => a.showTime.localeCompare(b.showTime))
-                  .map((st, idx) => (
+                  .sort((a, b) => a.startTime.localeCompare(b.startTime))
+                  .map((st) => (
                     <button
-                      key={idx}
+                      key={st.showtimeId}
                       className="show-time"
                       onClick={() => handleShowtimeClick(st)}
                     >
                       <span className="time-text">
-                        {st.showTime.split("T")[1].substring(0, 5)}
+                        {st.startTime.split("T")[1].substring(0, 5)}
                       </span>
                       <span className="room-text"> - {st.roomName}</span>
                     </button>

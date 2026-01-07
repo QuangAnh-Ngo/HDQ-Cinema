@@ -4,6 +4,7 @@ import com.example.HDQCinema.dto.request.EmployeeAccountCreationRequest;
 import com.example.HDQCinema.dto.request.EmployeeAccountUpdateRequest;
 import com.example.HDQCinema.dto.response.ApiResponse;
 import com.example.HDQCinema.dto.response.EmployeeAccountResponse;
+import com.example.HDQCinema.dto.response.PageResponse;
 import com.example.HDQCinema.service.EmployeeAccountService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -34,6 +35,18 @@ public class EmployeeAccountController {
     ApiResponse<List<EmployeeAccountResponse>> getEmployeeAccount(){
         return ApiResponse.<List<EmployeeAccountResponse>>builder()
                 .result(employeeAccountService.getEmployeeAccount())
+                .build();
+    }
+
+    @GetMapping("/paged")
+    ApiResponse<PageResponse<EmployeeAccountResponse>> getEmployeeAccountsPaged(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "50") int size,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDir) {
+        return ApiResponse.<PageResponse<EmployeeAccountResponse>>builder()
+                .result(employeeAccountService.getEmployeeAccountsPaged(page, size, keyword, sortBy, sortDir))
                 .build();
     }
 

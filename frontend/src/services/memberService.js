@@ -8,7 +8,7 @@ export const memberService = {
   getAll: async () => {
     try {
       const response = await axiosInstance.get("/members");
-      return response || [];
+      return response?.result || response?.data?.result || [];
     } catch (error) {
       console.error("Get members error:", error);
       throw error;

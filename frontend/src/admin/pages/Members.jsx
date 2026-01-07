@@ -106,10 +106,15 @@ const Members = () => {
     }
   };
 
-  const formatDate = (dateString) => {
-    if (!dateString) return "N/A";
-    return new Date(dateString).toLocaleDateString("vi-VN");
-  };
+    const formatDate = (dateString) => {
+        if (!dateString) return "---";
+        try {
+            const date = new Date(dateString);
+            return date.toLocaleDateString("vi-VN");
+        } catch (e) {
+            return dateString;
+        }
+    };
 
   // ✅ NOW safe to do conditional renders AFTER all hooks
   if (loading) {

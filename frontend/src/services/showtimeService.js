@@ -3,8 +3,8 @@ import axiosInstance from "./axiosInstance";
 
 export const showtimeService = {
   /**
-   * ✅ FIX: Lấy danh sách tất cả suất chiếu
-   * Response: { code, message, result: [{ showtimeId, movieId, showTimeRooms: [...] }] }
+   * Lấy danh sách tất cả suất chiếu
+   * Response: [{ showtimeId, movieId, movieTitle, startTime, roomId, roomName, cinemaId, cinemaName }]
    */
   getAll: async () => {
     try {
@@ -17,8 +17,59 @@ export const showtimeService = {
   },
 
   /**
-   * ✅ FIX: Lấy chi tiết suất chiếu theo ID
-   * Response: { code, message, result: { showtimeId, movieId, showTimeRooms: [...] } }
+   * Lấy suất chiếu trong 7 ngày tới (có thể lọc theo cinema và movie)
+   * Response: [{ showtimeId, movieId, movieTitle, startTime, roomId, roomName, cinemaId, cinemaName }]
+   */
+  getNext7Days: async (cinemaId = null, movieId = null) => {
+    try {
+      const params = new URLSearchParams();
+      if (cinemaId) params.append("cinemaId", cinemaId);
+      if (movieId) params.append("movieId", movieId);
+
+      const url = `/showtimes/next-7-days${params.toString() ? `?${params.toString()}` : ""}`;
+      const response = await axiosInstance.get(url);
+      return response || [];
+    } catch (error) {
+      console.error("Get next 7 days showtimes error:", error);
+      throw error;
+    }
+  },
+
+  /**
+   * Lấy suất chiếu trong 7 ngày tới với phân trang
+   */
+  getNext7DaysPaged: async (page = 0, size = 50, cinemaId = null, movieId = null) => {
+    try {
+      const params = new URLSearchParams({ page, size });
+      if (cinemaId) params.append("cinemaId", cinemaId);
+      if (movieId) params.append("movieId", movieId);
+
+      const response = await axiosInstance.get(`/showtimes/next-7-days/paged?${params.toString()}`);
+      return response;
+    } catch (error) {
+      console.error("Get next 7 days showtimes paged error:", error);
+      throw error;
+    }
+  },
+
+  /**
+   * Lấy suất chiếu phân trang với tìm kiếm
+   */
+  getPaged: async (page = 0, size = 50, keyword = "", sortBy = "startTime", sortDir = "asc") => {
+    try {
+      const params = new URLSearchParams({ page, size, sortBy, sortDir });
+      if (keyword) params.append("keyword", keyword);
+
+      const response = await axiosInstance.get(`/showtimes/paged?${params.toString()}`);
+      return response;
+    } catch (error) {
+      console.error("Get showtimes paged error:", error);
+      throw error;
+    }
+  },
+
+  /**
+   * Lấy chi tiết suất chiếu theo ID
    */
   getById: async (id) => {
     try {
@@ -31,33 +82,7 @@ export const showtimeService = {
   },
 
   /**
-   * Lấy danh sách suất chiếu theo phim
-   */
-  getByMovie: async (movieId) => {
-    try {
-      const response = await axiosInstance.get(`/showtimes/movie/${movieId}`);
-      return response || [];
-    } catch (error) {
-      console.error("Get showtimes by movie error:", error);
-      throw error;
-    }
-  },
-
-  /**
-   * Lấy danh sách suất chiếu theo phòng
-   */
-  getByRoom: async (roomId) => {
-    try {
-      const response = await axiosInstance.get(`/showtimes/room/${roomId}`);
-      return response || [];
-    } catch (error) {
-      console.error("Get showtimes by room error:", error);
-      throw error;
-    }
-  },
-
-  /**
-   * ✅ FIX: Tạo suất chiếu mới
+   * Tạo suất chiếu mới
    * Payload: { movieId, showTimeRooms: [{ showTime, roomId }] }
    */
   create: async (data) => {
@@ -80,7 +105,7 @@ export const showtimeService = {
   },
 
   /**
-   * ✅ FIX: Cập nhật suất chiếu
+   * Cập nhật suất chiếu
    */
   update: async (id, data) => {
     try {
@@ -114,8 +139,8 @@ export const showtimeService = {
   },
 
   /**
-   * ✅ Utility: Phân nhóm suất chiếu theo ngày
-   * Input: [{ showtimeId, movieId, showTimeRooms: [{ showTime, roomId }] }]
+   * Utility: Phân nhóm suất chiếu theo ngày
+   * Input: [{ showtimeId, startTime, roomId, roomName, ... }]
    */
   groupByDate: (showtimes) => {
     if (!Array.isArray(showtimes)) return {};
@@ -123,17 +148,13 @@ export const showtimeService = {
     const grouped = {};
 
     showtimes.forEach((showtime) => {
-      showtime.showTimeRooms?.forEach((str) => {
-        const date = str.showTime.split("T")[0];
-        if (!grouped[date]) {
-          grouped[date] = [];
-        }
-        grouped[date].push({
-          ...showtime,
-          showTime: str.showTime,
-          roomId: str.roomId,
-        });
-      });
+      const date = showtime.startTime?.split("T")[0];
+      if (!date) return;
+
+      if (!grouped[date]) {
+        grouped[date] = [];
+      }
+      grouped[date].push(showtime);
     });
 
     return grouped;
@@ -143,8 +164,9 @@ export const showtimeService = {
    * Format thời gian hiển thị
    */
   formatTime: (isoDateTime) => {
+    if (!isoDateTime) return "";
     const time = isoDateTime.split("T")[1];
-    return time.substring(0, 5);
+    return time?.substring(0, 5) || "";
   },
 };
 

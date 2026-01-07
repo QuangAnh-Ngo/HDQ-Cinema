@@ -3,26 +3,23 @@ package com.example.HDQCinema.service;
 import com.example.HDQCinema.dto.request.MovieCreationRequest;
 import com.example.HDQCinema.dto.request.MovieUpdateRequest;
 import com.example.HDQCinema.dto.response.MovieResponse;
-import com.example.HDQCinema.dto.response.ShowTimeResponse;
+import com.example.HDQCinema.dto.response.PageResponse;
 import com.example.HDQCinema.entity.Movie;
-import com.example.HDQCinema.entity.ShowTime;
 import com.example.HDQCinema.exception.AppException;
 import com.example.HDQCinema.exception.ErrorCode;
 import com.example.HDQCinema.mapper.MovieMapper;
-import com.example.HDQCinema.mapper.ShowTimeAndRoomMapper;
-import com.example.HDQCinema.mapper.ShowTimeMapper;
 import com.example.HDQCinema.repository.MovieRepository;
-import com.example.HDQCinema.repository.ShowTimeRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 @Service
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -68,6 +65,25 @@ public class MovieService {
 
     public List<MovieResponse> getAll(){
         return movieMapper.toMovieResponses(movieRepository.findAll());
+    }
+
+    public PageResponse<MovieResponse> getMoviesPaged(int page, int size, String keyword, String genre,
+            Integer limitAge, String sortBy, String sortDir) {
+        Sort sort = Sort.by(sortDir.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC,
+                sortBy != null ? sortBy : "id");
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        Page<Movie> moviePage = movieRepository.searchMovies(keyword, genre, limitAge, pageable);
+
+        List<MovieResponse> movieResponses = movieMapper.toMovieResponses(moviePage.getContent());
+
+        return PageResponse.<MovieResponse>builder()
+                .currentPage(page)
+                .pageSize(size)
+                .totalElements(moviePage.getTotalElements())
+                .totalPages(moviePage.getTotalPages())
+                .data(movieResponses)
+                .build();
     }
 
     public MovieResponse update(Long movieId, MovieUpdateRequest request){

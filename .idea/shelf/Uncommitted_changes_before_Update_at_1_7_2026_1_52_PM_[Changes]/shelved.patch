@@ -1,0 +1,486 @@
+Index: frontend/src/user/components/ScheduleModal/ScheduleModal.jsx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>// frontend/src/user/components/ScheduleModal/ScheduleModal.jsx\r\nimport { useState, useEffect, useMemo } from \"react\";\r\nimport PropTypes from \"prop-types\";\r\nimport { Modal, Tabs, Spin, message, Empty } from \"antd\";\r\nimport {\r\n  movieService,\r\n  cinemaService,\r\n  showtimeService,\r\n} from \"../../../services\"; // ✅ Import showtimeService\r\nimport \"./ScheduleModal.scss\";\r\n\r\nconst ScheduleModal = ({\r\n  visible,\r\n  movieId,\r\n  cinemaId,\r\n  onClose,\r\n  onSelectShowtime,\r\n}) => {\r\n  const [cinema, setCinema] = useState(null);\r\n  const [movie, setMovie] = useState(null);\r\n  const [loading, setLoading] = useState(true);\r\n  const [selectedDate, setSelectedDate] = useState(null);\r\n  const [showtimesMap, setShowtimesMap] = useState({}); // ✅ Map showTime+roomId -> showtimeId\r\n\r\n  useEffect(() => {\r\n    if (!visible || !movieId || !cinemaId) {\r\n      return;\r\n    }\r\n\r\n    const fetchData = async () => {\r\n      setLoading(true);\r\n      try {\r\n        const [movieData, cinemaData, allShowtimes] = await Promise.all([\r\n          movieService.getById(movieId),\r\n          cinemaService.getById(cinemaId),\r\n          showtimeService.getAll(), // ✅ Fetch all showtimes để lấy ID\r\n        ]);\r\n\r\n        setMovie(movieData);\r\n        setCinema(cinemaData);\r\n\r\n        // ✅ Tạo map từ showTime+roomId -> showtimeId\r\n        const stMap = {};\r\n        allShowtimes.forEach((st) => {\r\n          if (st.movieId === movieId) {\r\n            st.showTimeRooms?.forEach((str) => {\r\n              const key = `${str.showTime}_${str.roomId}`;\r\n              stMap[key] = st.showtimeId;\r\n            });\r\n          }\r\n        });\r\n        setShowtimesMap(stMap);\r\n        console.log(\"\uD83D\uDDFA\uFE0F Showtimes map:\", stMap);\r\n\r\n        // Lấy danh sách ngày có suất chiếu tại rạp này\r\n        if (movieData.showtimes && cinemaData.rooms) {\r\n          const roomIds = cinemaData.rooms.map((r) => r.roomId);\r\n          const filtered = movieData.showtimes.filter((st) =>\r\n            roomIds.includes(st.roomId)\r\n          );\r\n\r\n          if (filtered.length > 0) {\r\n            const firstDate = filtered[0].showTime.split(\"T\")[0];\r\n            setSelectedDate(firstDate);\r\n          }\r\n        }\r\n      } catch (error) {\r\n        console.error(\"Error fetching schedule:\", error);\r\n        message.error(\"Không thể tải lịch chiếu\");\r\n      } finally {\r\n        setLoading(false);\r\n      }\r\n    };\r\n\r\n    fetchData();\r\n  }, [visible, movieId, cinemaId]);\r\n\r\n  /**\r\n   * Nhóm suất chiếu theo ngày và ánh xạ tên phòng\r\n   */\r\n  const groupedShowtimes = useMemo(() => {\r\n    if (!movie?.showtimes || !cinema?.rooms) return {};\r\n\r\n    const roomMap = {};\r\n    cinema.rooms.forEach((r) => {\r\n      roomMap[r.roomId] = r.roomName;\r\n    });\r\n    const roomIds = cinema.rooms.map((r) => r.roomId);\r\n\r\n    return movie.showtimes\r\n      .filter((st) => roomIds.includes(st.roomId))\r\n      .reduce((acc, st) => {\r\n        const date = st.showTime.split(\"T\")[0];\r\n        if (!acc[date]) acc[date] = [];\r\n        acc[date].push({\r\n          ...st,\r\n          roomName: roomMap[st.roomId] || \"Phòng chiếu\",\r\n        });\r\n        return acc;\r\n      }, {});\r\n  }, [movie, cinema]);\r\n\r\n  const availableDates = Object.keys(groupedShowtimes).sort();\r\n\r\n  const formatDate = (dateStr) => {\r\n    const date = new Date(dateStr);\r\n    const day = date.getDate().toString().padStart(2, \"0\");\r\n    const month = (date.getMonth() + 1).toString().padStart(2, \"0\");\r\n    const weekdays = [\"CN\", \"T2\", \"T3\", \"T4\", \"T5\", \"T6\", \"T7\"];\r\n    return `${day}/${month} - ${weekdays[date.getDay()]}`;\r\n  };\r\n\r\n  /**\r\n   * ✅ Handle showtime selection\r\n   */\r\n  const handleShowtimeClick = (showtime) => {\r\n    console.log(\"\uD83D\uDD18 Clicked showtime:\", showtime);\r\n\r\n    // ✅ Tạo key để lookup showtimeId\r\n    const key = `${showtime.showTime}_${showtime.roomId}`;\r\n    const showtimeId = showtimesMap[key];\r\n\r\n    console.log(\"\uD83D\uDD11 Looking up key:\", key);\r\n    console.log(\"\uD83C\uDFAF Found showtimeId:\", showtimeId);\r\n\r\n    if (!showtimeId) {\r\n      message.error(\"Không tìm thấy suất chiếu này\");\r\n      return;\r\n    }\r\n\r\n    onSelectShowtime(showtimeId);\r\n  };\r\n\r\n  const dateTabs = availableDates.map((date) => ({\r\n    key: date,\r\n    label: formatDate(date),\r\n    children: (\r\n      <div className=\"day-schedule\">\r\n        {groupedShowtimes[date]\r\n          .sort((a, b) => a.showTime.localeCompare(b.showTime))\r\n          .map((st, idx) => (\r\n            <button\r\n              key={idx}\r\n              className=\"show-time\"\r\n              onClick={() => handleShowtimeClick(st)} // ✅ Call handler\r\n            >\r\n              <span className=\"time-text\">\r\n                {st.showTime.split(\"T\")[1].substring(0, 5)}\r\n              </span>\r\n              <span className=\"room-text\"> - {st.roomName}</span>\r\n            </button>\r\n          ))}\r\n      </div>\r\n    ),\r\n  }));\r\n\r\n  if (!visible) return null;\r\n\r\n  return (\r\n    <Modal\r\n      title={\r\n        <div className=\"modal-title\">\r\n          <h3>Lịch chiếu phim</h3>\r\n          {cinema && (\r\n            <p className=\"cinema-info\">\r\n              <span className=\"cinema-dot\"></span>\r\n              Rạp {cinema.name}\r\n            </p>\r\n          )}\r\n        </div>\r\n      }\r\n      open={visible}\r\n      onCancel={onClose}\r\n      footer={null}\r\n      width={800}\r\n      centered\r\n      className=\"schedule-modal-custom\"\r\n      destroyOnHidden // ✅ Fix warning\r\n    >\r\n      {loading ? (\r\n        <div className=\"modal-loading\">\r\n          <Spin size=\"large\" />\r\n          <p>Đang kiểm tra lịch chiếu...</p>\r\n        </div>\r\n      ) : availableDates.length > 0 ? (\r\n        <Tabs\r\n          activeKey={selectedDate}\r\n          onChange={setSelectedDate}\r\n          items={dateTabs}\r\n          centered\r\n          className=\"week-schedule-tabs\"\r\n        />\r\n      ) : (\r\n        <div className=\"modal-empty\">\r\n          <Empty description=\"Rạp này hiện chưa có suất chiếu cho phim đã chọn\" />\r\n        </div>\r\n      )}\r\n    </Modal>\r\n  );\r\n};\r\n\r\nScheduleModal.propTypes = {\r\n  visible: PropTypes.bool.isRequired,\r\n  movieId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,\r\n  cinemaId: PropTypes.oneOfType([PropTypes.string, PropTypes.number])\r\n    .isRequired,\r\n  onClose: PropTypes.func.isRequired,\r\n  onSelectShowtime: PropTypes.func.isRequired,\r\n};\r\n\r\nexport default ScheduleModal;\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/frontend/src/user/components/ScheduleModal/ScheduleModal.jsx b/frontend/src/user/components/ScheduleModal/ScheduleModal.jsx
+--- a/frontend/src/user/components/ScheduleModal/ScheduleModal.jsx	(revision 816cafd71249c8a9ecb19eed90f893ecd495b17e)
++++ b/frontend/src/user/components/ScheduleModal/ScheduleModal.jsx	(date 1767723863584)
+@@ -3,209 +3,210 @@
+ import PropTypes from "prop-types";
+ import { Modal, Tabs, Spin, message, Empty } from "antd";
+ import {
+-  movieService,
+-  cinemaService,
+-  showtimeService,
++    movieService,
++    cinemaService,
++    showtimeService,
+ } from "../../../services"; // ✅ Import showtimeService
+ import "./ScheduleModal.scss";
+ 
+ const ScheduleModal = ({
+-  visible,
+-  movieId,
+-  cinemaId,
+-  onClose,
+-  onSelectShowtime,
+-}) => {
+-  const [cinema, setCinema] = useState(null);
+-  const [movie, setMovie] = useState(null);
+-  const [loading, setLoading] = useState(true);
+-  const [selectedDate, setSelectedDate] = useState(null);
+-  const [showtimesMap, setShowtimesMap] = useState({}); // ✅ Map showTime+roomId -> showtimeId
++                           visible,
++                           movieId,
++                           cinemaId,
++                           onClose,
++                           onSelectShowtime,
++                       }) => {
++    const [cinema, setCinema] = useState(null);
++    const [movie, setMovie] = useState(null);
++    const [loading, setLoading] = useState(true);
++    const [selectedDate, setSelectedDate] = useState(null);
++    const [showtimesMap, setShowtimesMap] = useState({}); // ✅ Map showTime+roomId -> showtimeId
+ 
+-  useEffect(() => {
+-    if (!visible || !movieId || !cinemaId) {
+-      return;
+-    }
++    useEffect(() => {
++        if (!visible || !movieId || !cinemaId) {
++            return;
++        }
+ 
+-    const fetchData = async () => {
+-      setLoading(true);
+-      try {
+-        const [movieData, cinemaData, allShowtimes] = await Promise.all([
+-          movieService.getById(movieId),
+-          cinemaService.getById(cinemaId),
+-          showtimeService.getAll(), // ✅ Fetch all showtimes để lấy ID
+-        ]);
++        const fetchData = async () => {
++            setLoading(true);
++            try {
++                const [movieData, cinemaData, allShowtimes] = await Promise.all([
++                    movieService.getById(movieId),
++                    cinemaService.getById(cinemaId),
++                    showtimeService.getAll(),
++                ]);
+ 
+-        setMovie(movieData);
+-        setCinema(cinemaData);
++                setMovie(movieData);
++                setCinema(cinemaData);
+ 
+-        // ✅ Tạo map từ showTime+roomId -> showtimeId
+-        const stMap = {};
+-        allShowtimes.forEach((st) => {
+-          if (st.movieId === movieId) {
+-            st.showTimeRooms?.forEach((str) => {
+-              const key = `${str.showTime}_${str.roomId}`;
+-              stMap[key] = st.showtimeId;
+-            });
+-          }
+-        });
+-        setShowtimesMap(stMap);
+-        console.log("🗺️ Showtimes map:", stMap);
++                // ✅ FIX: Convert movieId to number để so sánh đúng
++                const numericMovieId = Number(movieId);
++
++                console.log("📦 All showtimes:", allShowtimes);
++                console.log("🎬 Looking for movieId:", numericMovieId);
++
++                // ✅ Tạo map từ showTime+roomId -> showtimeId
++                const stMap = {};
++                allShowtimes.forEach((st) => {
++                    console.log(`Checking st.movieId: ${st.movieId} vs ${numericMovieId}`);
++
++                    // ✅ So sánh bằng == hoặc convert cả hai
++                    if (Number(st.movieId) === numericMovieId) {
++                        st.showTimeRooms?.forEach((str) => {
++                            const key = `${str.showTime}_${str.roomId}`;
++                            stMap[key] = st.showtimeId;
++                            console.log(`✅ Added: ${key} -> ${st.showtimeId}`);
++                        });
++                    }
++                });
++
++                console.log("🗺️ Final showtimesMap:", stMap);
++                setShowtimesMap(stMap);
+ 
+-        // Lấy danh sách ngày có suất chiếu tại rạp này
+-        if (movieData.showtimes && cinemaData.rooms) {
+-          const roomIds = cinemaData.rooms.map((r) => r.roomId);
+-          const filtered = movieData.showtimes.filter((st) =>
+-            roomIds.includes(st.roomId)
+-          );
+-
+-          if (filtered.length > 0) {
+-            const firstDate = filtered[0].showTime.split("T")[0];
+-            setSelectedDate(firstDate);
+-          }
+-        }
+-      } catch (error) {
+-        console.error("Error fetching schedule:", error);
+-        message.error("Không thể tải lịch chiếu");
+-      } finally {
+-        setLoading(false);
+-      }
+-    };
++                // ... rest of code
++            } catch (error) {
++                console.error("Error fetching schedule:", error);
++                message.error("Không thể tải lịch chiếu");
++            } finally {
++                setLoading(false);
++            }
++        };
+ 
+-    fetchData();
+-  }, [visible, movieId, cinemaId]);
++        fetchData();
++    }, [visible, movieId, cinemaId]);
+ 
+-  /**
+-   * Nhóm suất chiếu theo ngày và ánh xạ tên phòng
+-   */
+-  const groupedShowtimes = useMemo(() => {
+-    if (!movie?.showtimes || !cinema?.rooms) return {};
++
++    /**
++     * Nhóm suất chiếu theo ngày và ánh xạ tên phòng
++     */
++    const groupedShowtimes = useMemo(() => {
++        if (!movie?.showtimes || !cinema?.rooms) return {};
+ 
+-    const roomMap = {};
+-    cinema.rooms.forEach((r) => {
+-      roomMap[r.roomId] = r.roomName;
+-    });
+-    const roomIds = cinema.rooms.map((r) => r.roomId);
++        const roomMap = {};
++        cinema.rooms.forEach((r) => {
++            roomMap[r.roomId] = r.roomName;
++        });
++        const roomIds = cinema.rooms.map((r) => r.roomId);
+ 
+-    return movie.showtimes
+-      .filter((st) => roomIds.includes(st.roomId))
+-      .reduce((acc, st) => {
+-        const date = st.showTime.split("T")[0];
+-        if (!acc[date]) acc[date] = [];
+-        acc[date].push({
+-          ...st,
+-          roomName: roomMap[st.roomId] || "Phòng chiếu",
+-        });
+-        return acc;
+-      }, {});
+-  }, [movie, cinema]);
++        return movie.showtimes
++            .filter((st) => roomIds.includes(st.roomId))
++            .reduce((acc, st) => {
++                const date = st.showTime.split("T")[0];
++                if (!acc[date]) acc[date] = [];
++                acc[date].push({
++                    ...st,
++                    roomName: roomMap[st.roomId] || "Phòng chiếu",
++                });
++                return acc;
++            }, {});
++    }, [movie, cinema]);
+ 
+-  const availableDates = Object.keys(groupedShowtimes).sort();
++    const availableDates = Object.keys(groupedShowtimes).sort();
+ 
+-  const formatDate = (dateStr) => {
+-    const date = new Date(dateStr);
+-    const day = date.getDate().toString().padStart(2, "0");
+-    const month = (date.getMonth() + 1).toString().padStart(2, "0");
+-    const weekdays = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
+-    return `${day}/${month} - ${weekdays[date.getDay()]}`;
+-  };
++    const formatDate = (dateStr) => {
++        const date = new Date(dateStr);
++        const day = date.getDate().toString().padStart(2, "0");
++        const month = (date.getMonth() + 1).toString().padStart(2, "0");
++        const weekdays = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
++        return `${day}/${month} - ${weekdays[date.getDay()]}`;
++    };
+ 
+-  /**
+-   * ✅ Handle showtime selection
+-   */
+-  const handleShowtimeClick = (showtime) => {
+-    console.log("🔘 Clicked showtime:", showtime);
++    /**
++     * ✅ Handle showtime selection
++     */
++    const handleShowtimeClick = (showtime) => {
++        console.log("🔘 Clicked showtime:", showtime);
+ 
+-    // ✅ Tạo key để lookup showtimeId
+-    const key = `${showtime.showTime}_${showtime.roomId}`;
+-    const showtimeId = showtimesMap[key];
++        // ✅ Tạo key để lookup showtimeId
++        const key = `${showtime.showTime}_${showtime.roomId}`;
++        const showtimeId = showtimesMap[key];
+ 
+-    console.log("🔑 Looking up key:", key);
+-    console.log("🎯 Found showtimeId:", showtimeId);
++        console.log("🔑 Looking up key:", key);
++        console.log("🎯 Found showtimeId:", showtimeId);
+ 
+-    if (!showtimeId) {
+-      message.error("Không tìm thấy suất chiếu này");
+-      return;
+-    }
++        if (!showtimeId) {
++            message.error("Không tìm thấy suất chiếu này");
++            return;
++        }
+ 
+-    onSelectShowtime(showtimeId);
+-  };
++        onSelectShowtime(showtimeId);
++    };
+ 
+-  const dateTabs = availableDates.map((date) => ({
+-    key: date,
+-    label: formatDate(date),
+-    children: (
+-      <div className="day-schedule">
+-        {groupedShowtimes[date]
+-          .sort((a, b) => a.showTime.localeCompare(b.showTime))
+-          .map((st, idx) => (
+-            <button
+-              key={idx}
+-              className="show-time"
+-              onClick={() => handleShowtimeClick(st)} // ✅ Call handler
+-            >
++    const dateTabs = availableDates.map((date) => ({
++        key: date,
++        label: formatDate(date),
++        children: (
++            <div className="day-schedule">
++                {groupedShowtimes[date]
++                    .sort((a, b) => a.showTime.localeCompare(b.showTime))
++                    .map((st, idx) => (
++                        <button
++                            key={idx}
++                            className="show-time"
++                            onClick={() => handleShowtimeClick(st)} // ✅ Call handler
++                        >
+               <span className="time-text">
+                 {st.showTime.split("T")[1].substring(0, 5)}
+               </span>
+-              <span className="room-text"> - {st.roomName}</span>
+-            </button>
+-          ))}
+-      </div>
+-    ),
+-  }));
++                            <span className="room-text"> - {st.roomName}</span>
++                        </button>
++                    ))}
++            </div>
++        ),
++    }));
+ 
+-  if (!visible) return null;
++    if (!visible) return null;
+ 
+-  return (
+-    <Modal
+-      title={
+-        <div className="modal-title">
+-          <h3>Lịch chiếu phim</h3>
+-          {cinema && (
+-            <p className="cinema-info">
+-              <span className="cinema-dot"></span>
+-              Rạp {cinema.name}
+-            </p>
+-          )}
+-        </div>
+-      }
+-      open={visible}
+-      onCancel={onClose}
+-      footer={null}
+-      width={800}
+-      centered
+-      className="schedule-modal-custom"
+-      destroyOnHidden // ✅ Fix warning
+-    >
+-      {loading ? (
+-        <div className="modal-loading">
+-          <Spin size="large" />
+-          <p>Đang kiểm tra lịch chiếu...</p>
+-        </div>
+-      ) : availableDates.length > 0 ? (
+-        <Tabs
+-          activeKey={selectedDate}
+-          onChange={setSelectedDate}
+-          items={dateTabs}
+-          centered
+-          className="week-schedule-tabs"
+-        />
+-      ) : (
+-        <div className="modal-empty">
+-          <Empty description="Rạp này hiện chưa có suất chiếu cho phim đã chọn" />
+-        </div>
+-      )}
+-    </Modal>
+-  );
++    return (
++        <Modal
++            title={
++                <div className="modal-title">
++                    <h3>Lịch chiếu phim</h3>
++                    {cinema && (
++                        <p className="cinema-info">
++                            <span className="cinema-dot"></span>
++                            Rạp {cinema.name}
++                        </p>
++                    )}
++                </div>
++            }
++            open={visible}
++            onCancel={onClose}
++            footer={null}
++            width={800}
++            centered
++            className="schedule-modal-custom"
++            destroyOnHidden // ✅ Fix warning
++        >
++            {loading ? (
++                <div className="modal-loading">
++                    <Spin size="large" />
++                    <p>Đang kiểm tra lịch chiếu...</p>
++                </div>
++            ) : availableDates.length > 0 ? (
++                <Tabs
++                    activeKey={selectedDate}
++                    onChange={setSelectedDate}
++                    items={dateTabs}
++                    centered
++                    className="week-schedule-tabs"
++                />
++            ) : (
++                <div className="modal-empty">
++                    <Empty description="Rạp này hiện chưa có suất chiếu cho phim đã chọn" />
++                </div>
++            )}
++        </Modal>
++    );
+ };
+ 
+ ScheduleModal.propTypes = {
+-  visible: PropTypes.bool.isRequired,
+-  movieId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+-  cinemaId: PropTypes.oneOfType([PropTypes.string, PropTypes.number])
+-    .isRequired,
+-  onClose: PropTypes.func.isRequired,
+-  onSelectShowtime: PropTypes.func.isRequired,
++    visible: PropTypes.bool.isRequired,
++    movieId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
++    cinemaId: PropTypes.oneOfType([PropTypes.string, PropTypes.number])
++        .isRequired,
++    onClose: PropTypes.func.isRequired,
++    onSelectShowtime: PropTypes.func.isRequired,
+ };
+ 
+ export default ScheduleModal;
+Index: frontend/src/services/employeeService.js
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>// frontend/src/services/employeeService.js\r\nimport axiosInstance from \"./axiosInstance\";\r\n\r\nexport const employeeService = {\r\n  getAll: async () => {\r\n    try {\r\n      const response = await axiosInstance.get(\"/employees\");\r\n      return response || [];\r\n    } catch (error) {\r\n      console.error(\"Get employees error:\", error);\r\n      throw error;\r\n    }\r\n  },\r\n\r\n  create: async (data) => {\r\n    try {\r\n      const payload = {\r\n        firstName: data.firstName,\r\n        lastName: data.lastName,\r\n        phone: data.phone || data.phoneNumber,\r\n        email: data.email,\r\n      };\r\n      const response = await axiosInstance.post(\"/employees\", payload);\r\n      return response;\r\n    } catch (error) {\r\n      console.error(\"Create employee error:\", error);\r\n      throw error;\r\n    }\r\n  },\r\n\r\n  /**\r\n   * ✅ FIX: PUT uses {employeeAccountId} not {employeeId}\r\n   */\r\n  update: async (employeeAccountId, data) => {\r\n    try {\r\n      const payload = {\r\n        firstName: data.firstName,\r\n        lastName: data.lastName,\r\n        phone: data.phone || data.phoneNumber,\r\n        email: data.email,\r\n      };\r\n      const response = await axiosInstance.put(\r\n        `/employees/${employeeAccountId}`,\r\n        payload\r\n      );\r\n      return response;\r\n    } catch (error) {\r\n      console.error(\"Update employee error:\", error);\r\n      throw error;\r\n    }\r\n  },\r\n\r\n  /**\r\n   * ✅ DELETE uses {employeeId}\r\n   */\r\n  delete: async (employeeId) => {\r\n    try {\r\n      await axiosInstance.delete(`/employees/${employeeId}`);\r\n    } catch (error) {\r\n      console.error(\"Delete employee error:\", error);\r\n      throw error;\r\n    }\r\n  },\r\n};\r\n\r\nexport default employeeService;\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/frontend/src/services/employeeService.js b/frontend/src/services/employeeService.js
+--- a/frontend/src/services/employeeService.js	(revision 816cafd71249c8a9ecb19eed90f893ecd495b17e)
++++ b/frontend/src/services/employeeService.js	(date 1767765912030)
+@@ -5,7 +5,7 @@
+   getAll: async () => {
+     try {
+       const response = await axiosInstance.get("/employees");
+-      return response || [];
++      return response?.result || [];
+     } catch (error) {
+       console.error("Get employees error:", error);
+       throw error;
+Index: backend/src/main/resources/db/migration/V1__init_schema.sql
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>-- 1. Tạo các bảng không phụ thuộc (Parent Tables)\r\nCREATE TABLE cinema (\r\n                        cinema_id bigint GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,\r\n                        name varchar(255),\r\n                        address varchar(255),\r\n                        city varchar(255),\r\n                        district varchar(255)\r\n);\r\n\r\nCREATE TABLE movie (\r\n                       movie_id bigint GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,\r\n                       title varchar(255),\r\n                       director varchar(255),\r\n                       genre varchar(255),\r\n                       duration integer,\r\n                       limit_age integer,\r\n                       poster varchar(255),\r\n                       trailer_url varchar(255),\r\n                       description varchar(255),\r\n                       day_start date,\r\n                       day_end date\r\n);\r\n\r\nCREATE TABLE day_type (\r\n                          id bigint GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,\r\n                          day_type varchar(255) UNIQUE NOT NULL, -- Dùng để liên kết với ticket_price\r\n                          day_start date,\r\n                          day_end date\r\n);\r\n\r\nCREATE TABLE employee (\r\n                          employee_id bigint GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,\r\n                          first_name varchar(255),\r\n                          last_name varchar(255),\r\n                          email varchar(255) UNIQUE,\r\n                          phone varchar(255) UNIQUE,\r\n                          position varchar(255) NOT NULL,\r\n                          CONSTRAINT employee_position_check CHECK (position IN ('EMPLOYEE', 'MANAGER', 'ADMIN'))\r\n);\r\n\r\nCREATE TABLE permission (\r\n                            permission_id bigint GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,\r\n                            name varchar(255) UNIQUE NOT NULL,\r\n                            description varchar(255)\r\n);\r\n\r\nCREATE TABLE role (\r\n                      role_id bigint GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,\r\n                      name varchar(255) UNIQUE NOT NULL,\r\n                      description varchar(255)\r\n);\r\n\r\nCREATE TABLE invalidated_token (\r\n                                   id varchar(255) PRIMARY KEY,\r\n                                   expiry_time timestamp(6)\r\n);\r\n\r\n-- 2. Tạo các bảng Account (Sử dụng UUID - varchar(255))\r\nCREATE TABLE member (\r\n                        member_id varchar(255) PRIMARY KEY,\r\n                        username varchar(255) UNIQUE NOT NULL,\r\n                        password varchar(255) NOT NULL,\r\n                        email varchar(255) UNIQUE NOT NULL,\r\n                        phone_number varchar(255) UNIQUE NOT NULL,\r\n                        first_name varchar(255),\r\n                        last_name varchar(255),\r\n                        dob date,\r\n                        day_created timestamp(6) NOT NULL,\r\n                        status varchar(255) NOT NULL,\r\n                        CONSTRAINT member_status_check CHECK (status IN ('ACTIVE', 'INACTIVE'))\r\n);\r\n\r\nCREATE TABLE employee_account (\r\n                                  employee_account_id varchar(255) PRIMARY KEY,\r\n                                  username varchar(255) UNIQUE NOT NULL,\r\n                                  password varchar(255) NOT NULL,\r\n                                  email varchar(255) UNIQUE,\r\n                                  employee_id bigint UNIQUE NOT NULL,\r\n                                  day_created timestamp(6) NOT NULL,\r\n                                  status varchar(255) NOT NULL,\r\n                                  CONSTRAINT employee_account_status_check CHECK (status IN ('ACTIVE', 'INACTIVE')),\r\n                                  CONSTRAINT fk_employee FOREIGN KEY (employee_id) REFERENCES employee(employee_id)\r\n);\r\n\r\n-- 3. Tạo các bảng quan hệ trung gian (Roles & Permissions)\r\nCREATE TABLE role_permissions (\r\n                                  role_role_id bigint NOT NULL,\r\n                                  permissions_permission_id bigint NOT NULL,\r\n                                  PRIMARY KEY (role_role_id, permissions_permission_id),\r\n                                  CONSTRAINT fk_role_permissions_role FOREIGN KEY (role_role_id) REFERENCES role(role_id),\r\n                                  CONSTRAINT fk_role_permissions_perm FOREIGN KEY (permissions_permission_id) REFERENCES permission(permission_id)\r\n);\r\n\r\nCREATE TABLE member_roles (\r\n                              member_member_id varchar(255) NOT NULL,\r\n                              roles_role_id bigint NOT NULL,\r\n                              PRIMARY KEY (member_member_id, roles_role_id),\r\n                              CONSTRAINT fk_member_roles_member FOREIGN KEY (member_member_id) REFERENCES member(member_id),\r\n                              CONSTRAINT fk_member_roles_role FOREIGN KEY (roles_role_id) REFERENCES role(role_id)\r\n);\r\n\r\nCREATE TABLE employee_account_roles (\r\n                                        employee_account_employee_account_id varchar(255) NOT NULL,\r\n                                        roles_role_id bigint NOT NULL,\r\n                                        PRIMARY KEY (employee_account_employee_account_id, roles_role_id),\r\n                                        CONSTRAINT fk_emp_roles_acc FOREIGN KEY (employee_account_employee_account_id) REFERENCES employee_account(employee_account_id),\r\n                                        CONSTRAINT fk_emp_roles_role FOREIGN KEY (roles_role_id) REFERENCES role(role_id)\r\n);\r\n\r\n-- 4. Tạo các bảng nghiệp vụ rạp (Room, Seat, Showtime)\r\nCREATE TABLE room (\r\n                      room_id bigint GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,\r\n                      room_name varchar(255),\r\n                      cinema_id bigint NOT NULL,\r\n                      CONSTRAINT fk_room_cinema FOREIGN KEY (cinema_id) REFERENCES cinema(cinema_id)\r\n);\r\n\r\nCREATE TABLE seat (\r\n                      seat_id bigint GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,\r\n                      seat_number integer NOT NULL,\r\n                      seat_row char(1),\r\n                      seat_type varchar(255),\r\n                      room_id bigint NOT NULL,\r\n                      CONSTRAINT seat_seat_type_check CHECK (seat_type IN ('CLASSIC', 'VIP')),\r\n                      CONSTRAINT fk_seat_room FOREIGN KEY (room_id) REFERENCES room(room_id)\r\n);\r\n\r\nCREATE TABLE show_time (\r\n                           showtime_id bigint GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,\r\n                           start_time timestamp(6),\r\n                           movie_id bigint NOT NULL,\r\n                           room_id bigint NOT NULL,\r\n                           CONSTRAINT uk_showtime UNIQUE (start_time, room_id),\r\n                           CONSTRAINT fk_showtime_movie FOREIGN KEY (movie_id) REFERENCES movie(movie_id),\r\n                           CONSTRAINT fk_showtime_room FOREIGN KEY (room_id) REFERENCES room(room_id)\r\n);\r\n\r\n-- 5. Giá vé và Giao dịch (TicketPrice, Booking)\r\nCREATE TABLE ticket_price (\r\n                              id bigint GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,\r\n                              price double precision NOT NULL,\r\n                              seat_type varchar(255),\r\n                              cinema_id bigint NOT NULL,\r\n                              day_type varchar(255) NOT NULL, -- Liên kết theo String như yêu cầu [cite: 48, 180]\r\n                              CONSTRAINT ticket_price_seat_type_check CHECK (seat_type IN ('CLASSIC', 'VIP')),\r\n                              CONSTRAINT fk_price_cinema FOREIGN KEY (cinema_id) REFERENCES cinema(cinema_id),\r\n                              CONSTRAINT fk_price_daytype FOREIGN KEY (day_type) REFERENCES day_type(day_type)\r\n);\r\n\r\nCREATE TABLE booking (\r\n                         booking_id bigint GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,\r\n                         total_price double precision NOT NULL,\r\n                         create_time timestamp(6),\r\n                         booking_status varchar(255),\r\n                         member_id varchar(255) NOT NULL,\r\n                         CONSTRAINT booking_booking_status_check CHECK (booking_status IN ('PENDING', 'CONFIRM')),\r\n                         CONSTRAINT fk_booking_member FOREIGN KEY (member_id) REFERENCES member(member_id)\r\n);\r\n\r\nCREATE TABLE booking_detail (\r\n                                id bigint GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,\r\n                                price double precision NOT NULL,\r\n                                seat_status varchar(255),\r\n                                booking_id bigint NOT NULL,\r\n                                seat_id bigint NOT NULL,\r\n                                showtime_id bigint NOT NULL,\r\n                                CONSTRAINT booking_detail_seat_status_check CHECK (seat_status IN ('BOOKED', 'AVAILABLE', 'HELD')),\r\n                                CONSTRAINT uk_seat_showtime UNIQUE (seat_id, showtime_id),\r\n                                CONSTRAINT fk_detail_booking FOREIGN KEY (booking_id) REFERENCES booking(booking_id),\r\n                                CONSTRAINT fk_detail_seat FOREIGN KEY (seat_id) REFERENCES seat(seat_id),\r\n                                CONSTRAINT fk_detail_showtime FOREIGN KEY (showtime_id) REFERENCES show_time(showtime_id)\r\n);\r\n\r\nCREATE TABLE paymenturl (\r\n                            url varchar(2048) PRIMARY KEY,\r\n                            amount double precision NOT NULL,\r\n                            created_at timestamp(6) NOT NULL,\r\n                            booking_id bigint UNIQUE NOT NULL,\r\n                            member_id varchar(255) NOT NULL,\r\n                            CONSTRAINT fk_pay_booking FOREIGN KEY (booking_id) REFERENCES booking(booking_id),\r\n                            CONSTRAINT fk_pay_member FOREIGN KEY (member_id) REFERENCES member(member_id)\r\n);\r\n\r\nINSERT INTO role (name, description) VALUES ('ADMIN', 'All Permission');
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/backend/src/main/resources/db/migration/V1__init_schema.sql b/backend/src/main/resources/db/migration/V1__init_schema.sql
+--- a/backend/src/main/resources/db/migration/V1__init_schema.sql	(revision 816cafd71249c8a9ecb19eed90f893ecd495b17e)
++++ b/backend/src/main/resources/db/migration/V1__init_schema.sql	(date 1767711808704)
+@@ -14,9 +14,9 @@
+                        genre varchar(255),
+                        duration integer,
+                        limit_age integer,
+-                       poster varchar(255),
+-                       trailer_url varchar(255),
+-                       description varchar(255),
++                       poster varchar(2048),
++                       trailer_url varchar(2048),
++                       description varchar(2048),
+                        day_start date,
+                        day_end date
+ );
+Index: frontend/src/services/memberService.js
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>// frontend/src/services/memberService.js\r\nimport axiosInstance from \"./axiosInstance\";\r\n\r\nexport const memberService = {\r\n  /**\r\n   * Get all members (GET /members)\r\n   */\r\n  getAll: async () => {\r\n    try {\r\n      const response = await axiosInstance.get(\"/members\");\r\n      return response || [];\r\n    } catch (error) {\r\n      console.error(\"Get members error:\", error);\r\n      throw error;\r\n    }\r\n  },\r\n\r\n  /**\r\n   * Get current logged-in member info (GET /members/my-info)\r\n   */\r\n  getMyInfo: async () => {\r\n    try {\r\n      const response = await axiosInstance.get(\"/members/my-info\");\r\n      return response;\r\n    } catch (error) {\r\n      console.error(\"Get current member info error:\", error);\r\n      throw error;\r\n    }\r\n  },\r\n\r\n  /**\r\n   * ✅ Register new member (POST /members)\r\n   * Used by Register page\r\n   */\r\n  register: async (data) => {\r\n    try {\r\n      const payload = {\r\n        username: data.username,\r\n        password: data.password,\r\n        email: data.email,\r\n        phoneNumber: data.phoneNumber || data.phone,\r\n        firstName: data.firstName,\r\n        lastName: data.lastName,\r\n        dob: data.dob, // ✅ MUST be YYYY-MM-DD format\r\n      };\r\n\r\n      console.log(\"\uD83D\uDCE4 Register payload:\", payload);\r\n\r\n      const response = await axiosInstance.post(\"/members\", payload);\r\n\r\n      console.log(\"✅ Register response:\", response);\r\n\r\n      return response;\r\n    } catch (error) {\r\n      console.error(\"❌ Register error:\", error);\r\n      throw error;\r\n    }\r\n  },\r\n\r\n  /**\r\n   * Create member (alias for register - used by admin)\r\n   */\r\n  create: async (data) => {\r\n    return memberService.register(data);\r\n  },\r\n\r\n  /**\r\n   * Update member (PUT /members/{memberId})\r\n   */\r\n  update: async (memberId, data) => {\r\n    try {\r\n      const payload = {\r\n        username: data.username,\r\n        email: data.email,\r\n        phoneNumber: data.phoneNumber || data.phone,\r\n        dob: data.dob,\r\n      };\r\n\r\n      if (data.password && data.password.trim()) {\r\n        payload.password = data.password;\r\n      }\r\n\r\n      const response = await axiosInstance.put(`/members/${memberId}`, payload);\r\n      return response;\r\n    } catch (error) {\r\n      console.error(\"Update member error:\", error);\r\n      throw error;\r\n    }\r\n  },\r\n\r\n  /**\r\n   * Delete member (DELETE /members/{memberId})\r\n   */\r\n  delete: async (memberId) => {\r\n    try {\r\n      await axiosInstance.delete(`/members/${memberId}`);\r\n    } catch (error) {\r\n      console.error(\"Delete member error:\", error);\r\n      throw error;\r\n    }\r\n  },\r\n};\r\n\r\nexport default memberService;\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/frontend/src/services/memberService.js b/frontend/src/services/memberService.js
+--- a/frontend/src/services/memberService.js	(revision 816cafd71249c8a9ecb19eed90f893ecd495b17e)
++++ b/frontend/src/services/memberService.js	(date 1767766330273)
+@@ -8,7 +8,7 @@
+   getAll: async () => {
+     try {
+       const response = await axiosInstance.get("/members");
+-      return response || [];
++      return response?.result || response?.data?.result || [];
+     } catch (error) {
+       console.error("Get members error:", error);
+       throw error;
+Index: frontend/src/admin/pages/Members.jsx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>// frontend/src/admin/pages/Members.jsx\r\nimport { useState, useEffect, useMemo } from \"react\";\r\nimport {\r\n  FiSearch,\r\n  FiTrash2,\r\n  FiUser,\r\n  FiMail,\r\n  FiPhone,\r\n  FiCalendar,\r\n} from \"react-icons/fi\";\r\nimport Breadcrumb from \"../components/Common/Breadcrumb\";\r\nimport Loading from \"../components/Common/Loading\";\r\nimport ConfirmDialog from \"../components/Common/ConfirmDialog\";\r\nimport { memberService } from \"../../services\";\r\nimport { message } from \"antd\";\r\nimport \"../styles/AdminLayout.scss\";\r\n\r\nconst Members = () => {\r\n  const [members, setMembers] = useState([]);\r\n  const [loading, setLoading] = useState(true);\r\n  const [searchTerm, setSearchTerm] = useState(\"\");\r\n  const [showDeleteDialog, setShowDeleteDialog] = useState(false);\r\n  const [memberToDelete, setMemberToDelete] = useState(null);\r\n  const [hasPermission, setHasPermission] = useState(true); // ✅ Add permission state\r\n\r\n  useEffect(() => {\r\n    fetchMembers();\r\n  }, []);\r\n\r\n  const fetchMembers = async () => {\r\n    try {\r\n      setLoading(true);\r\n      const data = await memberService.getAll();\r\n\r\n      console.log(\"✅ Members loaded:\", data.length);\r\n      setMembers(Array.isArray(data) ? data : []);\r\n      setHasPermission(true); // ✅ Set permission true on success\r\n    } catch (error) {\r\n      console.error(\"Error fetching members:\", error);\r\n\r\n      if (error.status === 403) {\r\n        setHasPermission(false); // ✅ Set permission false on 403\r\n        message.warning({\r\n          content:\r\n            \"Bạn không có quyền xem danh sách thành viên. Chỉ ADMIN mới có quyền này.\",\r\n          duration: 5,\r\n        });\r\n      } else {\r\n        message.error(\"Không thể lấy danh sách thành viên\");\r\n      }\r\n\r\n      setMembers([]);\r\n    } finally {\r\n      setLoading(false);\r\n    }\r\n  };\r\n\r\n  // ✅ IMPORTANT: Call ALL hooks BEFORE any conditional returns\r\n  const filteredMembers = useMemo(() => {\r\n    if (!searchTerm) return members;\r\n\r\n    const lowerSearch = searchTerm.toLowerCase();\r\n    return members.filter(\r\n      (member) =>\r\n        member.username?.toLowerCase().includes(lowerSearch) ||\r\n        member.email?.toLowerCase().includes(lowerSearch) ||\r\n        member.phoneNumber?.includes(searchTerm) ||\r\n        member.firstName?.toLowerCase().includes(lowerSearch) ||\r\n        member.lastName?.toLowerCase().includes(lowerSearch)\r\n    );\r\n  }, [members, searchTerm]);\r\n\r\n  const stats = useMemo(() => {\r\n    return {\r\n      total: members.length,\r\n      filtered: filteredMembers.length,\r\n    };\r\n  }, [members, filteredMembers]);\r\n\r\n  // ✅ Handler functions\r\n  const handleDeleteMember = (member) => {\r\n    setMemberToDelete(member);\r\n    setShowDeleteDialog(true);\r\n  };\r\n\r\n  const confirmDelete = async () => {\r\n    try {\r\n      const memberId = memberToDelete.username || memberToDelete.id;\r\n\r\n      await memberService.delete(memberId);\r\n\r\n      setMembers((prev) =>\r\n        prev.filter((m) => m.username !== memberToDelete.username)\r\n      );\r\n\r\n      message.success(\"Xóa thành viên thành công!\");\r\n      setShowDeleteDialog(false);\r\n      setMemberToDelete(null);\r\n\r\n      setTimeout(() => {\r\n        fetchMembers();\r\n      }, 500);\r\n    } catch (error) {\r\n      console.error(\"Error deleting member:\", error);\r\n      message.error(error.message || \"Có lỗi xảy ra khi xóa thành viên!\");\r\n    }\r\n  };\r\n\r\n  const formatDate = (dateString) => {\r\n    if (!dateString) return \"N/A\";\r\n    return new Date(dateString).toLocaleDateString(\"vi-VN\");\r\n  };\r\n\r\n  // ✅ NOW safe to do conditional renders AFTER all hooks\r\n  if (loading) {\r\n    return <Loading text=\"Đang tải danh sách thành viên...\" />;\r\n  }\r\n\r\n  // ✅ Show permission error if 403\r\n  if (!hasPermission) {\r\n    return (\r\n      <div className=\"admin-page\">\r\n        <Breadcrumb />\r\n        <div className=\"page-header\">\r\n          <h1>Quản lý thành viên</h1>\r\n        </div>\r\n\r\n        <div\r\n          className=\"empty-state\"\r\n          style={{\r\n            padding: \"60px 20px\",\r\n            textAlign: \"center\",\r\n            backgroundColor: \"#fff\",\r\n            borderRadius: 8,\r\n            border: \"1px solid #e5e7eb\",\r\n            margin: \"24px 0\",\r\n          }}\r\n        >\r\n          <FiUser size={48} color=\"#d1d5db\" />\r\n          <h3 style={{ marginTop: 16, color: \"#6b7280\" }}>\r\n            Không có quyền truy cập\r\n          </h3>\r\n          <p style={{ color: \"#9ca3af\", marginTop: 8 }}>\r\n            Bạn không có quyền xem danh sách thành viên.\r\n            <br />\r\n            Vui lòng liên hệ quản trị viên để được cấp quyền.\r\n          </p>\r\n        </div>\r\n      </div>\r\n    );\r\n  }\r\n\r\n  // ✅ Main render - normal UI\r\n  return (\r\n    <div className=\"admin-page\">\r\n      <Breadcrumb />\r\n\r\n      <div className=\"page-header\">\r\n        <h1>Quản lý thành viên</h1>\r\n      </div>\r\n\r\n      <div className=\"stats-grid\">\r\n        <div className=\"stat-card\">\r\n          <div className=\"stat-content\">\r\n            <div className=\"stat-info\">\r\n              <p>Tổng thành viên</p>\r\n              <h3>{stats.total}</h3>\r\n            </div>\r\n          </div>\r\n        </div>\r\n        <div className=\"stat-card\">\r\n          <div className=\"stat-content\">\r\n            <div className=\"stat-info\">\r\n              <p>Kết quả tìm kiếm</p>\r\n              <h3 style={{ color: \"#2563eb\" }}>{stats.filtered}</h3>\r\n            </div>\r\n          </div>\r\n        </div>\r\n      </div>\r\n\r\n      <div className=\"filters-bar\">\r\n        <div className=\"filters-content\">\r\n          <div className=\"search-input\">\r\n            <FiSearch size={20} />\r\n            <input\r\n              type=\"text\"\r\n              placeholder=\"Tìm kiếm username, email, số điện thoại...\"\r\n              value={searchTerm}\r\n              onChange={(e) => setSearchTerm(e.target.value)}\r\n            />\r\n          </div>\r\n        </div>\r\n      </div>\r\n\r\n      <div className=\"admin-table\">\r\n        {filteredMembers.length > 0 ? (\r\n          <table>\r\n            <thead>\r\n              <tr>\r\n                <th>Username</th>\r\n                <th>Họ và tên</th>\r\n                <th>Email</th>\r\n                <th>Số điện thoại</th>\r\n                <th>Ngày sinh</th>\r\n                <th>Hành động</th>\r\n              </tr>\r\n            </thead>\r\n            <tbody>\r\n              {filteredMembers.map((member) => (\r\n                <tr key={member.username}>\r\n                  <td>\r\n                    <div\r\n                      style={{ display: \"flex\", alignItems: \"center\", gap: 8 }}\r\n                    >\r\n                      <FiUser size={16} color=\"#6b7280\" />\r\n                      <strong>{member.username}</strong>\r\n                    </div>\r\n                  </td>\r\n                  <td>\r\n                    {member.firstName && member.lastName\r\n                      ? `${member.firstName} ${member.lastName}`\r\n                      : \"N/A\"}\r\n                  </td>\r\n                  <td>\r\n                    <div\r\n                      style={{ display: \"flex\", alignItems: \"center\", gap: 8 }}\r\n                    >\r\n                      <FiMail size={14} color=\"#6b7280\" />\r\n                      {member.email}\r\n                    </div>\r\n                  </td>\r\n                  <td>\r\n                    <div\r\n                      style={{ display: \"flex\", alignItems: \"center\", gap: 8 }}\r\n                    >\r\n                      <FiPhone size={14} color=\"#6b7280\" />\r\n                      {member.phoneNumber || \"N/A\"}\r\n                    </div>\r\n                  </td>\r\n                  <td>\r\n                    <div\r\n                      style={{ display: \"flex\", alignItems: \"center\", gap: 8 }}\r\n                    >\r\n                      <FiCalendar size={14} color=\"#6b7280\" />\r\n                      {formatDate(member.dob)}\r\n                    </div>\r\n                  </td>\r\n                  <td>\r\n                    <div className=\"actions\">\r\n                      <button\r\n                        onClick={() => handleDeleteMember(member)}\r\n                        className=\"delete\"\r\n                        title=\"Xóa thành viên\"\r\n                      >\r\n                        <FiTrash2 size={18} />\r\n                      </button>\r\n                    </div>\r\n                  </td>\r\n                </tr>\r\n              ))}\r\n            </tbody>\r\n          </table>\r\n        ) : (\r\n          <div className=\"empty\">\r\n            {searchTerm\r\n              ? \"Không tìm thấy thành viên nào\"\r\n              : \"Chưa có thành viên nào\"}\r\n          </div>\r\n        )}\r\n      </div>\r\n\r\n      <ConfirmDialog\r\n        isOpen={showDeleteDialog}\r\n        onClose={() => {\r\n          setShowDeleteDialog(false);\r\n          setMemberToDelete(null);\r\n        }}\r\n        onConfirm={confirmDelete}\r\n        title=\"Xác nhận xóa thành viên\"\r\n        message={`Bạn có chắc chắn muốn xóa thành viên \"${memberToDelete?.username}\"? Hành động này không thể hoàn tác.`}\r\n        type=\"danger\"\r\n      />\r\n    </div>\r\n  );\r\n};\r\n\r\nexport default Members;\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/frontend/src/admin/pages/Members.jsx b/frontend/src/admin/pages/Members.jsx
+--- a/frontend/src/admin/pages/Members.jsx	(revision 816cafd71249c8a9ecb19eed90f893ecd495b17e)
++++ b/frontend/src/admin/pages/Members.jsx	(date 1767767328357)
+@@ -106,10 +106,15 @@
+     }
+   };
+ 
+-  const formatDate = (dateString) => {
+-    if (!dateString) return "N/A";
+-    return new Date(dateString).toLocaleDateString("vi-VN");
+-  };
++    const formatDate = (dateString) => {
++        if (!dateString) return "---";
++        try {
++            const date = new Date(dateString);
++            return date.toLocaleDateString("vi-VN");
++        } catch (e) {
++            return dateString;
++        }
++    };
+ 
+   // ✅ NOW safe to do conditional renders AFTER all hooks
+   if (loading) {

@@ -5,6 +5,7 @@ import com.example.HDQCinema.dto.request.MovieUpdateRequest;
 import com.example.HDQCinema.dto.request.ShowTimeUpdateRequest;
 import com.example.HDQCinema.dto.response.ApiResponse;
 import com.example.HDQCinema.dto.response.MovieResponse;
+import com.example.HDQCinema.dto.response.PageResponse;
 import com.example.HDQCinema.entity.Movie;
 import com.example.HDQCinema.service.MovieService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -57,6 +58,20 @@ public class MovieController {
     ApiResponse<List<MovieResponse>> getAllMovies(){
         return ApiResponse.<List<MovieResponse>>builder()
                 .result(movieService.getAll())
+                .build();
+    }
+
+    @GetMapping("/paged")
+    ApiResponse<PageResponse<MovieResponse>> getMoviesPaged(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "50") int size,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String genre,
+            @RequestParam(required = false) Integer limitAge,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDir) {
+        return ApiResponse.<PageResponse<MovieResponse>>builder()
+                .result(movieService.getMoviesPaged(page, size, keyword, genre, limitAge, sortBy, sortDir))
                 .build();
     }
 

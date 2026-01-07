@@ -6,6 +6,7 @@ import com.example.HDQCinema.dto.request.MemberUpdateRequest;
 import com.example.HDQCinema.dto.response.ApiResponse;
 import com.example.HDQCinema.dto.response.EmployeeAccountResponse;
 import com.example.HDQCinema.dto.response.MemberResponse;
+import com.example.HDQCinema.dto.response.PageResponse;
 import com.example.HDQCinema.service.MemberService;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
@@ -39,6 +40,18 @@ public class MemberController {
                 .build();
     }
 
+    @GetMapping("/paged")
+    ApiResponse<PageResponse<MemberResponse>> getMembersPaged(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "50") int size,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDir) {
+        return ApiResponse.<PageResponse<MemberResponse>>builder()
+                .result(memberService.getMembersPaged(page, size, keyword, sortBy, sortDir))
+                .build();
+    }
+
     @DeleteMapping("/{employeeId}")
     ApiResponse<String> deleteMember(@PathVariable String employeeId){
         memberService.deleteMember(employeeId);
@@ -47,7 +60,7 @@ public class MemberController {
                 .build();
     }
 
-    @PutMapping("/{employeeAccountId}")
+    @PutMapping("/{memberId}")
     ApiResponse<MemberResponse> updateMember(@PathVariable String memberId, @RequestBody @Valid MemberUpdateRequest request){
         return ApiResponse.<MemberResponse>builder()
                 .result(memberService.updateMember(memberId, request))

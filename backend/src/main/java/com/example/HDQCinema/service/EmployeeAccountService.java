@@ -4,6 +4,7 @@ import com.example.HDQCinema.constant.PredefinedRole;
 import com.example.HDQCinema.dto.request.EmployeeAccountCreationRequest;
 import com.example.HDQCinema.dto.request.EmployeeAccountUpdateRequest;
 import com.example.HDQCinema.dto.response.EmployeeAccountResponse;
+import com.example.HDQCinema.dto.response.PageResponse;
 import com.example.HDQCinema.entity.Employee;
 import com.example.HDQCinema.entity.EmployeeAccount;
 import com.example.HDQCinema.entity.Role;
@@ -17,6 +18,10 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -82,6 +87,27 @@ public class EmployeeAccountService {
 
         return users.stream().map(employeeAccountMapper::toEmployeeAccountResponse)
                 .toList();
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    public PageResponse<EmployeeAccountResponse> getEmployeeAccountsPaged(int page, int size, String keyword, String sortBy, String sortDir) {
+        Sort sort = Sort.by(sortDir.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC,
+                sortBy != null ? sortBy : "id");
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        Page<EmployeeAccount> accountPage = employeeAccountRepository.searchEmployeeAccounts(keyword, pageable);
+
+        List<EmployeeAccountResponse> accountResponses = accountPage.getContent().stream()
+                .map(employeeAccountMapper::toEmployeeAccountResponse)
+                .toList();
+
+        return PageResponse.<EmployeeAccountResponse>builder()
+                .currentPage(page)
+                .pageSize(size)
+                .totalElements(accountPage.getTotalElements())
+                .totalPages(accountPage.getTotalPages())
+                .data(accountResponses)
+                .build();
     }
 
     @PreAuthorize("hasRole('ADMIN')")

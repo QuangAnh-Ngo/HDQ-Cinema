@@ -4,6 +4,7 @@ import com.example.HDQCinema.dto.request.BookingDetailRequest;
 import com.example.HDQCinema.dto.request.BookingRequest;
 import com.example.HDQCinema.dto.response.AmountOfPendingBookingResponse;
 import com.example.HDQCinema.dto.response.BookingResponse;
+import com.example.HDQCinema.dto.response.PageResponse;
 import com.example.HDQCinema.entity.*;
 import com.example.HDQCinema.enums.BookingStatus;
 import com.example.HDQCinema.enums.SeatStatus;
@@ -17,6 +18,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
@@ -120,14 +125,41 @@ public class BookingService {
     @Transactional
     @Modifying(clearAutomatically = true)
     public void deleteExpiredBookings(LocalDateTime lim) {
-        List<Booking> expiredBookings = bookingRepository.findAllByCreateTimeBeforeAndBookingStatus(lim, BookingStatus.PENDING);
-        bookingRepository.deleteAll(expiredBookings);
+        // ✅ SỬA: Sử dụng bulk delete trực tiếp trong DB thay vì load entity
+        // Bước 1: Xóa BookingDetail trước (do foreign key)
+        int deletedDetails = bookingRepository.deleteExpiredBookingDetails(lim, BookingStatus.PENDING);
+
+        // Bước 2: Xóa Booking
+        int deletedBookings = bookingRepository.deleteExpiredBookings(lim, BookingStatus.PENDING);
+
+        if (deletedBookings > 0) {
+            log.info("Deleted {} expired bookings and {} booking details", deletedBookings, deletedDetails);
+        }
     }
 
 
     public List<BookingResponse> getBookingsByDate(LocalDate date) {
         List<Booking> bookings =  bookingRepository.findBookingsByCreateTime_Date(date);
         return bookingMapper.toResponses(bookings);
+    }
+
+    public PageResponse<BookingResponse> getBookingsPaged(int page, int size, String keyword,
+            BookingStatus status, String sortBy, String sortDir) {
+        Sort sort = Sort.by(sortDir.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC,
+                sortBy != null ? sortBy : "id");
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        Page<Booking> bookingPage = bookingRepository.searchBookings(keyword, status, pageable);
+
+        List<BookingResponse> bookingResponses = bookingMapper.toResponses(bookingPage.getContent());
+
+        return PageResponse.<BookingResponse>builder()
+                .currentPage(page)
+                .pageSize(size)
+                .totalElements(bookingPage.getTotalElements())
+                .totalPages(bookingPage.getTotalPages())
+                .data(bookingResponses)
+                .build();
     }
 
     public List<BookingResponse> getBookingsByMember(String memberId) {

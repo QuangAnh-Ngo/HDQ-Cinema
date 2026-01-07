@@ -2,6 +2,7 @@ package com.example.HDQCinema.service;
 
 import com.example.HDQCinema.dto.request.ShowTimeRequest;
 import com.example.HDQCinema.dto.request.ShowTimeUpdateRequest;
+import com.example.HDQCinema.dto.response.PageResponse;
 import com.example.HDQCinema.dto.response.ShowTimeResponse;
 import com.example.HDQCinema.entity.*;
 import com.example.HDQCinema.exception.AppException;
@@ -14,8 +15,13 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -38,13 +44,8 @@ public class ShowTimeService {
             Room room = roomRepository.findById(showTimeRoom.getRoomId())
                     .orElseThrow(()-> new AppException(ErrorCode.ROOM_NOT_EXISTED));
 
-//            if(showTimeRepository.existsShowTimeByRoomAndStartTime(room, showTimeRoom.getShowTime()))
-//                throw new RuntimeException("showtime existed");
-
             ShowTime showTime = showTimeMapper.toShowTime(movie, room, showTimeRoom.getShowTime());
             showTimes.add(showTime);
-//            List<BookingSeat> bookingSeats = bookingSeatService.create(showTime);
-//            showTime.setBookingSeats(new HashSet<>(bookingSeats));
             showTimeRepository.save(showTime);
 
         }
@@ -56,42 +57,108 @@ public class ShowTimeService {
     public ShowTimeResponse update(Long showtimeId, ShowTimeUpdateRequest request){
         ShowTime showTime = showTimeRepository.findShowTimesById(showtimeId);
 
-        Movie movie = null;
-        if(request.getMovieId() !=null){
-            movie = movieRepository.findById(request.getMovieId())
+        // Thêm null check
+        if (showTime == null) {
+            throw new AppException(ErrorCode.SHOWTIME_NOT_FOUND);
+        }
+
+        if(request.getMovieId() != null){
+            Movie movie = movieRepository.findById(request.getMovieId())
                     .orElseThrow(()-> new AppException(ErrorCode.MOVIE_NOT_FOUND));
             showTime.setMovie(movie);
-
         }
+
         if (request.getShowTimeRooms() != null && !request.getShowTimeRooms().isEmpty()) {
             for(var showTimeRoom : request.getShowTimeRooms()){
                 if(showTimeRoom.getRoomId() != null) {
                     Room room = roomRepository.findById(showTimeRoom.getRoomId())
                             .orElseThrow(() -> new AppException(ErrorCode.ROOM_NOT_EXISTED));
-
-//            if(showTimeRepository.existsShowTimeByRoomAndStartTime(room, showTimeRoom.getShowTime()))
-//                throw new RuntimeException("showtime existed");
                     showTime.setRoom(room);
                 }
                 if(showTimeRoom.getShowTime() != null) showTime.setStartTime(showTimeRoom.getShowTime());
-//            List<BookingSeat> bookingSeats = bookingSeatService.create(showTime);
-//            showTime.setBookingSeats(new HashSet<>(bookingSeats));
-
             }
         }
 
-
-//            List<BookingSeat> bookingSeats = bookingSeatService.create(showTime);
-//            showTime.setBookingSeats(new HashSet<>(bookingSeats));
-            showTimeRepository.save(showTime);
+        showTimeRepository.save(showTime);
 
         return showTimeMapper.toResponse(showTime);
     }
+
     public void delete(Long showtimeId){
+        // Thêm check tồn tại trước khi xóa
+        if (!showTimeRepository.existsById(showtimeId)) {
+            throw new AppException(ErrorCode.SHOWTIME_NOT_FOUND);
+        }
         showTimeRepository.deleteById(showtimeId);
     }
 
     public List<ShowTimeResponse> getAll(){
         return showTimeMapper.toResponses(showTimeRepository.findAll());
     }
+
+    // Phân trang và tìm kiếm showtime
+    public PageResponse<ShowTimeResponse> getShowTimesPaged(int page, int size, String keyword, String sortBy, String sortDir) {
+        Sort sort = Sort.by(sortDir.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC,
+                sortBy != null ? sortBy : "id");
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        Page<ShowTime> showTimePage = showTimeRepository.searchShowTimes(keyword, pageable);
+
+        List<ShowTimeResponse> showTimeResponses = showTimeMapper.toResponses(showTimePage.getContent());
+
+        return PageResponse.<ShowTimeResponse>builder()
+                .currentPage(page)
+                .pageSize(size)
+                .totalElements(showTimePage.getTotalElements())
+                .totalPages(showTimePage.getTotalPages())
+                .data(showTimeResponses)
+                .build();
+    }
+
+    // Lấy suất chiếu trong 7 ngày tới với phân trang
+    public PageResponse<ShowTimeResponse> getShowTimesNext7DaysPaged(int page, int size, Long cinemaId, Long movieId) {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime endDate = now.plusDays(7);
+
+        Pageable pageable = PageRequest.of(page, size);
+        Page<ShowTime> showTimePage = showTimeRepository.findShowTimesInDateRange(now, endDate, cinemaId, movieId, pageable);
+
+        List<ShowTimeResponse> showTimeResponses = showTimeMapper.toResponses(showTimePage.getContent());
+
+        return PageResponse.<ShowTimeResponse>builder()
+                .currentPage(page)
+                .pageSize(size)
+                .totalElements(showTimePage.getTotalElements())
+                .totalPages(showTimePage.getTotalPages())
+                .data(showTimeResponses)
+                .build();
+    }
+
+    // Lấy tất cả suất chiếu trong 7 ngày tới (không phân trang - cho frontend ScheduleModal)
+    public List<ShowTimeResponse> getShowTimesNext7Days(Long cinemaId, Long movieId) {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime endDate = now.plusDays(7);
+
+        List<ShowTime> showTimes = showTimeRepository.findShowTimesInDateRangeList(now, endDate, cinemaId, movieId);
+
+        return showTimeMapper.toResponses(showTimes);
+    }
+
+    // Đếm số lượng suất chiếu trong 7 ngày tới
+    public long countShowTimesNext7Days(Long cinemaId, Long movieId) {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime endDate = now.plusDays(7);
+
+        return showTimeRepository.countShowTimesInDateRange(now, endDate, cinemaId, movieId);
+    }
+
+    // Tìm showtime theo startTime và roomId
+    public ShowTimeResponse getShowTimeByStartTimeAndRoom(LocalDateTime startTime, Long roomId) {
+        ShowTime showTime = showTimeRepository.findByStartTimeAndRoomId(startTime, roomId);
+        if (showTime == null) {
+            throw new AppException(ErrorCode.SHOWTIME_NOT_FOUND);
+        }
+        return showTimeMapper.toResponse(showTime);
+    }
 }
+
