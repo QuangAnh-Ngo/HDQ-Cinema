@@ -33,7 +33,7 @@ public interface BookingMapper {
     }
 
     default BookingResponse toResponse(Booking booking) {
-        if (booking == null) {
+        if (booking == null && !booking.getBookingDetails().isEmpty()) {
             return null;
         } else {
             BookingResponse.BookingResponseBuilder bookingResponse = BookingResponse.builder();
@@ -41,6 +41,9 @@ public interface BookingMapper {
             bookingResponse.totalPrice(booking.getTotalPrice());
             bookingResponse.createTime(booking.getCreateTime());
             bookingResponse.seats(toSeat(booking));
+            bookingResponse.showTime(booking.getBookingDetails().iterator().next().getShowTime().getStartTime());
+            bookingResponse.username(booking.getMember().getUsername());
+
             return bookingResponse.build();
         }
     }

@@ -7,6 +7,8 @@ services:
     restart: on-failure
     ports:
       - "8080:8080"
+#    ports:
+#      - "8080"
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-db:5432/${POSTGRES_DB}
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
@@ -28,6 +30,9 @@ services:
     restart: unless-stopped
     ports:
       - "5173:5173"
+#    ports:
+#      - "5173"
+
     volumes:
       # Vite thường để index.html ở root, nên mount cả thư mục project sẽ tốt hơn
       - ./frontend:/app
