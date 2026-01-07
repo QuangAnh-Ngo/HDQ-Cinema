@@ -34,6 +34,11 @@ const Showtimes = () => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showtimeToDelete, setShowtimeToDelete] = useState(null);
 
+  // ✅ Store lookup maps
+  const [movieMap, setMovieMap] = useState(new Map());
+  const [roomMap, setRoomMap] = useState(new Map());
+  const [cinemaMap, setCinemaMap] = useState(new Map());
+
   useEffect(() => {
     fetchShowtimes();
   }, []);
@@ -45,41 +50,60 @@ const Showtimes = () => {
   const fetchShowtimes = async () => {
     try {
       setLoading(true);
-      const data = await showtimeService.getAll();
 
-      // ✅ Pre-fetch all movies and rooms ONCE
-      const [allMovies, allRooms] = await Promise.all([
+      // ✅ Fetch all data in parallel
+      const [showtimesData, moviesData, cinemasData] = await Promise.all([
+        showtimeService.getAll(),
         movieService.getAll().catch(() => []),
-        roomService.getAll().catch(() => []),
+        cinemaService.getAll().catch(() => []),
       ]);
 
-      console.log("📦 Pre-fetched movies:", allMovies.length);
-      console.log("📦 Pre-fetched rooms:", allRooms.length);
+      // ✅ Create lookup maps
+      const mMap = new Map(moviesData.map((m) => [m.id, m]));
+      setMovieMap(mMap);
 
-      // ✅ Create lookup maps for faster access
-      const movieMap = new Map(allMovies.map((m) => [m.id, m]));
-      const roomMap = new Map(allRooms.map((r) => [r.id || r.roomId, r]));
+      const cMap = new Map(cinemasData.map((c) => [c.id, c]));
+      setCinemaMap(cMap);
 
-      // ✅ Transform data using maps (no additional API calls)
-      const transformed = Array.isArray(data)
-        ? data.map((st) => {
-            const roomId = st.showTimeRooms?.[0]?.roomId;
-            const room = roomMap.get(roomId);
-            const movie = movieMap.get(st.movieId);
+      // ✅ Create room map from cinemas
+      const rMap = new Map();
+      cinemasData.forEach((cinema) => {
+        cinema.rooms?.forEach((room) => {
+          rMap.set(room.roomId, {
+            ...room,
+            cinemaId: cinema.id,
+            cinemaName: cinema.name,
+          });
+        });
+      });
+      setRoomMap(rMap);
 
-            return {
-              ...st,
-              movieTitle: movie?.title || "N/A",
-              roomId: roomId,
-              roomName: room?.name || room?.roomName || "N/A",
-              cinemaName: room?.cinemaName || "N/A",
-              date: st.showTimeRooms?.[0]?.showTime?.split("T")[0],
-              startTime: st.showTimeRooms?.[0]?.showTime
-                ?.split("T")[1]
-                ?.substring(0, 5),
-              price: "(Không cố định)",
-              status: calculateShowtimeStatus(st.showTimeRooms?.[0]?.showTime),
-            };
+      // ✅ Transform showtimes data
+      const transformed = Array.isArray(showtimesData)
+        ? showtimesData.flatMap((st) => {
+            // Each showtime can have multiple showTimeRooms
+            return (st.showTimeRooms || []).map((str, index) => {
+              const room = rMap.get(str.roomId);
+              const movie = mMap.get(st.movieId);
+              const showTimeISO = str.showTime;
+
+              return {
+                id: `${st.showtimeId}-${index}`,
+                showtimeId: st.showtimeId,
+                movieId: st.movieId,
+                movieTitle: movie?.title || "N/A",
+                roomId: str.roomId,
+                roomName: room?.roomName || "N/A",
+                cinemaId: room?.cinemaId,
+                cinemaName: room?.cinemaName || "N/A",
+                showTimeISO: showTimeISO,
+                date: showTimeISO?.split("T")[0],
+                startTime: showTimeISO?.split("T")[1]?.substring(0, 5),
+                status: calculateShowtimeStatus(showTimeISO),
+                // Keep original data for edit
+                showTimeRooms: st.showTimeRooms,
+              };
+            });
           })
         : [];
 
@@ -102,7 +126,6 @@ const Showtimes = () => {
 
     if (showDate > now) return "upcoming";
 
-    // Check if within 3 hours after start time
     const threeHoursLater = new Date(showDate.getTime() + 3 * 60 * 60 * 1000);
     if (now >= showDate && now <= threeHoursLater) return "active";
 
@@ -113,11 +136,12 @@ const Showtimes = () => {
     let filtered = [...showtimes];
 
     if (searchTerm) {
+      const search = searchTerm.toLowerCase();
       filtered = filtered.filter(
         (st) =>
-          st.movieTitle?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          st.cinemaName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          st.roomName?.toLowerCase().includes(searchTerm.toLowerCase())
+          st.movieTitle?.toLowerCase().includes(search) ||
+          st.cinemaName?.toLowerCase().includes(search) ||
+          st.roomName?.toLowerCase().includes(search)
       );
     }
 
@@ -129,11 +153,11 @@ const Showtimes = () => {
       filtered = filtered.filter((st) => st.status === statusFilter);
     }
 
-    // Sort by date and time
+    // Sort by date and time (newest first)
     filtered.sort((a, b) => {
-      const dateCompare = new Date(a.date || 0) - new Date(b.date || 0);
-      if (dateCompare !== 0) return dateCompare;
-      return (a.startTime || "").localeCompare(b.startTime || "");
+      const dateCompare =
+        new Date(b.showTimeISO || 0) - new Date(a.showTimeISO || 0);
+      return dateCompare;
     });
 
     setFilteredShowtimes(filtered);
@@ -145,7 +169,16 @@ const Showtimes = () => {
   };
 
   const handleEditShowtime = (showtime) => {
-    setSelectedShowtime(showtime);
+    // ✅ Pass full data for editing
+    setSelectedShowtime({
+      ...showtime,
+      showTimeRooms: [
+        {
+          showTime: showtime.showTimeISO,
+          roomId: showtime.roomId,
+        },
+      ],
+    });
     setShowShowtimeForm(true);
   };
 
@@ -156,13 +189,10 @@ const Showtimes = () => {
 
   const confirmDelete = async () => {
     try {
-      await showtimeService.delete(
-        showtimeToDelete.showtimeId || showtimeToDelete.id
-      );
-      setShowtimes((prev) =>
-        prev.filter((st) => st.id !== showtimeToDelete.id)
-      );
+      await showtimeService.delete(showtimeToDelete.showtimeId);
       message.success("Xóa lịch chiếu thành công!");
+      fetchShowtimes(); // Reload data
+      setShowDeleteDialog(false);
     } catch (error) {
       console.error("Error deleting showtime:", error);
       message.error(error.message || "Có lỗi xảy ra khi xóa lịch chiếu!");
@@ -172,22 +202,16 @@ const Showtimes = () => {
   const handleSubmitShowtime = async (showtimeData) => {
     try {
       if (selectedShowtime) {
-        const updated = await showtimeService.update(
-          selectedShowtime.showtimeId || selectedShowtime.id,
-          showtimeData
-        );
-        setShowtimes((prev) =>
-          prev.map((st) => (st.id === selectedShowtime.id ? updated : st))
-        );
+        await showtimeService.update(selectedShowtime.showtimeId, showtimeData);
         message.success("Cập nhật lịch chiếu thành công!");
       } else {
-        const newShowtime = await showtimeService.create(showtimeData);
+        await showtimeService.create(showtimeData);
         message.success("Tạo lịch chiếu thành công!");
-        fetchShowtimes(); // Reload to get full data
       }
 
       setShowShowtimeForm(false);
       setSelectedShowtime(null);
+      fetchShowtimes(); // Reload data
     } catch (error) {
       console.error("Error submitting showtime:", error);
       message.error(error.message || "Có lỗi xảy ra!");
@@ -199,7 +223,6 @@ const Showtimes = () => {
       upcoming: { label: "Sắp chiếu", className: "info" },
       active: { label: "Đang chiếu", className: "success" },
       ended: { label: "Đã kết thúc", className: "gray" },
-      cancelled: { label: "Đã hủy", className: "danger" },
     };
 
     const badge = badges[status] || badges.upcoming;
@@ -219,17 +242,11 @@ const Showtimes = () => {
 
   const getDateRangeStats = () => {
     const today = new Date().toISOString().split("T")[0];
-    const upcoming = showtimes.filter(
-      (st) => st.date >= today && st.status !== "ended"
-    );
-    const past = showtimes.filter(
-      (st) => st.date < today || st.status === "ended"
-    );
-
     return {
+      total: showtimes.length,
       today: showtimes.filter((st) => st.date === today).length,
-      upcoming: upcoming.length,
-      past: past.length,
+      upcoming: showtimes.filter((st) => st.status === "upcoming").length,
+      ended: showtimes.filter((st) => st.status === "ended").length,
     };
   };
 
@@ -255,6 +272,14 @@ const Showtimes = () => {
         <div className="stat-card">
           <div className="stat-content">
             <div className="stat-info">
+              <p>Tổng lịch chiếu</p>
+              <h3>{stats.total}</h3>
+            </div>
+          </div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-content">
+            <div className="stat-info">
               <p>Hôm nay</p>
               <h3 style={{ color: "#2563eb" }}>{stats.today}</h3>
             </div>
@@ -263,7 +288,7 @@ const Showtimes = () => {
         <div className="stat-card">
           <div className="stat-content">
             <div className="stat-info">
-              <p>Sắp tới</p>
+              <p>Sắp chiếu</p>
               <h3 style={{ color: "#10b981" }}>{stats.upcoming}</h3>
             </div>
           </div>
@@ -271,8 +296,8 @@ const Showtimes = () => {
         <div className="stat-card">
           <div className="stat-content">
             <div className="stat-info">
-              <p>Đã qua</p>
-              <h3 style={{ color: "#6b7280" }}>{stats.past}</h3>
+              <p>Đã kết thúc</p>
+              <h3 style={{ color: "#6b7280" }}>{stats.ended}</h3>
             </div>
           </div>
         </div>
@@ -307,8 +332,17 @@ const Showtimes = () => {
             <option value="upcoming">Sắp chiếu</option>
             <option value="active">Đang chiếu</option>
             <option value="ended">Đã kết thúc</option>
-            <option value="cancelled">Đã hủy</option>
           </select>
+
+          {dateFilter && (
+            <button
+              className="btn secondary"
+              onClick={() => setDateFilter("")}
+              style={{ marginLeft: "8px" }}
+            >
+              Xóa bộ lọc ngày
+            </button>
+          )}
         </div>
       </div>
 
@@ -321,22 +355,21 @@ const Showtimes = () => {
                 <th>Rạp - Phòng</th>
                 <th>Ngày chiếu</th>
                 <th>Giờ chiếu</th>
-                <th>Giá vé</th>
                 <th>Trạng thái</th>
                 <th>Hành động</th>
               </tr>
             </thead>
             <tbody>
               {filteredShowtimes.map((showtime) => (
-                <tr key={showtime.showtimeId || showtime.id}>
+                <tr key={showtime.id}>
                   <td>
-                    <strong>{showtime.movieTitle || "N/A"}</strong>
+                    <strong>{showtime.movieTitle}</strong>
                   </td>
                   <td>
                     <div>
-                      <p>{showtime.cinemaName || "N/A"}</p>
+                      <p style={{ margin: 0 }}>{showtime.cinemaName}</p>
                       <small style={{ color: "#6b7280" }}>
-                        {showtime.roomName || "N/A"}
+                        {showtime.roomName}
                       </small>
                     </div>
                   </td>
@@ -347,7 +380,6 @@ const Showtimes = () => {
                       <span>{showtime.startTime || "N/A"}</span>
                     </div>
                   </td>
-                  <td>{showtime.price?.toLocaleString() || "N/A"} VNĐ</td>
                   <td>{getStatusBadge(showtime.status)}</td>
                   <td>
                     <div className="actions">

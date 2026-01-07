@@ -1,12 +1,18 @@
 // frontend/src/admin/pages/Rooms.jsx
 import { useState, useEffect } from "react";
-import { FiPlus, FiSearch, FiEdit, FiTrash2, FiGrid } from "react-icons/fi";
+import {
+  FiPlus,
+  FiSearch,
+  FiEdit,
+  FiTrash2,
+  FiGrid,
+  FiAlertCircle,
+} from "react-icons/fi";
 import Breadcrumb from "../components/Common/Breadcrumb";
 import Loading from "../components/Common/Loading";
 import ConfirmDialog from "../components/Common/ConfirmDialog";
 import RoomForm from "../components/RoomForm";
-import SeatEditor from "../components/SeatEditor";
-import { roomService, cinemaService } from "../../services"; // ✅ Fixed
+import { roomService, cinemaService } from "../../services";
 import { message } from "antd";
 import "../styles/AdminLayout.scss";
 
@@ -17,10 +23,8 @@ const Rooms = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [cinemaFilter, setCinemaFilter] = useState("all");
-  const [typeFilter, setTypeFilter] = useState("all");
 
   const [showRoomForm, setShowRoomForm] = useState(false);
-  const [showSeatEditor, setShowSeatEditor] = useState(false);
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [roomToDelete, setRoomToDelete] = useState(null);
@@ -31,7 +35,7 @@ const Rooms = () => {
 
   useEffect(() => {
     filterRooms();
-  }, [rooms, searchTerm, cinemaFilter, typeFilter]);
+  }, [rooms, searchTerm, cinemaFilter]);
 
   const fetchData = async () => {
     try {
@@ -58,7 +62,9 @@ const Rooms = () => {
 
     if (searchTerm) {
       filtered = filtered.filter((room) =>
-        room.name?.toLowerCase().includes(searchTerm.toLowerCase())
+        (room.roomName || room.name)
+          ?.toLowerCase()
+          .includes(searchTerm.toLowerCase())
       );
     }
 
@@ -66,10 +72,6 @@ const Rooms = () => {
       filtered = filtered.filter(
         (room) => String(room.cinemaId) === String(cinemaFilter)
       );
-    }
-
-    if (typeFilter !== "all") {
-      filtered = filtered.filter((room) => room.type === typeFilter);
     }
 
     setFilteredRooms(filtered);
@@ -80,31 +82,32 @@ const Rooms = () => {
     setShowRoomForm(true);
   };
 
+  // ✅ Hiển thị thông báo đang phát triển
   const handleEditRoom = (room) => {
-    setSelectedRoom(room);
-    setShowRoomForm(true);
+    message.warning("Chức năng chỉnh sửa phòng đang được phát triển");
   };
 
   const handleEditSeats = (room) => {
-    setSelectedRoom(room);
-    setShowSeatEditor(true);
+    message.warning("Chức năng quản lý sơ đồ ghế đang được phát triển");
   };
 
   const handleDeleteRoom = (room) => {
-    setRoomToDelete(room);
-    setShowDeleteDialog(true);
+    message.warning("Chức năng xóa phòng đang được phát triển");
   };
 
   const handleSubmitRoom = async (roomData) => {
     try {
       if (selectedRoom) {
-        message.warning("Chức năng sửa phòng chưa được hỗ trợ bởi backend");
+        message.warning("Chức năng chỉnh sửa phòng đang được phát triển");
         return;
-      } else {
-        const newRoom = await roomService.create(roomData);
-        message.success("Thêm phòng thành công!");
-        fetchData(); // Reload data
       }
+
+      await roomService.create(roomData);
+      message.success("Thêm phòng thành công!");
+
+      // Clear cache và reload
+      roomService.clearCache();
+      fetchData();
 
       setShowRoomForm(false);
       setSelectedRoom(null);
@@ -114,48 +117,10 @@ const Rooms = () => {
     }
   };
 
-  const confirmDelete = async () => {
-    message.warning("Chức năng xóa phòng chưa được hỗ trợ bởi backend");
-    setShowDeleteDialog(false);
-  };
-
-  const handleSaveSeatLayout = async (seatData) => {
-    try {
-      // If roomService has updateSeatLayout method
-      if (roomService.updateSeatLayout) {
-        await roomService.updateSeatLayout(seatData.roomId, seatData);
-      } else {
-        // Alternative: update room with seat data
-        await roomService.update(seatData.roomId, { seats: seatData.seats });
-      }
-
-      message.success("Lưu sơ đồ ghế thành công!");
-      setShowSeatEditor(false);
-      setSelectedRoom(null);
-      fetchData();
-    } catch (error) {
-      console.error("Error saving seat layout:", error);
-      message.error(error.message || "Có lỗi xảy ra khi lưu sơ đồ ghế!");
-    }
-  };
-
-  const getStatusBadge = (status) => {
-    const badges = {
-      active: { label: "Hoạt động", className: "success" },
-      inactive: { label: "Ngừng hoạt động", className: "gray" },
-      maintenance: { label: "Bảo trì", className: "warning" },
-    };
-
-    const badge = badges[status] || badges.inactive;
-    return <span className={`badge ${badge.className}`}>{badge.label}</span>;
-  };
-
   const getCinemaName = (cinemaId) => {
     const cinema = cinemas.find((c) => String(c.id) === String(cinemaId));
     return cinema?.name || "N/A";
   };
-
-  const roomTypes = ["2D", "3D", "IMAX", "4DX", "ScreenX"];
 
   if (loading) {
     return <Loading text="Đang tải danh sách phòng..." />;
@@ -173,6 +138,14 @@ const Rooms = () => {
         </button>
       </div>
 
+      {/* ✅ Thông báo API hạn chế */}
+      <div className="page-notice">
+        <FiAlertCircle size={18} />
+        <span>
+          Một số chức năng (Sửa, Xóa, Sơ đồ ghế) đang được phát triển.
+        </span>
+      </div>
+
       <div className="stats-grid">
         <div className="stat-card">
           <div className="stat-content">
@@ -185,20 +158,8 @@ const Rooms = () => {
         <div className="stat-card">
           <div className="stat-content">
             <div className="stat-info">
-              <p>Đang hoạt động</p>
-              <h3 style={{ color: "#10b981" }}>
-                {rooms.filter((r) => r.status === "active").length}
-              </h3>
-            </div>
-          </div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-content">
-            <div className="stat-info">
-              <p>Tổng sức chứa</p>
-              <h3 style={{ color: "#2563eb" }}>
-                {rooms.reduce((sum, r) => sum + (r.capacity || 0), 0)}
-              </h3>
+              <p>Số rạp</p>
+              <h3 style={{ color: "#10b981" }}>{cinemas.length}</h3>
             </div>
           </div>
         </div>
@@ -227,18 +188,6 @@ const Rooms = () => {
               </option>
             ))}
           </select>
-
-          <select
-            value={typeFilter}
-            onChange={(e) => setTypeFilter(e.target.value)}
-          >
-            <option value="all">Tất cả loại</option>
-            {roomTypes.map((type) => (
-              <option key={type} value={type}>
-                {type}
-              </option>
-            ))}
-          </select>
         </div>
       </div>
 
@@ -247,48 +196,40 @@ const Rooms = () => {
           <table>
             <thead>
               <tr>
+                <th>ID</th>
                 <th>Tên phòng</th>
                 <th>Rạp chiếu</th>
-                <th>Loại</th>
-                <th>Sức chứa</th>
-                <th>Trạng thái</th>
                 <th>Hành động</th>
               </tr>
             </thead>
             <tbody>
               {filteredRooms.map((room) => (
                 <tr key={room.roomId || room.id}>
+                  <td>{room.roomId || room.id}</td>
                   <td>
                     <strong>{room.roomName || room.name}</strong>
                   </td>
-                  <td>{getCinemaName(room.cinemaId)}</td>
-                  <td>
-                    <span className="badge info">{room.type || "2D"}</span>
-                  </td>
-                  <td>{room.capacity || "N/A"} ghế</td>
-                  <td>{getStatusBadge(room.status || "active")}</td>
+                  <td>{room.cinemaName || getCinemaName(room.cinemaId)}</td>
                   <td>
                     <div className="actions">
                       <button
                         onClick={() => handleEditSeats(room)}
-                        className="view"
-                        title="Sơ đồ ghế"
+                        className="view disabled"
+                        title="Sơ đồ ghế (Đang phát triển)"
                       >
                         <FiGrid size={18} />
                       </button>
                       <button
                         onClick={() => handleEditRoom(room)}
-                        className="edit"
-                        title="Chỉnh sửa"
-                        disabled
+                        className="edit disabled"
+                        title="Chỉnh sửa (Đang phát triển)"
                       >
                         <FiEdit size={18} />
                       </button>
                       <button
                         onClick={() => handleDeleteRoom(room)}
-                        className="delete"
-                        title="Xóa"
-                        disabled
+                        className="delete disabled"
+                        title="Xóa (Đang phát triển)"
                       >
                         <FiTrash2 size={18} />
                       </button>
@@ -315,23 +256,17 @@ const Rooms = () => {
         />
       )}
 
-      {showSeatEditor && (
-        <SeatEditor
-          room={selectedRoom}
-          onClose={() => {
-            setShowSeatEditor(false);
-            setSelectedRoom(null);
-          }}
-          onSave={handleSaveSeatLayout}
-        />
-      )}
-
       <ConfirmDialog
         isOpen={showDeleteDialog}
         onClose={() => setShowDeleteDialog(false)}
-        onConfirm={confirmDelete}
+        onConfirm={() => {
+          message.warning("Chức năng xóa phòng đang được phát triển");
+          setShowDeleteDialog(false);
+        }}
         title="Xác nhận xóa phòng"
-        message={`Bạn có chắc chắn muốn xóa phòng "${roomToDelete?.name}"? Hành động này sẽ xóa tất cả lịch chiếu liên quan.`}
+        message={`Bạn có chắc chắn muốn xóa phòng "${
+          roomToDelete?.roomName || roomToDelete?.name
+        }"?`}
         type="danger"
       />
     </div>
