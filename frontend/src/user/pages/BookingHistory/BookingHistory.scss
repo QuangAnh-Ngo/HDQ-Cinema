@@ -1,0 +1,344 @@
+// frontend/src/user/pages/BookingHistory/BookingHistory.scss
+
+// ✅ Color Variables - Đen, Be, Xám, Trắng
+$bg-dark: #1a1a1a;
+$bg-card: #242424;
+$bg-card-hover: #2a2a2a;
+$beige: #d4a574;
+$beige-light: #e8c9a8;
+$beige-dark: #b8956a;
+$gray-light: #a0a0a0;
+$gray-medium: #6b6b6b;
+$gray-dark: #404040;
+$white: #ffffff;
+$white-muted: rgba(255, 255, 255, 0.8);
+
+.booking-history-page {
+  min-height: calc(100vh - 80px);
+  background: $bg-dark;
+  padding: 40px 20px;
+
+  .page-container {
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  // Loading
+  .loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px;
+    gap: 20px;
+
+    p {
+      color: $gray-light;
+      font-size: 16px;
+    }
+  }
+
+  // Header
+  .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 32px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid $gray-dark;
+
+    .header-content {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+
+      .header-icon {
+        font-size: 40px;
+        color: $beige;
+      }
+
+      h1 {
+        font-size: 28px;
+        font-weight: 700;
+        color: $white;
+        margin: 0;
+      }
+
+      p {
+        color: $gray-light;
+        margin: 4px 0 0;
+        font-size: 14px;
+      }
+    }
+
+    .booking-count {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: rgba($beige, 0.1);
+      border: 1px solid rgba($beige, 0.3);
+      border-radius: 12px;
+      padding: 12px 24px;
+
+      .count {
+        font-size: 32px;
+        font-weight: 700;
+        color: $beige;
+      }
+
+      .label {
+        font-size: 12px;
+        color: $gray-light;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+    }
+  }
+
+  // Empty & Error
+  .empty-container,
+  .error-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 300px;
+    gap: 24px;
+
+    .ant-empty-description {
+      color: $gray-light;
+    }
+
+    .browse-btn,
+    .retry-btn {
+      padding: 12px 32px;
+      background: $beige;
+      color: $bg-dark;
+      border: none;
+      border-radius: 25px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+
+      &:hover {
+        background: $beige-light;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba($beige, 0.3);
+      }
+    }
+  }
+
+  // Bookings List
+  .bookings-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  // Booking Card
+  .booking-card {
+    position: relative;
+    background: $bg-card;
+    border: 1px solid $gray-dark;
+    border-radius: 16px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+
+    &:hover {
+      background: $bg-card-hover;
+      border-color: rgba($beige, 0.4);
+      transform: translateY(-2px);
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+    }
+
+    // Status Badge
+    .status-badge {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+
+      &.upcoming {
+        background: $beige;
+        color: $bg-dark;
+      }
+
+      &.completed {
+        background: $gray-dark;
+        color: $gray-light;
+      }
+    }
+
+    // Card Content
+    .card-content {
+      display: flex;
+      padding: 24px;
+      gap: 32px;
+
+      @media (max-width: 640px) {
+        flex-direction: column;
+        gap: 24px;
+      }
+    }
+
+    // Booking Info (Left)
+    .booking-info {
+      flex: 1;
+
+      .booking-id {
+        margin-bottom: 20px;
+
+        .label {
+          display: block;
+          font-size: 11px;
+          color: $gray-medium;
+          text-transform: uppercase;
+          letter-spacing: 1px;
+          margin-bottom: 4px;
+        }
+
+        .value {
+          font-size: 24px;
+          font-weight: 700;
+          color: $beige;
+          font-family: "Monaco", "Menlo", monospace;
+        }
+      }
+
+      .info-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        margin-bottom: 16px;
+
+        &:last-child {
+          margin-bottom: 0;
+        }
+
+        .icon {
+          color: $beige;
+          font-size: 18px;
+          margin-top: 2px;
+          flex-shrink: 0;
+        }
+
+        .info-content {
+          .label {
+            display: block;
+            font-size: 12px;
+            color: $gray-medium;
+            margin-bottom: 4px;
+          }
+
+          .value {
+            font-size: 15px;
+            color: $white;
+            font-weight: 500;
+          }
+        }
+
+        .seats-list {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+          margin-top: 4px;
+
+          .seat-badge {
+            padding: 4px 12px;
+            background: rgba($beige, 0.15);
+            border: 1px solid rgba($beige, 0.4);
+            border-radius: 6px;
+            color: $beige-light;
+            font-size: 13px;
+            font-weight: 600;
+          }
+        }
+      }
+    }
+
+    // Booking Price (Right)
+    .booking-price {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: flex-end;
+      min-width: 180px;
+      padding-left: 32px;
+      border-left: 1px solid $gray-dark;
+
+      @media (max-width: 640px) {
+        flex-direction: row;
+        align-items: center;
+        padding-left: 0;
+        padding-top: 20px;
+        border-left: none;
+        border-top: 1px solid $gray-dark;
+        min-width: auto;
+      }
+
+      .price-info {
+        .label {
+          display: block;
+          font-size: 12px;
+          color: $gray-medium;
+          margin-bottom: 4px;
+        }
+
+        .amount {
+          font-size: 24px;
+          font-weight: 700;
+          color: $beige;
+        }
+      }
+
+      .booking-time {
+        text-align: right;
+
+        @media (max-width: 640px) {
+          text-align: left;
+        }
+
+        .label {
+          display: block;
+          font-size: 11px;
+          color: $gray-medium;
+          margin-bottom: 2px;
+        }
+
+        .value {
+          font-size: 13px;
+          color: $gray-light;
+        }
+      }
+    }
+
+    // Info Notice
+    .info-notice {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 24px;
+      background: rgba($beige-dark, 0.1);
+      border-top: 1px solid rgba($beige-dark, 0.2);
+      color: $beige;
+      font-size: 12px;
+
+      svg {
+        flex-shrink: 0;
+      }
+    }
+
+    // No data text
+    .no-data {
+      color: $gray-medium;
+      font-style: italic;
+      font-size: 13px;
+    }
+  }
+}

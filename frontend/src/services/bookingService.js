@@ -19,10 +19,13 @@ export const bookingService = {
   /**
    * Lấy danh sách booking theo ngày
    * GET /bookings/date/{date}
+   * @param {string} date - Format: YYYY-MM-DD
    */
   getByDate: async (date) => {
     try {
+      console.log("📅 Fetching bookings for date:", date);
       const response = await axiosInstance.get(`/bookings/date/${date}`);
+      console.log("✅ Bookings response:", response);
       return response || [];
     } catch (error) {
       console.error("Get bookings by date error:", error);
@@ -33,27 +36,28 @@ export const bookingService = {
   /**
    * Lấy số lượng booking pending
    * GET /bookings/pending
+   * @returns {number} amount
    */
   getPendingCount: async () => {
     try {
       const response = await axiosInstance.get("/bookings/pending");
+      // API returns { amount: number }
       return response?.amount || 0;
     } catch (error) {
       console.error("Get pending bookings error:", error);
-      throw error;
+      return 0; // Return 0 instead of throwing
     }
   },
 
   /**
-   * ✅ FIX: Tạo booking mới
+   * Tạo booking mới
    * POST /bookings
    * Request: { memberId, showTimeId, cinemaId, bookingDetailRequests: [{ seatId }] }
    */
   create: async (data) => {
     try {
-      // ✅ FIX: Use memberId instead of userId
       const payload = {
-        memberId: data.memberId || data.userId, // ✅ FIXED!
+        memberId: data.memberId || data.userId,
         showTimeId: parseInt(data.showTimeId, 10),
         cinemaId: parseInt(data.cinemaId, 10),
         bookingDetailRequests: data.seats.map((seatId) => ({
@@ -61,11 +65,11 @@ export const bookingService = {
         })),
       };
 
-      console.log("📦 Booking payload:", payload);
+      console.log("📦 Creating booking:", payload);
 
       const response = await axiosInstance.post("/bookings", payload);
 
-      console.log("✅ Booking response:", response);
+      console.log("✅ Booking created:", response);
 
       return response;
     } catch (error) {
@@ -75,16 +79,17 @@ export const bookingService = {
   },
 
   /**
-   * Utility: Format booking cho UI
+   * Utility: Format booking response
    */
   formatBooking: (booking) => {
     return {
       ...booking,
       bookingId: booking.id,
       formattedPrice:
-        new Intl.NumberFormat("vi-VN").format(booking.totalPrice) + " VNĐ",
+        new Intl.NumberFormat("vi-VN").format(booking.totalPrice) + "đ",
       formattedDate: new Date(booking.createTime).toLocaleString("vi-VN"),
       formattedShowTime: new Date(booking.showTime).toLocaleString("vi-VN"),
+      seatCount: booking.seats?.length || 0,
     };
   },
 };
