@@ -1,12 +1,16 @@
-// frontend/src/admin/styles/ShowtimeForm.scss
+// frontend/src/admin/components/RoomForm.scss
 
-.showtime-form-modal {
-  max-width: 800px !important;
+.room-form-modal {
+  .modal {
+    max-width: 500px;
+    border-radius: 16px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  }
 
   .modal-header {
-    background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+    background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
     padding: 20px 24px !important;
-    border-radius: 8px 8px 0 0;
+    border-radius: 16px 16px 0 0;
     border-bottom: none !important;
 
     h2 {
@@ -28,23 +32,37 @@
     padding: 24px !important;
   }
 
-  .form-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 24px;
+  // ✅ Form Notice
+  .form-notice {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    border-radius: 10px;
+    font-size: 14px;
+    margin-bottom: 24px;
 
-    @media (max-width: 768px) {
-      grid-template-columns: 1fr;
+    svg {
+      flex-shrink: 0;
+    }
+
+    &.warning {
+      background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+      border: 1px solid #f59e0b;
+      color: #92400e;
+    }
+
+    &.info {
+      background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+      border: 1px solid #3b82f6;
+      color: #1e40af;
     }
   }
 
-  .form-column {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-  }
-
+  // ✅ Form Group Styling
   .form-group {
+    margin-bottom: 20px;
+
     label {
       display: block;
       font-size: 14px;
@@ -70,9 +88,9 @@
 
       &:focus {
         outline: none;
-        border-color: #7c3aed;
+        border-color: #3b82f6;
         background-color: #fff;
-        box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.1);
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
       }
 
       &:hover:not(:focus):not(:disabled) {
@@ -83,12 +101,20 @@
       &.error {
         border-color: #ef4444;
         background-color: #fef2f2;
+
+        &:focus {
+          box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1);
+        }
       }
 
       &:disabled {
         background-color: #f3f4f6;
         color: #9ca3af;
         cursor: not-allowed;
+      }
+
+      &::placeholder {
+        color: #9ca3af;
       }
     }
 
@@ -103,6 +129,9 @@
     }
 
     .error-message {
+      display: flex;
+      align-items: center;
+      gap: 6px;
       color: #ef4444;
       font-size: 12px;
       margin-top: 6px;
@@ -110,76 +139,17 @@
     }
 
     .form-hint {
-      font-size: 13px;
+      font-size: 12px;
       color: #6b7280;
-      margin-top: 8px;
-      padding: 8px 12px;
-      background: #f3f4f6;
-      border-radius: 6px;
-
-      strong {
-        color: #7c3aed;
-      }
+      margin-top: 6px;
     }
   }
 
-  // Movie Summary Box
-  .movie-summary {
-    background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%);
-    border: 1px solid #c4b5fd;
-    border-radius: 10px;
-    padding: 16px;
-
-    h4 {
-      font-size: 14px;
-      font-weight: 600;
-      color: #5b21b6;
-      margin: 0 0 12px 0;
-    }
-
-    p {
-      font-size: 13px;
-      color: #4c1d95;
-      margin: 6px 0;
-
-      strong {
-        color: #5b21b6;
-        margin-right: 4px;
-      }
-    }
-  }
-
-  // Alert Styles
-  .alert {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 14px 16px;
-    border-radius: 10px;
-    margin-top: 20px;
-
-    svg {
-      flex-shrink: 0;
-    }
-
-    &.success {
-      background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
-      border: 1px solid #6ee7b7;
-      color: #065f46;
-    }
-
-    &.danger {
-      background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
-      border: 1px solid #fca5a5;
-      color: #991b1b;
-    }
-  }
-
-  // Form Actions
+  // ✅ Form Actions
   .form-actions {
     display: flex;
     gap: 12px;
-    margin-top: 24px;
+    margin-top: 28px;
     padding-top: 20px;
     border-top: 1px solid #e5e7eb;
 
@@ -204,14 +174,14 @@
       }
 
       &.submit {
-        background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
         border: none;
         color: white;
-        box-shadow: 0 4px 14px rgba(124, 58, 237, 0.3);
+        box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3);
 
         &:hover:not(:disabled) {
-          background: linear-gradient(135deg, #6d28d9 0%, #9333ea 100%);
-          box-shadow: 0 6px 20px rgba(124, 58, 237, 0.4);
+          background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+          box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
           transform: translateY(-1px);
         }
 
@@ -220,17 +190,63 @@
           color: #9ca3af;
           cursor: not-allowed;
           box-shadow: none;
+          transform: none;
         }
       }
     }
   }
+
+  // ✅ Info Box
+  .info-box {
+    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+    padding: 16px;
+    border-radius: 10px;
+    margin-top: 20px;
+    border: 1px solid #bfdbfe;
+
+    h4 {
+      font-size: 14px;
+      font-weight: 600;
+      color: #1e40af;
+      margin: 0 0 8px 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
+      svg {
+        width: 16px;
+        height: 16px;
+      }
+    }
+
+    p {
+      font-size: 13px;
+      color: #1e40af;
+      margin: 0;
+      line-height: 1.5;
+    }
+  }
 }
 
-// Responsive
+// ✅ Responsive
 @media (max-width: 640px) {
-  .showtime-form-modal {
+  .room-form-modal {
+    .modal {
+      max-width: 100%;
+      margin: 16px;
+      border-radius: 12px;
+    }
+
+    .modal-header {
+      border-radius: 12px 12px 0 0;
+    }
+
     .form-actions {
       flex-direction: column-reverse;
+
+      button {
+        width: 100%;
+      }
     }
   }
 }

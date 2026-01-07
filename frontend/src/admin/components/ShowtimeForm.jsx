@@ -1,15 +1,14 @@
 // frontend/src/admin/components/ShowtimeForm.jsx
 import { useState, useEffect } from "react";
-import { FiX, FiAlertCircle } from "react-icons/fi";
-import { movieService, cinemaService, roomService } from "../../services"; // ✅ Fixed import
-import "../styles/AdminLayout.scss";
+import { FiX, FiAlertCircle, FiCheck } from "react-icons/fi";
+import { movieService, cinemaService } from "../../services";
+import "../styles/ShowtimeForm.scss";
 
 const ShowtimeForm = ({ showtime, onClose, onSubmit }) => {
   const [movies, setMovies] = useState([]);
   const [cinemas, setCinemas] = useState([]);
   const [rooms, setRooms] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [checking, setChecking] = useState(false);
   const [conflict, setConflict] = useState(null);
 
   const [formData, setFormData] = useState({
@@ -18,8 +17,6 @@ const ShowtimeForm = ({ showtime, onClose, onSubmit }) => {
     roomId: "",
     date: "",
     startTime: "",
-    price: 45000,
-    status: "upcoming",
   });
 
   const [errors, setErrors] = useState({});
@@ -30,16 +27,31 @@ const ShowtimeForm = ({ showtime, onClose, onSubmit }) => {
 
   useEffect(() => {
     if (showtime) {
-      setFormData(showtime);
+      // ✅ Parse existing showtime data
+      const firstShowTimeRoom = showtime.showTimeRooms?.[0];
+      const showTimeISO = firstShowTimeRoom?.showTime || "";
+      const [date, time] = showTimeISO.split("T");
+
+      setFormData({
+        movieId: showtime.movieId || "",
+        cinemaId: showtime.cinemaId || "",
+        roomId: firstShowTimeRoom?.roomId || showtime.roomId || "",
+        date: date || "",
+        startTime: time?.substring(0, 5) || "",
+      });
+
+      // Load rooms for selected cinema
       if (showtime.cinemaId) {
-        fetchRooms(showtime.cinemaId);
+        fetchRoomsByCinema(showtime.cinemaId);
       }
     }
   }, [showtime]);
 
   useEffect(() => {
     if (formData.cinemaId) {
-      fetchRooms(formData.cinemaId);
+      fetchRoomsByCinema(formData.cinemaId);
+    } else {
+      setRooms([]);
     }
   }, [formData.cinemaId]);
 
@@ -47,8 +59,8 @@ const ShowtimeForm = ({ showtime, onClose, onSubmit }) => {
     try {
       setLoading(true);
       const [moviesData, cinemasData] = await Promise.all([
-        movieService.getAll(), // ✅ Fixed
-        cinemaService.getAll(), // ✅ Fixed
+        movieService.getAll(),
+        cinemaService.getAll(),
       ]);
 
       setMovies(Array.isArray(moviesData) ? moviesData : []);
@@ -62,22 +74,17 @@ const ShowtimeForm = ({ showtime, onClose, onSubmit }) => {
     }
   };
 
-  const fetchRooms = async (cinemaId) => {
+  // ✅ Get rooms from cinema.rooms (API returns rooms inside cinema)
+  const fetchRoomsByCinema = async (cinemaId) => {
     try {
-      // ✅ Use roomService.getByCinema or getAll and filter
-      let roomsData = [];
-
-      if (roomService.getByCinema) {
-        roomsData = await roomService.getByCinema(cinemaId);
+      const cinema = cinemas.find((c) => String(c.id) === String(cinemaId));
+      if (cinema?.rooms) {
+        setRooms(cinema.rooms);
       } else {
-        // Fallback: get all rooms and filter by cinemaId
-        const allRooms = await roomService.getAll();
-        roomsData = allRooms.filter(
-          (r) => String(r.cinemaId) === String(cinemaId)
-        );
+        // Fallback: fetch cinema by ID
+        const cinemaData = await cinemaService.getById(cinemaId);
+        setRooms(cinemaData?.rooms || []);
       }
-
-      setRooms(Array.isArray(roomsData) ? roomsData : []);
     } catch (error) {
       console.error("Error fetching rooms:", error);
       setRooms([]);
@@ -87,38 +94,16 @@ const ShowtimeForm = ({ showtime, onClose, onSubmit }) => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+
+    // Clear room when cinema changes
+    if (name === "cinemaId") {
+      setFormData((prev) => ({ ...prev, roomId: "" }));
+    }
+
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: "" }));
     }
     setConflict(null);
-  };
-
-  const handleCheckConflict = async () => {
-    if (!formData.roomId || !formData.date || !formData.startTime) {
-      return;
-    }
-
-    try {
-      setChecking(true);
-
-      // ✅ Simple conflict check - compare with existing showtimes
-      // You can implement more sophisticated check if showtimeService has checkConflict method
-      setConflict({
-        type: "success",
-        message: "Lịch chiếu hợp lệ, không có xung đột!",
-      });
-
-      // TODO: Implement real conflict check when backend supports it
-      // const result = await showtimeService.checkConflict({...});
-    } catch (error) {
-      console.error("Error checking conflict:", error);
-      setConflict({
-        type: "error",
-        message: "Không thể kiểm tra trùng lịch",
-      });
-    } finally {
-      setChecking(false);
-    }
   };
 
   const validate = () => {
@@ -131,12 +116,8 @@ const ShowtimeForm = ({ showtime, onClose, onSubmit }) => {
     if (!formData.startTime) newErrors.startTime = "Vui lòng chọn giờ chiếu";
 
     const today = new Date().toISOString().split("T")[0];
-    if (formData.date < today) {
+    if (formData.date && formData.date < today) {
       newErrors.date = "Ngày chiếu không được trong quá khứ";
-    }
-
-    if (!formData.price || formData.price < 0) {
-      newErrors.price = "Giá vé không hợp lệ";
     }
 
     setErrors(newErrors);
@@ -148,25 +129,18 @@ const ShowtimeForm = ({ showtime, onClose, onSubmit }) => {
 
     if (!validate()) return;
 
-    // Check conflict before submit
-    await handleCheckConflict();
-
-    if (conflict?.type === "error") {
-      alert("Vui lòng chọn thời gian khác, lịch chiếu bị trùng!");
-      return;
-    }
-
-    // ✅ Transform data to match backend format
+    // ✅ Transform data to match API format
     const submitData = {
-      movieId: formData.movieId,
+      movieId: parseInt(formData.movieId, 10),
       showTimeRooms: [
         {
           showTime: `${formData.date}T${formData.startTime}:00`,
-          roomId: formData.roomId,
+          roomId: parseInt(formData.roomId, 10),
         },
       ],
     };
 
+    console.log("📤 Submitting showtime:", submitData);
     onSubmit(submitData);
   };
 
@@ -176,9 +150,10 @@ const ShowtimeForm = ({ showtime, onClose, onSubmit }) => {
   };
 
   const calculateEndTime = () => {
-    if (!formData.startTime) return "";
+    if (!formData.startTime || !formData.movieId) return "";
+
     const movie = movies.find((m) => String(m.id) === String(formData.movieId));
-    if (!movie) return "";
+    if (!movie?.duration) return "";
 
     const [hours, minutes] = formData.startTime.split(":").map(Number);
     const totalMinutes = hours * 60 + minutes + movie.duration + 15; // +15 phút dọn phòng
@@ -190,20 +165,24 @@ const ShowtimeForm = ({ showtime, onClose, onSubmit }) => {
       .padStart(2, "0")}`;
   };
 
+  const getSelectedMovie = () => {
+    return movies.find((m) => String(m.id) === String(formData.movieId));
+  };
+
   return (
     <div className="modal-overlay">
-      <div className="modal large">
+      <div className="modal showtime-form-modal">
         <div className="modal-header">
           <h2>{showtime ? "Chỉnh sửa lịch chiếu" : "Tạo lịch chiếu mới"}</h2>
-          <button onClick={onClose}>
+          <button onClick={onClose} type="button">
             <FiX size={24} />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="modal-body admin-form">
+        <form onSubmit={handleSubmit} className="modal-body">
           <div className="form-grid">
             {/* Left Column */}
-            <div>
+            <div className="form-column">
               <div className="form-group">
                 <label>
                   Phim <span className="required">*</span>
@@ -215,7 +194,7 @@ const ShowtimeForm = ({ showtime, onClose, onSubmit }) => {
                   className={errors.movieId ? "error" : ""}
                   disabled={loading}
                 >
-                  <option value="">Chọn phim</option>
+                  <option value="">-- Chọn phim --</option>
                   {movies.map((movie) => (
                     <option key={movie.id} value={movie.id}>
                       {movie.title} ({movie.duration} phút)
@@ -238,10 +217,10 @@ const ShowtimeForm = ({ showtime, onClose, onSubmit }) => {
                   className={errors.cinemaId ? "error" : ""}
                   disabled={loading}
                 >
-                  <option value="">Chọn rạp</option>
+                  <option value="">-- Chọn rạp --</option>
                   {cinemas.map((cinema) => (
                     <option key={cinema.id} value={cinema.id}>
-                      {cinema.name}
+                      {cinema.name} - {cinema.district}, {cinema.city}
                     </option>
                   ))}
                 </select>
@@ -262,13 +241,15 @@ const ShowtimeForm = ({ showtime, onClose, onSubmit }) => {
                   disabled={!formData.cinemaId || rooms.length === 0}
                 >
                   <option value="">
-                    {formData.cinemaId
-                      ? "Chọn phòng"
-                      : "Vui lòng chọn rạp trước"}
+                    {!formData.cinemaId
+                      ? "-- Vui lòng chọn rạp trước --"
+                      : rooms.length === 0
+                      ? "-- Rạp chưa có phòng --"
+                      : "-- Chọn phòng --"}
                   </option>
                   {rooms.map((room) => (
-                    <option key={room.id} value={room.id}>
-                      {room.name} ({room.type}) - {room.capacity} ghế
+                    <option key={room.roomId} value={room.roomId}>
+                      {room.roomName}
                     </option>
                   ))}
                 </select>
@@ -279,7 +260,7 @@ const ShowtimeForm = ({ showtime, onClose, onSubmit }) => {
             </div>
 
             {/* Right Column */}
-            <div>
+            <div className="form-column">
               <div className="form-group">
                 <label>
                   Ngày chiếu <span className="required">*</span>
@@ -305,80 +286,56 @@ const ShowtimeForm = ({ showtime, onClose, onSubmit }) => {
                   value={formData.startTime}
                   onChange={handleChange}
                   className={errors.startTime ? "error" : ""}
-                  onBlur={handleCheckConflict}
                 />
                 {errors.startTime && (
                   <p className="error-message">{errors.startTime}</p>
                 )}
                 {formData.startTime && getMovieDuration() > 0 && (
                   <p className="form-hint">
-                    Dự kiến kết thúc: {calculateEndTime()} (+15 phút dọn phòng)
+                    ⏱ Dự kiến kết thúc: <strong>{calculateEndTime()}</strong>{" "}
+                    (+15 phút dọn phòng)
                   </p>
                 )}
               </div>
 
-              <div className="form-group">
-                <label>
-                  Giá vé (VNĐ) <span className="required">*</span>
-                </label>
-                <input
-                  type="number"
-                  name="price"
-                  value={formData.price}
-                  onChange={handleChange}
-                  className={errors.price ? "error" : ""}
-                  min="0"
-                  step="1000"
-                  placeholder="45000"
-                />
-                {errors.price && (
-                  <p className="error-message">{errors.price}</p>
-                )}
-              </div>
-
-              <div className="form-group">
-                <label>Trạng thái</label>
-                <select
-                  name="status"
-                  value={formData.status}
-                  onChange={handleChange}
-                >
-                  <option value="upcoming">Sắp chiếu</option>
-                  <option value="active">Đang chiếu</option>
-                  <option value="ended">Đã kết thúc</option>
-                  <option value="cancelled">Đã hủy</option>
-                </select>
-              </div>
+              {/* Movie Info Summary */}
+              {getSelectedMovie() && (
+                <div className="movie-summary">
+                  <h4>Thông tin phim</h4>
+                  <p>
+                    <strong>Tên:</strong> {getSelectedMovie().title}
+                  </p>
+                  <p>
+                    <strong>Thời lượng:</strong> {getSelectedMovie().duration}{" "}
+                    phút
+                  </p>
+                  <p>
+                    <strong>Thể loại:</strong> {getSelectedMovie().genre}
+                  </p>
+                </div>
+              )}
             </div>
           </div>
 
           {/* Conflict Alert */}
           {conflict && (
-            <div className={`alert ${conflict.type}`}>
-              <FiAlertCircle size={20} />
+            <div
+              className={`alert ${
+                conflict.type === "success" ? "success" : "danger"
+              }`}
+            >
+              {conflict.type === "success" ? (
+                <FiCheck size={20} />
+              ) : (
+                <FiAlertCircle size={20} />
+              )}
               <span>{conflict.message}</span>
-            </div>
-          )}
-
-          {checking && (
-            <div className="alert info">
-              <span>Đang kiểm tra trùng lịch...</span>
             </div>
           )}
 
           <div className="form-actions">
             <button type="button" onClick={onClose} className="cancel">
               Hủy
-            </button>
-            <button
-              type="button"
-              onClick={handleCheckConflict}
-              className="secondary"
-              disabled={
-                !formData.roomId || !formData.date || !formData.startTime
-              }
-            >
-              Kiểm tra trùng lịch
             </button>
             <button type="submit" className="submit">
               {showtime ? "Cập nhật" : "Tạo lịch chiếu"}
