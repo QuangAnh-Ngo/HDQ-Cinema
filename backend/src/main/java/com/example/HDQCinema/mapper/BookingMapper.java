@@ -43,6 +43,7 @@ public interface BookingMapper {
             bookingResponse.seats(toSeat(booking));
             bookingResponse.showTime(booking.getBookingDetails().iterator().next().getShowTime().getStartTime());
             bookingResponse.username(booking.getMember().getUsername());
+            bookingResponse.bookingStatus(booking.getBookingStatus());
 
             return bookingResponse.build();
         }

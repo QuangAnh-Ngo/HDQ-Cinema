@@ -1,6 +1,7 @@
 package com.example.HDQCinema.dto.response;
 
 import com.example.HDQCinema.entity.Seat;
+import com.example.HDQCinema.enums.BookingStatus;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -20,4 +21,5 @@ public class BookingResponse {
     String username;
     LocalDateTime showTime;
     List<String> seats;
+    BookingStatus bookingStatus;
 }
