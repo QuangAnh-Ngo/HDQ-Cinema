@@ -143,4 +143,8 @@ public class BookingService {
         var num =  bookingRepository.countBookingsByBookingStatusPending();
         return AmountOfPendingBookingResponse.builder().amount(num).build();
     }
+
+    public List<BookingResponse> getAll(){
+        return bookingMapper.toResponses(bookingRepository.findAll());
+    }
 }
