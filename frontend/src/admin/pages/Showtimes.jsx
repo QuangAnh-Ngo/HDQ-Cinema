@@ -1,5 +1,5 @@
 // frontend/src/admin/pages/Showtimes.jsx
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   FiPlus,
   FiSearch,
@@ -7,160 +7,90 @@ import {
   FiTrash2,
   FiClock,
   FiCalendar,
+  FiChevronLeft,
+  FiChevronRight,
 } from "react-icons/fi";
 import Breadcrumb from "../components/Common/Breadcrumb";
 import Loading from "../components/Common/Loading";
 import ConfirmDialog from "../components/Common/ConfirmDialog";
 import ShowtimeForm from "../components/ShowtimeForm";
-import {
-  showtimeService,
-  movieService,
-  roomService,
-  cinemaService,
-} from "../../services";
-import { message } from "antd";
+import { showtimeService } from "../../services";
+import { message, Select } from "antd";
 import "../styles/AdminLayout.scss";
 
 const Showtimes = () => {
-  const [showtimes, setShowtimes] = useState([]);
-  const [filteredShowtimes, setFilteredShowtimes] = useState([]);
+  // ✅ State for pagination
+  const [pageData, setPageData] = useState({
+    content: [],
+    pageNumber: 0,
+    pageSize: 20,
+    totalElements: 0,
+    totalPages: 0,
+  });
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [dateFilter, setDateFilter] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [stats, setStats] = useState({ total: 0, upcoming: 0, today: 0 });
+
+  // ✅ Filters (backend handles everything)
+  const [filters, setFilters] = useState({
+    search: "",
+    dateFrom: "",
+    dateTo: "",
+    status: "all",
+    page: 0,
+    size: 20,
+    sortBy: "startTime",
+    sortDir: "asc",
+  });
 
   const [showShowtimeForm, setShowShowtimeForm] = useState(false);
   const [selectedShowtime, setSelectedShowtime] = useState(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showtimeToDelete, setShowtimeToDelete] = useState(null);
 
-  // ✅ Store lookup maps
-  const [movieMap, setMovieMap] = useState(new Map());
-  const [roomMap, setRoomMap] = useState(new Map());
-  const [cinemaMap, setCinemaMap] = useState(new Map());
-
-  useEffect(() => {
-    fetchShowtimes();
-  }, []);
-
-  useEffect(() => {
-    filterShowtimes();
-  }, [showtimes, searchTerm, dateFilter, statusFilter]);
-
-  const fetchShowtimes = async () => {
+  // ✅ Fetch data with debounce
+  const fetchShowtimes = useCallback(async () => {
     try {
       setLoading(true);
 
-      // ✅ Fetch all data in parallel
-      const [showtimesData, moviesData, cinemasData] = await Promise.all([
-        showtimeService.getAll(),
-        movieService.getAll().catch(() => []),
-        cinemaService.getAll().catch(() => []),
+      const [searchResult, statsResult] = await Promise.all([
+        showtimeService.search(filters),
+        showtimeService.getStatistics(),
       ]);
 
-      // ✅ Create lookup maps
-      const mMap = new Map(moviesData.map((m) => [m.id, m]));
-      setMovieMap(mMap);
-
-      const cMap = new Map(cinemasData.map((c) => [c.id, c]));
-      setCinemaMap(cMap);
-
-      // ✅ Create room map from cinemas
-      const rMap = new Map();
-      cinemasData.forEach((cinema) => {
-        cinema.rooms?.forEach((room) => {
-          rMap.set(room.roomId, {
-            ...room,
-            cinemaId: cinema.id,
-            cinemaName: cinema.name,
-          });
-        });
-      });
-      setRoomMap(rMap);
-
-      // ✅ Transform showtimes data
-      const transformed = Array.isArray(showtimesData)
-        ? showtimesData.flatMap((st) => {
-            // Each showtime can have multiple showTimeRooms
-            return (st.showTimeRooms || []).map((str, index) => {
-              const room = rMap.get(str.roomId);
-              const movie = mMap.get(st.movieId);
-              const showTimeISO = str.showTime;
-
-              return {
-                id: `${st.showtimeId}-${index}`,
-                showtimeId: st.showtimeId,
-                movieId: st.movieId,
-                movieTitle: movie?.title || "N/A",
-                roomId: str.roomId,
-                roomName: room?.roomName || "N/A",
-                cinemaId: room?.cinemaId,
-                cinemaName: room?.cinemaName || "N/A",
-                showTimeISO: showTimeISO,
-                date: showTimeISO?.split("T")[0],
-                startTime: showTimeISO?.split("T")[1]?.substring(0, 5),
-                status: calculateShowtimeStatus(showTimeISO),
-                // Keep original data for edit
-                showTimeRooms: st.showTimeRooms,
-              };
-            });
-          })
-        : [];
-
-      console.log("✅ Transformed showtimes:", transformed.length);
-      setShowtimes(transformed);
+      setPageData(searchResult);
+      setStats(statsResult);
     } catch (error) {
       console.error("Error fetching showtimes:", error);
       message.error("Lỗi khi tải danh sách lịch chiếu");
-      setShowtimes([]);
     } finally {
       setLoading(false);
     }
+  }, [filters]);
+
+  useEffect(() => {
+    const debounce = setTimeout(() => {
+      fetchShowtimes();
+    }, 300); // Debounce 300ms for search
+
+    return () => clearTimeout(debounce);
+  }, [fetchShowtimes]);
+
+  // ✅ Handle filter changes
+  const handleFilterChange = (key, value) => {
+    setFilters((prev) => ({
+      ...prev,
+      [key]: value,
+      page: 0, // Reset to first page when filter changes
+    }));
   };
 
-  const calculateShowtimeStatus = (showTimeISO) => {
-    if (!showTimeISO) return "upcoming";
-
-    const showDate = new Date(showTimeISO);
-    const now = new Date();
-
-    if (showDate > now) return "upcoming";
-
-    const threeHoursLater = new Date(showDate.getTime() + 3 * 60 * 60 * 1000);
-    if (now >= showDate && now <= threeHoursLater) return "active";
-
-    return "ended";
+  // ✅ Handle pagination
+  const handlePageChange = (newPage) => {
+    setFilters((prev) => ({ ...prev, page: newPage }));
   };
 
-  const filterShowtimes = () => {
-    let filtered = [...showtimes];
-
-    if (searchTerm) {
-      const search = searchTerm.toLowerCase();
-      filtered = filtered.filter(
-        (st) =>
-          st.movieTitle?.toLowerCase().includes(search) ||
-          st.cinemaName?.toLowerCase().includes(search) ||
-          st.roomName?.toLowerCase().includes(search)
-      );
-    }
-
-    if (dateFilter) {
-      filtered = filtered.filter((st) => st.date === dateFilter);
-    }
-
-    if (statusFilter !== "all") {
-      filtered = filtered.filter((st) => st.status === statusFilter);
-    }
-
-    // Sort by date and time (newest first)
-    filtered.sort((a, b) => {
-      const dateCompare =
-        new Date(b.showTimeISO || 0) - new Date(a.showTimeISO || 0);
-      return dateCompare;
-    });
-
-    setFilteredShowtimes(filtered);
+  const handlePageSizeChange = (newSize) => {
+    setFilters((prev) => ({ ...prev, size: newSize, page: 0 }));
   };
 
   const handleAddShowtime = () => {
@@ -169,12 +99,11 @@ const Showtimes = () => {
   };
 
   const handleEditShowtime = (showtime) => {
-    // ✅ Pass full data for editing
     setSelectedShowtime({
       ...showtime,
       showTimeRooms: [
         {
-          showTime: showtime.showTimeISO,
+          showTime: showtime.startTime,
           roomId: showtime.roomId,
         },
       ],
@@ -191,7 +120,7 @@ const Showtimes = () => {
     try {
       await showtimeService.delete(showtimeToDelete.showtimeId);
       message.success("Xóa lịch chiếu thành công!");
-      fetchShowtimes(); // Reload data
+      fetchShowtimes();
       setShowDeleteDialog(false);
     } catch (error) {
       console.error("Error deleting showtime:", error);
@@ -211,7 +140,7 @@ const Showtimes = () => {
 
       setShowShowtimeForm(false);
       setSelectedShowtime(null);
-      fetchShowtimes(); // Reload data
+      fetchShowtimes();
     } catch (error) {
       console.error("Error submitting showtime:", error);
       message.error(error.message || "Có lỗi xảy ra!");
@@ -224,7 +153,6 @@ const Showtimes = () => {
       active: { label: "Đang chiếu", className: "success" },
       ended: { label: "Đã kết thúc", className: "gray" },
     };
-
     const badge = badges[status] || badges.upcoming;
     return <span className={`badge ${badge.className}`}>{badge.label}</span>;
   };
@@ -240,19 +168,7 @@ const Showtimes = () => {
     });
   };
 
-  const getDateRangeStats = () => {
-    const today = new Date().toISOString().split("T")[0];
-    return {
-      total: showtimes.length,
-      today: showtimes.filter((st) => st.date === today).length,
-      upcoming: showtimes.filter((st) => st.status === "upcoming").length,
-      ended: showtimes.filter((st) => st.status === "ended").length,
-    };
-  };
-
-  const stats = getDateRangeStats();
-
-  if (loading) {
+  if (loading && pageData.content.length === 0) {
     return <Loading text="Đang tải lịch chiếu..." />;
   }
 
@@ -268,12 +184,13 @@ const Showtimes = () => {
         </button>
       </div>
 
+      {/* ✅ Stats from backend */}
       <div className="stats-grid">
         <div className="stat-card">
           <div className="stat-content">
             <div className="stat-info">
               <p>Tổng lịch chiếu</p>
-              <h3>{stats.total}</h3>
+              <h3>{stats.total?.toLocaleString()}</h3>
             </div>
           </div>
         </div>
@@ -281,7 +198,9 @@ const Showtimes = () => {
           <div className="stat-content">
             <div className="stat-info">
               <p>Hôm nay</p>
-              <h3 style={{ color: "#2563eb" }}>{stats.today}</h3>
+              <h3 style={{ color: "#2563eb" }}>
+                {stats.today?.toLocaleString()}
+              </h3>
             </div>
           </div>
         </div>
@@ -289,20 +208,25 @@ const Showtimes = () => {
           <div className="stat-content">
             <div className="stat-info">
               <p>Sắp chiếu</p>
-              <h3 style={{ color: "#10b981" }}>{stats.upcoming}</h3>
+              <h3 style={{ color: "#10b981" }}>
+                {stats.upcoming?.toLocaleString()}
+              </h3>
             </div>
           </div>
         </div>
         <div className="stat-card">
           <div className="stat-content">
             <div className="stat-info">
-              <p>Đã kết thúc</p>
-              <h3 style={{ color: "#6b7280" }}>{stats.ended}</h3>
+              <p>Trang hiện tại</p>
+              <h3>
+                {pageData.pageNumber + 1} / {pageData.totalPages}
+              </h3>
             </div>
           </div>
         </div>
       </div>
 
+      {/* ✅ Filters - Backend handles filtering */}
       <div className="filters-bar">
         <div className="filters-content">
           <div className="search-input">
@@ -310,23 +234,34 @@ const Showtimes = () => {
             <input
               type="text"
               placeholder="Tìm kiếm phim, rạp, phòng..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              value={filters.search}
+              onChange={(e) => handleFilterChange("search", e.target.value)}
             />
           </div>
 
-          <div className="search-input" style={{ maxWidth: "200px" }}>
+          <div className="search-input" style={{ maxWidth: "180px" }}>
             <FiCalendar size={20} />
             <input
               type="date"
-              value={dateFilter}
-              onChange={(e) => setDateFilter(e.target.value)}
+              value={filters.dateFrom}
+              onChange={(e) => handleFilterChange("dateFrom", e.target.value)}
+              placeholder="Từ ngày"
+            />
+          </div>
+
+          <div className="search-input" style={{ maxWidth: "180px" }}>
+            <FiCalendar size={20} />
+            <input
+              type="date"
+              value={filters.dateTo}
+              onChange={(e) => handleFilterChange("dateTo", e.target.value)}
+              placeholder="Đến ngày"
             />
           </div>
 
           <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
+            value={filters.status}
+            onChange={(e) => handleFilterChange("status", e.target.value)}
           >
             <option value="all">Tất cả trạng thái</option>
             <option value="upcoming">Sắp chiếu</option>
@@ -334,20 +269,34 @@ const Showtimes = () => {
             <option value="ended">Đã kết thúc</option>
           </select>
 
-          {dateFilter && (
+          {(filters.search ||
+            filters.dateFrom ||
+            filters.dateTo ||
+            filters.status !== "all") && (
             <button
               className="btn secondary"
-              onClick={() => setDateFilter("")}
-              style={{ marginLeft: "8px" }}
+              onClick={() =>
+                setFilters({
+                  ...filters,
+                  search: "",
+                  dateFrom: "",
+                  dateTo: "",
+                  status: "all",
+                  page: 0,
+                })
+              }
             >
-              Xóa bộ lọc ngày
+              Xóa bộ lọc
             </button>
           )}
         </div>
       </div>
 
+      {/* ✅ Table */}
       <div className="admin-table">
-        {filteredShowtimes.length > 0 ? (
+        {loading && <div className="table-loading">Đang tải...</div>}
+
+        {pageData.content.length > 0 ? (
           <table>
             <thead>
               <tr>
@@ -360,8 +309,8 @@ const Showtimes = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredShowtimes.map((showtime) => (
-                <tr key={showtime.id}>
+              {pageData.content.map((showtime) => (
+                <tr key={showtime.showtimeId}>
                   <td>
                     <strong>{showtime.movieTitle}</strong>
                   </td>
@@ -377,7 +326,7 @@ const Showtimes = () => {
                   <td>
                     <div className="time-cell">
                       <FiClock size={14} />
-                      <span>{showtime.startTime || "N/A"}</span>
+                      <span>{showtime.time || "N/A"}</span>
                     </div>
                   </td>
                   <td>{getStatusBadge(showtime.status)}</td>
@@ -408,6 +357,58 @@ const Showtimes = () => {
         )}
       </div>
 
+      {/* ✅ Pagination */}
+      {pageData.totalPages > 1 && (
+        <div
+          className="pagination"
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            padding: "16px",
+            marginTop: "16px",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <span>Hiển thị</span>
+            <Select
+              value={filters.size}
+              onChange={handlePageSizeChange}
+              style={{ width: 80 }}
+              options={[
+                { value: 10, label: "10" },
+                { value: 20, label: "20" },
+                { value: 50, label: "50" },
+                { value: 100, label: "100" },
+              ]}
+            />
+            <span>/ {pageData.totalElements.toLocaleString()} kết quả</span>
+          </div>
+
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <button
+              className="btn secondary"
+              disabled={pageData.first}
+              onClick={() => handlePageChange(pageData.pageNumber - 1)}
+            >
+              <FiChevronLeft />
+            </button>
+
+            <span style={{ padding: "0 16px" }}>
+              Trang {pageData.pageNumber + 1} / {pageData.totalPages}
+            </span>
+
+            <button
+              className="btn secondary"
+              disabled={pageData.last}
+              onClick={() => handlePageChange(pageData.pageNumber + 1)}
+            >
+              <FiChevronRight />
+            </button>
+          </div>
+        </div>
+      )}
+
       {showShowtimeForm && (
         <ShowtimeForm
           showtime={selectedShowtime}
@@ -424,7 +425,7 @@ const Showtimes = () => {
         onClose={() => setShowDeleteDialog(false)}
         onConfirm={confirmDelete}
         title="Xác nhận xóa lịch chiếu"
-        message={`Bạn có chắc chắn muốn xóa lịch chiếu "${showtimeToDelete?.movieTitle}" lúc ${showtimeToDelete?.startTime}?`}
+        message={`Bạn có chắc chắn muốn xóa lịch chiếu "${showtimeToDelete?.movieTitle}" lúc ${showtimeToDelete?.time}?`}
         type="danger"
       />
     </div>

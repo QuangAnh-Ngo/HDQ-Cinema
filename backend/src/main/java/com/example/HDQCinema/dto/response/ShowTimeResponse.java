@@ -1,13 +1,11 @@
+// backend/src/main/java/com/example/HDQCinema/dto/response/ShowTimeResponse.java
 package com.example.HDQCinema.dto.response;
 
-import com.example.HDQCinema.dto.request.ShowTimeAndRoom;
-import com.example.HDQCinema.entity.ShowTime;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Getter
 @Setter
@@ -17,6 +15,28 @@ import java.util.List;
 @Builder
 public class ShowTimeResponse {
     Long showtimeId;
+    
+    // Movie info
     Long movieId;
-    List<ShowTimeAndRoom> showTimeRooms;
+    String movieTitle;
+    String moviePoster;
+    Integer movieDuration;
+    
+    // Room info
+    Long roomId;
+    String roomName;
+    
+    // Cinema info
+    Long cinemaId;
+    String cinemaName;
+    
+    // Time info
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    LocalDateTime startTime;
+    
+    String date;      // yyyy-MM-dd (for frontend grouping)
+    String time;      // HH:mm (for display)
+    
+    // Status: upcoming, active, ended
+    String status;
 }

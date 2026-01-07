@@ -307,11 +307,21 @@ const Bookings = () => {
 
       {/* Detail Modal */}
       {showDetailModal && selectedBooking && (
-        <div className="modal-overlay">
-          <div className="modal booking-detail-modal">
+        <div
+          className="modal-overlay"
+          onClick={() => setShowDetailModal(false)}
+        >
+          <div
+            className="modal booking-detail-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="modal-header">
               <h2>Chi tiết đặt vé #{selectedBooking.id}</h2>
-              <button onClick={() => setShowDetailModal(false)} type="button">
+              <button
+                className="close-btn"
+                onClick={() => setShowDetailModal(false)}
+                type="button"
+              >
                 <FiX size={24} />
               </button>
             </div>
@@ -367,6 +377,16 @@ const Bookings = () => {
                   </p>
                 </div>
               </div>
+            </div>
+
+            {/* ✅ Footer với nút đóng */}
+            <div className="modal-footer">
+              <button
+                className="btn secondary"
+                onClick={() => setShowDetailModal(false)}
+              >
+                Đóng
+              </button>
             </div>
           </div>
         </div>

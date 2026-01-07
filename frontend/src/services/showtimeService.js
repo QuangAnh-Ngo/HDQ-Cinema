@@ -3,22 +3,55 @@ import axiosInstance from "./axiosInstance";
 
 export const showtimeService = {
   /**
-   * ✅ FIX: Lấy danh sách tất cả suất chiếu
-   * Response: { code, message, result: [{ showtimeId, movieId, showTimeRooms: [...] }] }
+   * ✅ NEW: Search with pagination and filters (Main method for admin)
    */
-  getAll: async () => {
+  search: async (params = {}) => {
     try {
-      const response = await axiosInstance.get("/showtimes");
-      return response || [];
+      const queryParams = new URLSearchParams();
+
+      // Pagination
+      queryParams.append("page", params.page ?? 0);
+      queryParams.append("size", params.size ?? 20);
+
+      // Sorting
+      queryParams.append("sortBy", params.sortBy ?? "startTime");
+      queryParams.append("sortDir", params.sortDir ?? "desc");
+
+      // Filters
+      if (params.movieId) queryParams.append("movieId", params.movieId);
+      if (params.cinemaId) queryParams.append("cinemaId", params.cinemaId);
+      if (params.roomId) queryParams.append("roomId", params.roomId);
+      if (params.dateFrom) queryParams.append("dateFrom", params.dateFrom);
+      if (params.dateTo) queryParams.append("dateTo", params.dateTo);
+      if (params.status && params.status !== "all")
+        queryParams.append("status", params.status);
+      if (params.search) queryParams.append("search", params.search);
+
+      const response = await axiosInstance.get(
+        `/showtimes/search?${queryParams.toString()}`
+      );
+      return response;
     } catch (error) {
-      console.error("Get all showtimes error:", error);
+      console.error("Search showtimes error:", error);
       throw error;
     }
   },
 
   /**
-   * ✅ FIX: Lấy chi tiết suất chiếu theo ID
-   * Response: { code, message, result: { showtimeId, movieId, showTimeRooms: [...] } }
+   * ✅ NEW: Get statistics
+   */
+  getStatistics: async () => {
+    try {
+      const response = await axiosInstance.get("/showtimes/statistics");
+      return response || { total: 0, upcoming: 0, today: 0 };
+    } catch (error) {
+      console.error("Get statistics error:", error);
+      return { total: 0, upcoming: 0, today: 0 };
+    }
+  },
+
+  /**
+   * ✅ Get by ID
    */
   getById: async (id) => {
     try {
@@ -31,7 +64,7 @@ export const showtimeService = {
   },
 
   /**
-   * Lấy danh sách suất chiếu theo phim
+   * ✅ Get upcoming by movie (for ScheduleModal)
    */
   getByMovie: async (movieId) => {
     try {
@@ -44,21 +77,34 @@ export const showtimeService = {
   },
 
   /**
-   * Lấy danh sách suất chiếu theo phòng
+   * ✅ Get upcoming by cinema
    */
-  getByRoom: async (roomId) => {
+  getByCinema: async (cinemaId) => {
     try {
-      const response = await axiosInstance.get(`/showtimes/room/${roomId}`);
+      const response = await axiosInstance.get(`/showtimes/cinema/${cinemaId}`);
       return response || [];
     } catch (error) {
-      console.error("Get showtimes by room error:", error);
+      console.error("Get showtimes by cinema error:", error);
       throw error;
     }
   },
 
   /**
-   * ✅ FIX: Tạo suất chiếu mới
-   * Payload: { movieId, showTimeRooms: [{ showTime, roomId }] }
+   * ✅ Legacy: Get all (deprecated - use search instead)
+   */
+  getAll: async () => {
+    try {
+      console.warn("⚠️ Using deprecated getAll() - consider using search()");
+      const response = await axiosInstance.get("/showtimes");
+      return response || [];
+    } catch (error) {
+      console.error("Get all showtimes error:", error);
+      throw error;
+    }
+  },
+
+  /**
+   * Create showtime
    */
   create: async (data) => {
     try {
@@ -80,7 +126,7 @@ export const showtimeService = {
   },
 
   /**
-   * ✅ FIX: Cập nhật suất chiếu
+   * Update showtime
    */
   update: async (id, data) => {
     try {
@@ -102,7 +148,7 @@ export const showtimeService = {
   },
 
   /**
-   * Xóa suất chiếu
+   * Delete showtime
    */
   delete: async (id) => {
     try {
@@ -114,37 +160,19 @@ export const showtimeService = {
   },
 
   /**
-   * ✅ Utility: Phân nhóm suất chiếu theo ngày
-   * Input: [{ showtimeId, movieId, showTimeRooms: [{ showTime, roomId }] }]
+   * ✅ Utility: Group showtimes by date
    */
   groupByDate: (showtimes) => {
     if (!Array.isArray(showtimes)) return {};
 
-    const grouped = {};
+    return showtimes.reduce((acc, st) => {
+      const date = st.date || st.startTime?.split("T")[0];
+      if (!date) return acc;
 
-    showtimes.forEach((showtime) => {
-      showtime.showTimeRooms?.forEach((str) => {
-        const date = str.showTime.split("T")[0];
-        if (!grouped[date]) {
-          grouped[date] = [];
-        }
-        grouped[date].push({
-          ...showtime,
-          showTime: str.showTime,
-          roomId: str.roomId,
-        });
-      });
-    });
-
-    return grouped;
-  },
-
-  /**
-   * Format thời gian hiển thị
-   */
-  formatTime: (isoDateTime) => {
-    const time = isoDateTime.split("T")[1];
-    return time.substring(0, 5);
+      if (!acc[date]) acc[date] = [];
+      acc[date].push(st);
+      return acc;
+    }, {});
   },
 };
 
