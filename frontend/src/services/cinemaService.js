@@ -3,8 +3,8 @@ import axiosInstance from "./axiosInstance";
 
 export const cinemaService = {
   /**
-   * Lấy danh sách tất cả rạp chiếu (GET /theaters)
-   * @returns {Promise<Array>}
+   * Get all cinemas (GET /theaters)
+   * Response: { id, name, city, district, address, rooms[] }
    */
   getAll: async () => {
     try {
@@ -17,9 +17,7 @@ export const cinemaService = {
   },
 
   /**
-   * Lấy chi tiết rạp chiếu theo ID (GET /theaters/{cinemaId})
-   * @param {string} id - Cinema ID
-   * @returns {Promise<Object>}
+   * Get cinema by ID (GET /theaters/{cinemaId})
    */
   getById: async (id) => {
     try {
@@ -32,9 +30,8 @@ export const cinemaService = {
   },
 
   /**
-   * Tạo rạp chiếu mới (POST /theaters)
-   * @param {Object} data - { name, city, district, address }
-   * @returns {Promise<Object>}
+   * Create new cinema (POST /theaters)
+   * Payload: { name, city, district, address }
    */
   create: async (data) => {
     try {
@@ -44,19 +41,23 @@ export const cinemaService = {
         district: data.district,
         address: data.address,
       };
+
+      console.log("📤 Creating cinema:", payload);
+
       const response = await axiosInstance.post("/theaters", payload);
+
+      console.log("✅ Cinema created:", response);
+
       return response;
     } catch (error) {
-      console.error("Create cinema error:", error);
+      console.error("❌ Create cinema error:", error);
       throw error;
     }
   },
 
   /**
-   * Cập nhật rạp chiếu (PUT /theaters/{cinemaId})
-   * @param {string} id - Cinema ID
-   * @param {Object} data - { name, city, district, address }
-   * @returns {Promise<Object>}
+   * Update cinema (PUT /theaters/{cinemaId})
+   * ⚠️ NOTE: Not in Swagger - may not work
    */
   update: async (id, data) => {
     try {
@@ -66,32 +67,39 @@ export const cinemaService = {
         district: data.district,
         address: data.address,
       };
+
+      console.log("📤 Updating cinema:", id, payload);
+
       const response = await axiosInstance.put(`/theaters/${id}`, payload);
+
+      console.log("✅ Cinema updated:", response);
+
       return response;
     } catch (error) {
-      console.error("Update cinema error:", error);
+      console.error("❌ Update cinema error:", error);
       throw error;
     }
   },
 
   /**
-   * Xóa rạp chiếu (DELETE /theaters/{cinemaId})
-   * @param {string} id - Cinema ID
-   * @returns {Promise<void>}
+   * Delete cinema (DELETE /theaters/{cinemaId})
+   * ⚠️ NOTE: Not in Swagger - may not work
    */
   delete: async (id) => {
     try {
+      console.log("📤 Deleting cinema:", id);
+
       await axiosInstance.delete(`/theaters/${id}`);
+
+      console.log("✅ Cinema deleted:", id);
     } catch (error) {
-      console.error("Delete cinema error:", error);
+      console.error("❌ Delete cinema error:", error);
       throw error;
     }
   },
 
   /**
-   * Lấy thống kê số phòng của rạp
-   * @param {string} id - Cinema ID
-   * @returns {Promise<Object>}
+   * Get cinema stats (rooms count)
    */
   getStats: async (id) => {
     try {
@@ -102,25 +110,6 @@ export const cinemaService = {
     } catch (error) {
       console.error("Get cinema stats error:", error);
       return { totalRooms: 0 };
-    }
-  },
-
-  /**
-   * Thêm phòng chiếu mới (POST /rooms)
-   * @param {Object} data - { roomName, cinemaId }
-   * @returns {Promise<Object>}
-   */
-  addRoom: async (data) => {
-    try {
-      const payload = {
-        roomName: data.roomName,
-        cinemaId: data.cinemaId,
-      };
-      const response = await axiosInstance.post("/rooms", payload);
-      return response;
-    } catch (error) {
-      console.error("Add room error:", error);
-      throw error;
     }
   },
 };

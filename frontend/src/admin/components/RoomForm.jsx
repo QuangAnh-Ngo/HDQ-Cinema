@@ -1,27 +1,20 @@
 // frontend/src/admin/components/RoomForm.jsx
 import { useState, useEffect } from "react";
-import { FiX } from "react-icons/fi";
-import { cinemaService } from "../../services"; // ✅ Fixed import
-import "../styles/AdminLayout.scss";
+import { FiX, FiAlertCircle, FiInfo } from "react-icons/fi";
+import { cinemaService } from "../../services";
+import "../styles/RoomForm.scss";
 
 const RoomForm = ({ room, onClose, onSubmit, cinemas }) => {
-  // ✅ Accept cinemas as prop
   const [localCinemas, setLocalCinemas] = useState([]);
   const [formData, setFormData] = useState({
-    name: "",
+    roomName: "",
     cinemaId: "",
-    capacity: "",
-    type: "2D",
-    rows: 10,
-    seatsPerRow: 12,
-    status: "active",
   });
 
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // ✅ Use cinemas from props if available, otherwise fetch
     if (cinemas && cinemas.length > 0) {
       setLocalCinemas(cinemas);
     } else {
@@ -31,14 +24,17 @@ const RoomForm = ({ room, onClose, onSubmit, cinemas }) => {
 
   useEffect(() => {
     if (room) {
-      setFormData(room);
+      setFormData({
+        roomName: room.roomName || room.name || "",
+        cinemaId: room.cinemaId || "",
+      });
     }
   }, [room]);
 
   const fetchCinemas = async () => {
     try {
       setLoading(true);
-      const data = await cinemaService.getAll(); // ✅ Fixed
+      const data = await cinemaService.getAll();
       setLocalCinemas(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Error fetching cinemas:", error);
@@ -59,18 +55,11 @@ const RoomForm = ({ room, onClose, onSubmit, cinemas }) => {
   const validate = () => {
     const newErrors = {};
 
-    if (!formData.name.trim()) newErrors.name = "Tên phòng không được để trống";
-    if (!formData.cinemaId) newErrors.cinemaId = "Vui lòng chọn rạp";
-    if (!formData.capacity || formData.capacity <= 0)
-      newErrors.capacity = "Sức chứa phải lớn hơn 0";
-    if (!formData.rows || formData.rows <= 0)
-      newErrors.rows = "Số hàng phải lớn hơn 0";
-    if (!formData.seatsPerRow || formData.seatsPerRow <= 0)
-      newErrors.seatsPerRow = "Số ghế mỗi hàng phải lớn hơn 0";
-
-    const totalSeats = formData.rows * formData.seatsPerRow;
-    if (totalSeats > 300) {
-      newErrors.rows = "Tổng số ghế không được vượt quá 300";
+    if (!formData.roomName.trim()) {
+      newErrors.roomName = "Tên phòng không được để trống";
+    }
+    if (!formData.cinemaId) {
+      newErrors.cinemaId = "Vui lòng chọn rạp";
     }
 
     setErrors(newErrors);
@@ -80,21 +69,32 @@ const RoomForm = ({ room, onClose, onSubmit, cinemas }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (validate()) {
-      onSubmit(formData);
+      onSubmit({
+        roomName: formData.roomName.trim(),
+        cinemaId: parseInt(formData.cinemaId, 10),
+      });
     }
   };
 
   return (
     <div className="modal-overlay">
-      <div className="modal">
+      <div className="modal room-form-modal">
         <div className="modal-header">
           <h2>{room ? "Chỉnh sửa phòng" : "Thêm phòng mới"}</h2>
-          <button onClick={onClose}>
+          <button onClick={onClose} type="button">
             <FiX size={24} />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="modal-body admin-form">
+        <form onSubmit={handleSubmit} className="modal-body">
+          {/* ✅ Thông báo nếu đang edit */}
+          {room && (
+            <div className="form-notice warning">
+              <FiAlertCircle size={18} />
+              <span>Chức năng chỉnh sửa phòng đang được phát triển</span>
+            </div>
+          )}
+
           <div className="form-group">
             <label>
               Rạp chiếu <span className="required">*</span>
@@ -106,7 +106,7 @@ const RoomForm = ({ room, onClose, onSubmit, cinemas }) => {
               className={errors.cinemaId ? "error" : ""}
               disabled={room || loading}
             >
-              <option value="">Chọn rạp</option>
+              <option value="">-- Chọn rạp --</option>
               {localCinemas.map((cinema) => (
                 <option key={cinema.id} value={cinema.id}>
                   {cinema.name}
@@ -124,104 +124,37 @@ const RoomForm = ({ room, onClose, onSubmit, cinemas }) => {
             </label>
             <input
               type="text"
-              name="name"
-              value={formData.name}
+              name="roomName"
+              value={formData.roomName}
               onChange={handleChange}
-              className={errors.name ? "error" : ""}
-              placeholder="Phòng 1, RAP 01"
+              className={errors.roomName ? "error" : ""}
+              placeholder="VD: Phòng 1, RAP 01, Screen A..."
+              disabled={room}
             />
-            {errors.name && <p className="error-message">{errors.name}</p>}
-          </div>
-
-          <div className="form-group">
-            <label>
-              Loại phòng <span className="required">*</span>
-            </label>
-            <select name="type" value={formData.type} onChange={handleChange}>
-              <option value="2D">2D</option>
-              <option value="3D">3D</option>
-              <option value="IMAX">IMAX</option>
-              <option value="4DX">4DX</option>
-              <option value="ScreenX">ScreenX</option>
-            </select>
-          </div>
-
-          <div className="form-grid">
-            <div className="form-group">
-              <label>
-                Số hàng ghế <span className="required">*</span>
-              </label>
-              <input
-                type="number"
-                name="rows"
-                value={formData.rows}
-                onChange={handleChange}
-                className={errors.rows ? "error" : ""}
-                min="1"
-                max="20"
-                placeholder="10"
-              />
-              {errors.rows && <p className="error-message">{errors.rows}</p>}
-            </div>
-
-            <div className="form-group">
-              <label>
-                Ghế mỗi hàng <span className="required">*</span>
-              </label>
-              <input
-                type="number"
-                name="seatsPerRow"
-                value={formData.seatsPerRow}
-                onChange={handleChange}
-                className={errors.seatsPerRow ? "error" : ""}
-                min="1"
-                max="20"
-                placeholder="12"
-              />
-              {errors.seatsPerRow && (
-                <p className="error-message">{errors.seatsPerRow}</p>
-              )}
-            </div>
-          </div>
-
-          <div className="form-group">
-            <label>
-              Sức chứa <span className="required">*</span>
-            </label>
-            <input
-              type="number"
-              name="capacity"
-              value={formData.capacity}
-              onChange={handleChange}
-              className={errors.capacity ? "error" : ""}
-              placeholder={formData.rows * formData.seatsPerRow || "120"}
-            />
-            {errors.capacity && (
-              <p className="error-message">{errors.capacity}</p>
+            {errors.roomName && (
+              <p className="error-message">{errors.roomName}</p>
             )}
             <p className="form-hint">
-              Tự động: {formData.rows * formData.seatsPerRow} ghế
+              Tên phòng sẽ hiển thị khi khách hàng đặt vé
             </p>
           </div>
 
-          <div className="form-group">
-            <label>Trạng thái</label>
-            <select
-              name="status"
-              value={formData.status}
-              onChange={handleChange}
-            >
-              <option value="active">Hoạt động</option>
-              <option value="inactive">Ngừng hoạt động</option>
-              <option value="maintenance">Bảo trì</option>
-            </select>
+          {/* ✅ Info Box */}
+          <div className="info-box">
+            <h4>
+              <FiInfo /> Lưu ý
+            </h4>
+            <p>
+              Sau khi tạo phòng, bạn có thể thiết lập sơ đồ ghế ngồi trong phần
+              quản lý ghế (chức năng đang phát triển).
+            </p>
           </div>
 
           <div className="form-actions">
             <button type="button" onClick={onClose} className="cancel">
               Hủy
             </button>
-            <button type="submit" className="submit">
+            <button type="submit" className="submit" disabled={room}>
               {room ? "Cập nhật" : "Tạo phòng"}
             </button>
           </div>

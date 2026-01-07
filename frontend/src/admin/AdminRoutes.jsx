@@ -9,6 +9,7 @@ import Rooms from "./pages/Rooms";
 import Showtimes from "./pages/Showtimes";
 import Bookings from "./pages/Bookings";
 import Employees from "./pages/Employees";
+import Members from "./pages/Members";
 import AdminProtectedRoute from "./AdminProtectedRoute";
 import "./styles/AdminLayout.scss";
 
@@ -95,6 +96,17 @@ const AdminRoutes = () => {
               element={
                 <AdminProtectedRoute allowedRoles={["MANAGER", "ADMIN"]}>
                   <Employees />
+                </AdminProtectedRoute>
+              }
+            />
+
+            <Route
+              path="members"
+              element={
+                <AdminProtectedRoute
+                  allowedRoles={["ADMIN", "MANAGER", "EMPLOYEE"]}
+                >
+                  <Members />
                 </AdminProtectedRoute>
               }
             />

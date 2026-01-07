@@ -1,0 +1,367 @@
+// frontend/src/user/pages/BookingHistory/BookingHistory.scss
+
+// ✅ Color Variables - Tươi sáng hơn
+$bg-main: #f5f5f0; // Nền sáng kem nhẹ
+$bg-card: #ffffff; // Card trắng
+$bg-card-hover: #fafafa;
+$beige: #c9a86c; // Be vàng tươi
+$beige-light: #e5d4b3;
+$beige-dark: #a68b4b;
+$gold: #d4af37; // Vàng gold
+$gray-text: #4a4a4a; // Text xám đậm
+$gray-light: #888888;
+$gray-border: #e0e0e0;
+$black: #1a1a1a;
+$white: #ffffff;
+
+.booking-history-page {
+  min-height: calc(100vh - 80px);
+  background: linear-gradient(135deg, $bg-main 0%, #e8e4da 100%);
+  padding: 40px 20px;
+
+  .page-container {
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  // Loading
+  .loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px;
+    gap: 20px;
+
+    p {
+      color: $gray-text;
+      font-size: 16px;
+    }
+  }
+
+  // Header
+  .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 32px;
+    padding-bottom: 24px;
+    border-bottom: 2px solid $beige-light;
+
+    .header-content {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+
+      .header-icon {
+        font-size: 44px;
+        color: $beige;
+        filter: drop-shadow(0 2px 4px rgba($beige, 0.3));
+      }
+
+      h1 {
+        font-size: 30px;
+        font-weight: 700;
+        color: $black;
+        margin: 0;
+      }
+
+      p {
+        color: $gray-light;
+        margin: 4px 0 0;
+        font-size: 14px;
+      }
+    }
+
+    .booking-count {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: linear-gradient(135deg, $beige 0%, $gold 100%);
+      border-radius: 16px;
+      padding: 16px 28px;
+      box-shadow: 0 4px 15px rgba($beige, 0.3);
+
+      .count {
+        font-size: 36px;
+        font-weight: 700;
+        color: $white;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+      }
+
+      .label {
+        font-size: 11px;
+        color: rgba($white, 0.9);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-weight: 600;
+      }
+    }
+  }
+
+  // Empty & Error
+  .empty-container,
+  .error-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 300px;
+    gap: 24px;
+    background: $white;
+    border-radius: 20px;
+    padding: 40px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+
+    .ant-empty-description {
+      color: $gray-light;
+    }
+
+    .browse-btn,
+    .retry-btn {
+      padding: 14px 36px;
+      background: linear-gradient(135deg, $beige 0%, $gold 100%);
+      color: $white;
+      border: none;
+      border-radius: 30px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba($beige, 0.3);
+
+      &:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba($beige, 0.4);
+      }
+    }
+  }
+
+  // Bookings List
+  .bookings-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  // Booking Card
+  .booking-card {
+    position: relative;
+    background: $white;
+    border: 1px solid $gray-border;
+    border-radius: 20px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+
+    &:hover {
+      border-color: $beige-light;
+      transform: translateY(-4px);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+    }
+
+    // Status Badge
+    .status-badge {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      padding: 8px 16px;
+      border-radius: 25px;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+
+      &.upcoming {
+        background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
+        color: $white;
+        box-shadow: 0 3px 10px rgba(34, 197, 94, 0.3);
+      }
+
+      &.completed {
+        background: linear-gradient(135deg, $beige-light 0%, $beige 100%);
+        color: $black;
+      }
+    }
+
+    // Card Content
+    .card-content {
+      display: flex;
+      padding: 28px;
+      gap: 32px;
+
+      @media (max-width: 640px) {
+        flex-direction: column;
+        gap: 24px;
+      }
+    }
+
+    // Booking Info (Left)
+    .booking-info {
+      flex: 1;
+
+      .booking-id {
+        margin-bottom: 24px;
+
+        .label {
+          display: block;
+          font-size: 11px;
+          color: $gray-light;
+          text-transform: uppercase;
+          letter-spacing: 1.5px;
+          margin-bottom: 6px;
+          font-weight: 600;
+        }
+
+        .value {
+          font-size: 28px;
+          font-weight: 800;
+          color: $beige;
+          font-family: "Monaco", "Menlo", monospace;
+          text-shadow: 0 1px 2px rgba($beige, 0.2);
+        }
+      }
+
+      .info-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 14px;
+        margin-bottom: 18px;
+
+        &:last-child {
+          margin-bottom: 0;
+        }
+
+        .icon {
+          color: $beige;
+          font-size: 20px;
+          margin-top: 2px;
+          flex-shrink: 0;
+        }
+
+        .info-content {
+          .label {
+            display: block;
+            font-size: 12px;
+            color: $gray-light;
+            margin-bottom: 4px;
+            font-weight: 500;
+          }
+
+          .value {
+            font-size: 15px;
+            color: $black;
+            font-weight: 600;
+          }
+        }
+
+        .seats-list {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+          margin-top: 6px;
+
+          .seat-badge {
+            padding: 6px 14px;
+            background: linear-gradient(135deg, $beige-light 0%, $beige 100%);
+            border: none;
+            border-radius: 8px;
+            color: $black;
+            font-size: 13px;
+            font-weight: 700;
+            box-shadow: 0 2px 6px rgba($beige, 0.2);
+          }
+        }
+      }
+    }
+
+    // Booking Price (Right)
+    .booking-price {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: flex-end;
+      min-width: 180px;
+      padding-left: 32px;
+      border-left: 2px solid $gray-border;
+
+      @media (max-width: 640px) {
+        flex-direction: row;
+        align-items: center;
+        padding-left: 0;
+        padding-top: 20px;
+        border-left: none;
+        border-top: 2px solid $gray-border;
+        min-width: auto;
+      }
+
+      .price-info {
+        text-align: right;
+
+        @media (max-width: 640px) {
+          text-align: left;
+        }
+
+        .label {
+          display: block;
+          font-size: 12px;
+          color: $gray-light;
+          margin-bottom: 4px;
+          font-weight: 500;
+        }
+
+        .amount {
+          font-size: 28px;
+          font-weight: 800;
+          color: $beige-dark;
+        }
+      }
+
+      .booking-time {
+        text-align: right;
+
+        @media (max-width: 640px) {
+          text-align: left;
+        }
+
+        .label {
+          display: block;
+          font-size: 11px;
+          color: $gray-light;
+          margin-bottom: 2px;
+        }
+
+        .value {
+          font-size: 13px;
+          color: $gray-text;
+          font-weight: 500;
+        }
+      }
+    }
+
+    // Info Notice
+    .info-notice {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 28px;
+      background: linear-gradient(90deg, #fffbeb 0%, #fef3c7 100%);
+      border-top: 1px solid #fde68a;
+      color: #b45309;
+      font-size: 13px;
+      font-weight: 500;
+
+      svg {
+        flex-shrink: 0;
+        color: #f59e0b;
+      }
+    }
+
+    // No data text
+    .no-data {
+      color: $gray-light;
+      font-style: italic;
+      font-size: 13px;
+    }
+  }
+}

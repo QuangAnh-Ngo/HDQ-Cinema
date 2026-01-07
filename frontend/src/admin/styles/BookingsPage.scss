@@ -1,16 +1,155 @@
+// frontend/src/admin/styles/Bookings.scss
+
 .bookings-page {
   .search-input.date-filter {
     max-width: 200px;
   }
 
   .booking-code {
-    font-weight: 600;
+    font-weight: 700;
     color: #2563eb;
+    font-family: "Monaco", "Menlo", monospace;
   }
 
-  .booking-detail-modal {
-    .modal {
-      max-width: 800px;
+  .user-cell {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    svg {
+      color: #6b7280;
     }
+  }
+
+  .showtime-cell {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    svg {
+      color: #6b7280;
+    }
+  }
+
+  .seats-cell {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .price-cell {
+    color: #059669;
+    font-weight: 600;
+  }
+
+  .time-cell {
+    color: #6b7280;
+    font-size: 13px;
+  }
+}
+
+// Booking Detail Modal
+.booking-detail-modal {
+  max-width: 600px !important;
+
+  .modal-header {
+    background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+    padding: 20px 24px !important;
+    border-radius: 8px 8px 0 0;
+    border-bottom: none !important;
+
+    h2 {
+      color: white !important;
+      font-size: 18px !important;
+      font-weight: 700 !important;
+    }
+
+    button {
+      color: white !important;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.1) !important;
+      }
+    }
+  }
+
+  .modal-body {
+    padding: 0 !important;
+  }
+
+  .booking-detail {
+    .detail-section {
+      padding: 20px 24px;
+      border-bottom: 1px solid #e5e7eb;
+
+      &:last-child {
+        border-bottom: none;
+      }
+
+      h3 {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 15px;
+        font-weight: 600;
+        color: #374151;
+        margin: 0 0 16px 0;
+
+        svg {
+          color: #059669;
+        }
+      }
+
+      p {
+        margin: 10px 0;
+        font-size: 14px;
+        color: #4b5563;
+
+        strong {
+          color: #111827;
+          font-weight: 600;
+          margin-right: 8px;
+          min-width: 120px;
+          display: inline-block;
+        }
+      }
+
+      .price-highlight {
+        color: #059669;
+        font-weight: 700;
+        font-size: 18px;
+      }
+    }
+
+    .seats-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
+
+      .badge {
+        padding: 6px 12px;
+        font-size: 13px;
+        font-weight: 600;
+      }
+    }
+  }
+}
+
+// Page Notice for warnings
+.page-notice.warning {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border: 1px solid #f59e0b;
+  border-radius: 10px;
+  color: #92400e;
+  font-size: 14px;
+  margin-bottom: 24px;
+
+  svg {
+    flex-shrink: 0;
   }
 }

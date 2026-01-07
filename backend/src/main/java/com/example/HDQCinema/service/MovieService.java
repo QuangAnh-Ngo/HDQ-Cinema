@@ -3,7 +3,6 @@ package com.example.HDQCinema.service;
 import com.example.HDQCinema.dto.request.MovieCreationRequest;
 import com.example.HDQCinema.dto.request.MovieUpdateRequest;
 import com.example.HDQCinema.dto.response.MovieResponse;
-import com.example.HDQCinema.dto.response.ShowTimeResponse;
 import com.example.HDQCinema.entity.Movie;
 import com.example.HDQCinema.entity.ShowTime;
 import com.example.HDQCinema.exception.AppException;

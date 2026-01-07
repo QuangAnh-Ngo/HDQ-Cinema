@@ -1,12 +1,12 @@
 // frontend/src/user/components/ScheduleModal/ScheduleModal.jsx
 import { useState, useEffect, useMemo } from "react";
 import PropTypes from "prop-types";
-import { Modal, Tabs, Spin, message, Empty } from "antd";
+import { Modal, Spin, message, Empty } from "antd";
 import {
   movieService,
   cinemaService,
   showtimeService,
-} from "../../../services"; // ✅ Import showtimeService
+} from "../../../services";
 import "./ScheduleModal.scss";
 
 const ScheduleModal = ({
@@ -20,7 +20,21 @@ const ScheduleModal = ({
   const [movie, setMovie] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState(null);
-  const [showtimesMap, setShowtimesMap] = useState({}); // ✅ Map showTime+roomId -> showtimeId
+  const [showtimesMap, setShowtimesMap] = useState({});
+
+  // ✅ Tạo danh sách 7 ngày từ hôm nay
+  const next7Days = useMemo(() => {
+    const days = [];
+    const today = new Date();
+
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(today);
+      date.setDate(today.getDate() + i);
+      days.push(date.toISOString().split("T")[0]);
+    }
+
+    return days;
+  }, []);
 
   useEffect(() => {
     if (!visible || !movieId || !cinemaId) {
@@ -33,37 +47,26 @@ const ScheduleModal = ({
         const [movieData, cinemaData, allShowtimes] = await Promise.all([
           movieService.getById(movieId),
           cinemaService.getById(cinemaId),
-          showtimeService.getAll(), // ✅ Fetch all showtimes để lấy ID
+          showtimeService.getAll(),
         ]);
 
         setMovie(movieData);
         setCinema(cinemaData);
 
-        // ✅ Tạo map từ showTime+roomId -> showtimeId
+        const numericMovieId = Number(movieId);
+
         const stMap = {};
         allShowtimes.forEach((st) => {
-          if (st.movieId === movieId) {
+          if (Number(st.movieId) === numericMovieId) {
             st.showTimeRooms?.forEach((str) => {
               const key = `${str.showTime}_${str.roomId}`;
               stMap[key] = st.showtimeId;
             });
           }
         });
+
         setShowtimesMap(stMap);
-        console.log("🗺️ Showtimes map:", stMap);
-
-        // Lấy danh sách ngày có suất chiếu tại rạp này
-        if (movieData.showtimes && cinemaData.rooms) {
-          const roomIds = cinemaData.rooms.map((r) => r.roomId);
-          const filtered = movieData.showtimes.filter((st) =>
-            roomIds.includes(st.roomId)
-          );
-
-          if (filtered.length > 0) {
-            const firstDate = filtered[0].showTime.split("T")[0];
-            setSelectedDate(firstDate);
-          }
-        }
+        setSelectedDate(next7Days[0]);
       } catch (error) {
         console.error("Error fetching schedule:", error);
         message.error("Không thể tải lịch chiếu");
@@ -73,10 +76,10 @@ const ScheduleModal = ({
     };
 
     fetchData();
-  }, [visible, movieId, cinemaId]);
+  }, [visible, movieId, cinemaId, next7Days]);
 
   /**
-   * Nhóm suất chiếu theo ngày và ánh xạ tên phòng
+   * Nhóm suất chiếu theo ngày
    */
   const groupedShowtimes = useMemo(() => {
     if (!movie?.showtimes || !cinema?.rooms) return {};
@@ -100,28 +103,55 @@ const ScheduleModal = ({
       }, {});
   }, [movie, cinema]);
 
-  const availableDates = Object.keys(groupedShowtimes).sort();
+  // ✅ Lấy showtimes cho ngày đang chọn + filter suất đã qua
+  const currentShowtimes = useMemo(() => {
+    if (!selectedDate) return [];
 
-  const formatDate = (dateStr) => {
+    const showtimes = groupedShowtimes[selectedDate] || [];
+    const today = new Date().toISOString().split("T")[0];
+
+    // ✅ Nếu là ngày hôm nay → filter bỏ suất đã qua
+    if (selectedDate === today) {
+      const now = new Date();
+
+      return showtimes.filter((st) => {
+        const showDateTime = new Date(st.showTime);
+        return showDateTime > now;
+      });
+    }
+
+    return showtimes;
+  }, [selectedDate, groupedShowtimes]);
+
+  // ✅ Kiểm tra ngày có suất chiếu còn lại không (cho styling tab)
+  const getAvailableShowtimesCount = (date) => {
+    const showtimes = groupedShowtimes[date] || [];
+    const today = new Date().toISOString().split("T")[0];
+
+    if (date === today) {
+      const now = new Date();
+      return showtimes.filter((st) => new Date(st.showTime) > now).length;
+    }
+
+    return showtimes.length;
+  };
+
+  const formatDateTab = (dateStr, index) => {
     const date = new Date(dateStr);
     const day = date.getDate().toString().padStart(2, "0");
     const month = (date.getMonth() + 1).toString().padStart(2, "0");
     const weekdays = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
-    return `${day}/${month} - ${weekdays[date.getDay()]}`;
+
+    if (index === 0) {
+      return { day: "Hôm nay", date: `${day}/${month}` };
+    }
+
+    return { day: weekdays[date.getDay()], date: `${day}/${month}` };
   };
 
-  /**
-   * ✅ Handle showtime selection
-   */
   const handleShowtimeClick = (showtime) => {
-    console.log("🔘 Clicked showtime:", showtime);
-
-    // ✅ Tạo key để lookup showtimeId
     const key = `${showtime.showTime}_${showtime.roomId}`;
     const showtimeId = showtimesMap[key];
-
-    console.log("🔑 Looking up key:", key);
-    console.log("🎯 Found showtimeId:", showtimeId);
 
     if (!showtimeId) {
       message.error("Không tìm thấy suất chiếu này");
@@ -130,29 +160,6 @@ const ScheduleModal = ({
 
     onSelectShowtime(showtimeId);
   };
-
-  const dateTabs = availableDates.map((date) => ({
-    key: date,
-    label: formatDate(date),
-    children: (
-      <div className="day-schedule">
-        {groupedShowtimes[date]
-          .sort((a, b) => a.showTime.localeCompare(b.showTime))
-          .map((st, idx) => (
-            <button
-              key={idx}
-              className="show-time"
-              onClick={() => handleShowtimeClick(st)} // ✅ Call handler
-            >
-              <span className="time-text">
-                {st.showTime.split("T")[1].substring(0, 5)}
-              </span>
-              <span className="room-text"> - {st.roomName}</span>
-            </button>
-          ))}
-      </div>
-    ),
-  }));
 
   if (!visible) return null;
 
@@ -172,28 +179,70 @@ const ScheduleModal = ({
       open={visible}
       onCancel={onClose}
       footer={null}
-      width={800}
+      width={700}
       centered
       className="schedule-modal-custom"
-      destroyOnHidden // ✅ Fix warning
+      destroyOnHidden
     >
       {loading ? (
         <div className="modal-loading">
           <Spin size="large" />
           <p>Đang kiểm tra lịch chiếu...</p>
         </div>
-      ) : availableDates.length > 0 ? (
-        <Tabs
-          activeKey={selectedDate}
-          onChange={setSelectedDate}
-          items={dateTabs}
-          centered
-          className="week-schedule-tabs"
-        />
       ) : (
-        <div className="modal-empty">
-          <Empty description="Rạp này hiện chưa có suất chiếu cho phim đã chọn" />
-        </div>
+        <>
+          {/* ✅ Custom Date Tabs */}
+          <div className="date-tabs">
+            {next7Days.map((date, index) => {
+              const { day, date: dateStr } = formatDateTab(date, index);
+              const isActive = selectedDate === date;
+              // ✅ Dùng function mới để check có suất còn lại không
+              const hasShowtimes = getAvailableShowtimesCount(date) > 0;
+
+              return (
+                <button
+                  key={date}
+                  className={`date-tab ${isActive ? "active" : ""} ${
+                    !hasShowtimes ? "no-showtime" : ""
+                  }`}
+                  onClick={() => setSelectedDate(date)}
+                >
+                  <span className="tab-day">{day}</span>
+                  <span className="tab-date">{dateStr}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* ✅ Nội dung */}
+          <div className="schedule-content">
+            {currentShowtimes.length > 0 ? (
+              <div className="day-schedule">
+                {currentShowtimes
+                  .sort((a, b) => a.showTime.localeCompare(b.showTime))
+                  .map((st, idx) => (
+                    <button
+                      key={idx}
+                      className="show-time"
+                      onClick={() => handleShowtimeClick(st)}
+                    >
+                      <span className="time-text">
+                        {st.showTime.split("T")[1].substring(0, 5)}
+                      </span>
+                      <span className="room-text"> - {st.roomName}</span>
+                    </button>
+                  ))}
+              </div>
+            ) : (
+              <div className="no-showtime-message">
+                <Empty
+                  image={Empty.PRESENTED_IMAGE_SIMPLE}
+                  description="Không có suất chiếu trong ngày này"
+                />
+              </div>
+            )}
+          </div>
+        </>
       )}
     </Modal>
   );

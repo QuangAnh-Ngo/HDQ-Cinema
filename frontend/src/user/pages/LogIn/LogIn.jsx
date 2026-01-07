@@ -98,7 +98,7 @@ const LogIn = () => {
           <h3>Sử dụng tên đăng nhập và mật khẩu</h3>
 
           {/* ✅ QUICK LOGIN BUTTONS - CHỈ HIỂN THỊ TRONG DEV MODE */}
-          {process.env.NODE_ENV === "development" && (
+          {/* {process.env.NODE_ENV === "development" && (
             <div
               className="quick-login-section"
               style={{
@@ -151,7 +151,7 @@ const LogIn = () => {
                 ))}
               </div>
             </div>
-          )}
+          )} */}
 
           {/* Username Input */}
           <input

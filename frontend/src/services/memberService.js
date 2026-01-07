@@ -3,8 +3,7 @@ import axiosInstance from "./axiosInstance";
 
 export const memberService = {
   /**
-   * Lấy danh sách tất cả thành viên (GET /members)
-   * @returns {Promise<Array>}
+   * Get all members (GET /members)
    */
   getAll: async () => {
     try {
@@ -17,13 +16,11 @@ export const memberService = {
   },
 
   /**
-   * Lấy thông tin thành viên đang đăng nhập (GET /members/my-info)
-   * @returns {Promise<Object>}
+   * Get current logged-in member info (GET /members/my-info)
    */
   getMyInfo: async () => {
     try {
       const response = await axiosInstance.get("/members/my-info");
-      // Response: { username, email, phoneNumber, firstName, lastName, dob, roles }
       return response;
     } catch (error) {
       console.error("Get current member info error:", error);
@@ -32,9 +29,8 @@ export const memberService = {
   },
 
   /**
-   * Đăng ký thành viên mới (POST /members)
-   * @param {Object} data - { username, password, email, phoneNumber, firstName, lastName, dob }
-   * @returns {Promise<Object>}
+   * ✅ Register new member (POST /members)
+   * Used by Register page
    */
   register: async (data) => {
     try {
@@ -45,35 +41,46 @@ export const memberService = {
         phoneNumber: data.phoneNumber || data.phone,
         firstName: data.firstName,
         lastName: data.lastName,
-        dob: data.dob, // Format: "YYYY-MM-DD"
+        dob: data.dob, // ✅ MUST be YYYY-MM-DD format
       };
 
+      console.log("📤 Register payload:", payload);
+
       const response = await axiosInstance.post("/members", payload);
+
+      console.log("✅ Register response:", response);
+
       return response;
     } catch (error) {
-      console.error("Register member error:", error);
+      console.error("❌ Register error:", error);
       throw error;
     }
   },
 
   /**
-   * Cập nhật thông tin thành viên (PUT /members/{employeeAccountId})
-   * ⚠️ Lưu ý: Swagger dùng path param {employeeAccountId} nhưng đây là member update
-   * @param {string} id - Member ID
-   * @param {Object} data - { username, password, email, phoneNumber, dob }
-   * @returns {Promise<Object>}
+   * Create member (alias for register - used by admin)
    */
-  update: async (id, data) => {
+  create: async (data) => {
+    return memberService.register(data);
+  },
+
+  /**
+   * Update member (PUT /members/{memberId})
+   */
+  update: async (memberId, data) => {
     try {
       const payload = {
         username: data.username,
-        password: data.password,
         email: data.email,
         phoneNumber: data.phoneNumber || data.phone,
         dob: data.dob,
       };
 
-      const response = await axiosInstance.put(`/members/${id}`, payload);
+      if (data.password && data.password.trim()) {
+        payload.password = data.password;
+      }
+
+      const response = await axiosInstance.put(`/members/${memberId}`, payload);
       return response;
     } catch (error) {
       console.error("Update member error:", error);
@@ -82,13 +89,11 @@ export const memberService = {
   },
 
   /**
-   * Xóa thành viên (DELETE /members/{employeeId})
-   * @param {string} id - Member ID
-   * @returns {Promise<void>}
+   * Delete member (DELETE /members/{memberId})
    */
-  delete: async (id) => {
+  delete: async (memberId) => {
     try {
-      await axiosInstance.delete(`/members/${id}`);
+      await axiosInstance.delete(`/members/${memberId}`);
     } catch (error) {
       console.error("Delete member error:", error);
       throw error;

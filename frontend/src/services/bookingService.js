@@ -3,7 +3,7 @@ import axiosInstance from "./axiosInstance";
 
 export const bookingService = {
   /**
-   * ✅ Lấy danh sách booking của member
+   * Lấy danh sách booking của member
    * GET /bookings/member/{memberId}
    */
   getByMember: async (memberId) => {
@@ -17,13 +17,15 @@ export const bookingService = {
   },
 
   /**
-   * ✅ Lấy danh sách booking theo ngày
+   * Lấy danh sách booking theo ngày
    * GET /bookings/date/{date}
+   * @param {string} date - Format: YYYY-MM-DD
    */
   getByDate: async (date) => {
     try {
-      // date format: "YYYY-MM-DD"
+      console.log("📅 Fetching bookings for date:", date);
       const response = await axiosInstance.get(`/bookings/date/${date}`);
+      console.log("✅ Bookings response:", response);
       return response || [];
     } catch (error) {
       console.error("Get bookings by date error:", error);
@@ -32,60 +34,62 @@ export const bookingService = {
   },
 
   /**
-   * ✅ Lấy số lượng booking pending
+   * Lấy số lượng booking pending
    * GET /bookings/pending
+   * @returns {number} amount
    */
   getPendingCount: async () => {
     try {
       const response = await axiosInstance.get("/bookings/pending");
+      // API returns { amount: number }
       return response?.amount || 0;
     } catch (error) {
       console.error("Get pending bookings error:", error);
-      throw error;
+      return 0; // Return 0 instead of throwing
     }
   },
 
   /**
-   * ✅ Tạo booking mới
+   * Tạo booking mới
    * POST /bookings
-   * Request: { userId, showTimeId, cinemaId, bookingDetailRequests: [{ seatId }] }
+   * Request: { memberId, showTimeId, cinemaId, bookingDetailRequests: [{ seatId }] }
    */
   create: async (data) => {
     try {
       const payload = {
-        userId: data.userId,
-        showTimeId: data.showTimeId,
-        cinemaId: data.cinemaId,
+        memberId: data.memberId || data.userId,
+        showTimeId: parseInt(data.showTimeId, 10),
+        cinemaId: parseInt(data.cinemaId, 10),
         bookingDetailRequests: data.seats.map((seatId) => ({
-          seatId: seatId,
+          seatId: parseInt(seatId, 10),
         })),
       };
 
-      console.log("📦 Booking payload:", payload);
+      console.log("📦 Creating booking:", payload);
 
       const response = await axiosInstance.post("/bookings", payload);
 
-      console.log("✅ Booking response:", response);
+      console.log("✅ Booking created:", response);
 
-      // Response structure: { id, totalPrice, createTime, username, showTime, seats }
       return response;
     } catch (error) {
-      console.error("Create booking error:", error);
+      console.error("❌ Create booking error:", error);
       throw error;
     }
   },
 
   /**
-   * ✅ Utility: Format booking cho UI
+   * Utility: Format booking response
    */
   formatBooking: (booking) => {
     return {
       ...booking,
       bookingId: booking.id,
       formattedPrice:
-        new Intl.NumberFormat("vi-VN").format(booking.totalPrice) + " VNĐ",
+        new Intl.NumberFormat("vi-VN").format(booking.totalPrice) + "đ",
       formattedDate: new Date(booking.createTime).toLocaleString("vi-VN"),
       formattedShowTime: new Date(booking.showTime).toLocaleString("vi-VN"),
+      seatCount: booking.seats?.length || 0,
     };
   },
 };
