@@ -10,14 +10,12 @@ const LogIn = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Lấy đường dẫn trước đó để quay lại sau khi login thành công
   const from = location.state?.from || "/";
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // ✅ TEST ACCOUNTS - XÓA KHI DEPLOY PRODUCTION
   const testAccounts = [
     { username: "member1", password: "123456", role: "Member" },
     { username: "employee1", password: "123456", role: "Employee" },
@@ -25,7 +23,6 @@ const LogIn = () => {
     { username: "admin1", password: "123456", role: "Admin" },
   ];
 
-  //✅Quick login với test account
   const handleQuickLogin = async (account) => {
     setUsername(account.username);
     setPassword(account.password);
@@ -52,9 +49,6 @@ const LogIn = () => {
     }
   };
 
-  /**
-   * Xử lý đăng nhập
-   */
   const handleLogin = async (e) => {
     e.preventDefault();
 
@@ -153,7 +147,6 @@ const LogIn = () => {
             </div>
           )} */}
 
-          {/* Username Input */}
           <input
             type="text"
             name="username"
@@ -166,7 +159,6 @@ const LogIn = () => {
             required
           />
 
-          {/* Password Input */}
           <input
             type="password"
             name="password"
@@ -178,7 +170,6 @@ const LogIn = () => {
             required
           />
 
-          {/* Login Button */}
           <button
             type="submit"
             disabled={loading}
@@ -193,14 +184,12 @@ const LogIn = () => {
             )}
           </button>
 
-          {/* Switch to Register */}
           <p className="switch-auth">
             Chưa có tài khoản? <Link to="/register">Đăng ký ngay</Link>
           </p>
 
           <span className="or"></span>
 
-          {/* Social Logins */}
           <div className="socials">
             <button
               type="button"

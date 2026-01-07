@@ -1,4 +1,3 @@
-// frontend/src/user/components/ScheduleModal/ScheduleModal.jsx
 import { useState, useEffect, useMemo } from "react";
 import PropTypes from "prop-types";
 import { Modal, Spin, message, Empty } from "antd";
@@ -22,7 +21,6 @@ const ScheduleModal = ({
   const [selectedDate, setSelectedDate] = useState(null);
   const [showtimes, setShowtimes] = useState([]);
 
-  // ✅ Tạo danh sách 7 ngày
   const next7Days = useMemo(() => {
     const days = [];
     const today = new Date();
@@ -40,7 +38,6 @@ const ScheduleModal = ({
     const fetchData = async () => {
       setLoading(true);
       try {
-        // ✅ Use optimized endpoint
         const [movieData, cinemaData, showtimeData] = await Promise.all([
           movieService.getById(movieId),
           cinemaService.getById(cinemaId),
@@ -50,7 +47,6 @@ const ScheduleModal = ({
         setMovie(movieData);
         setCinema(cinemaData);
 
-        // Filter by cinema's rooms
         const cinemaRoomIds = cinemaData.rooms?.map((r) => r.roomId) || [];
         const filteredShowtimes = showtimeData.filter((st) =>
           cinemaRoomIds.includes(st.roomId)
@@ -69,19 +65,16 @@ const ScheduleModal = ({
     fetchData();
   }, [visible, movieId, cinemaId, next7Days]);
 
-  // ✅ Group by date (already flat structure from backend)
   const groupedShowtimes = useMemo(() => {
     return showtimeService.groupByDate(showtimes);
   }, [showtimes]);
 
-  // ✅ Get showtimes for selected date
   const currentShowtimes = useMemo(() => {
     if (!selectedDate) return [];
 
     const dayShowtimes = groupedShowtimes[selectedDate] || [];
     const today = new Date().toISOString().split("T")[0];
 
-    // Filter past showtimes for today
     if (selectedDate === today) {
       const now = new Date();
       return dayShowtimes.filter((st) => new Date(st.startTime) > now);

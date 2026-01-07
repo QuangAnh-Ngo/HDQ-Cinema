@@ -1,4 +1,3 @@
-// frontend/src/admin/pages/Showtimes.jsx
 import { useState, useEffect, useCallback } from "react";
 import {
   FiPlus,
@@ -19,7 +18,6 @@ import { message, Select } from "antd";
 import "../styles/AdminLayout.scss";
 
 const Showtimes = () => {
-  // ✅ State for pagination
   const [pageData, setPageData] = useState({
     content: [],
     pageNumber: 0,
@@ -30,7 +28,6 @@ const Showtimes = () => {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ total: 0, upcoming: 0, today: 0 });
 
-  // ✅ Filters (backend handles everything)
   const [filters, setFilters] = useState({
     search: "",
     dateFrom: "",
@@ -47,7 +44,6 @@ const Showtimes = () => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showtimeToDelete, setShowtimeToDelete] = useState(null);
 
-  // ✅ Fetch data with debounce
   const fetchShowtimes = useCallback(async () => {
     try {
       setLoading(true);
@@ -75,7 +71,6 @@ const Showtimes = () => {
     return () => clearTimeout(debounce);
   }, [fetchShowtimes]);
 
-  // ✅ Handle filter changes
   const handleFilterChange = (key, value) => {
     setFilters((prev) => ({
       ...prev,
@@ -226,7 +221,6 @@ const Showtimes = () => {
         </div>
       </div>
 
-      {/* ✅ Filters - Backend handles filtering */}
       <div className="filters-bar">
         <div className="filters-content">
           <div className="search-input">
@@ -292,7 +286,6 @@ const Showtimes = () => {
         </div>
       </div>
 
-      {/* ✅ Table */}
       <div className="admin-table">
         {loading && <div className="table-loading">Đang tải...</div>}
 
@@ -357,7 +350,6 @@ const Showtimes = () => {
         )}
       </div>
 
-      {/* ✅ Pagination */}
       {pageData.totalPages > 1 && (
         <div
           className="pagination"

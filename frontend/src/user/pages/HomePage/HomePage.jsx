@@ -30,7 +30,6 @@ const HomePage = () => {
     try {
       let data = [];
       if (activeTab === "showing") {
-        // ✅ Truyền cinemaId vào query param 'c'
         data = await movieService.getShowing(cinemaId || "");
       } else {
         data = await movieService.getUpcoming(cinemaId || "");
@@ -56,12 +55,10 @@ const HomePage = () => {
 
       let result = [...movies];
 
-      // Filter by genre
       if (filters.genre !== "all") {
         result = result.filter((movie) => movie.genre?.includes(filters.genre));
       }
 
-      // Filter by age rating
       if (filters.ageRating !== "all") {
         const ageValue =
           filters.ageRating === "P" ? 0 : parseInt(filters.ageRating);
@@ -73,7 +70,6 @@ const HomePage = () => {
         });
       }
 
-      // Sort
       switch (filters.sortBy) {
         case "name-asc":
           result.sort((a, b) => a.title.localeCompare(b.title));
@@ -114,7 +110,7 @@ const HomePage = () => {
   };
 
   const handleSelectShowtime = (showtimeId) => {
-    console.log("🎬 HomePage - Selected showtimeId:", showtimeId); // ✅ Log
+    console.log("🎬 HomePage - Selected showtimeId:", showtimeId);
     setScheduleModalVisible(false);
     navigate("/seat-selection", {
       state: {

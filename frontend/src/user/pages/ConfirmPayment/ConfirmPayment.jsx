@@ -1,4 +1,3 @@
-// frontend/src/user/pages/ConfirmPayment/ConfirmPayment.jsx
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button, Spin, message, Card, Divider } from "antd";
@@ -10,7 +9,6 @@ const ConfirmPayment = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // ✅ Lấy data từ SeatSelection
   const {
     showtimeId,
     movieId,
@@ -24,14 +22,12 @@ const ConfirmPayment = () => {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // ✅ Check authentication
     if (!authService.isAuthenticated()) {
       message.warning("Vui lòng đăng nhập để tiến hành thanh toán");
       navigate("/login", { state: { from: location.pathname } });
       return;
     }
 
-    // ✅ Validate required data
     if (
       !showtimeId ||
       !selectedSeats ||
@@ -44,12 +40,6 @@ const ConfirmPayment = () => {
     }
   }, [navigate, showtimeId, selectedSeats, cinemaId, location.pathname]);
 
-  /**
-   * ✅ Payment flow:
-   * 1. Create booking → Get bookingId
-   * 2. Create payment → Get VNPay URL
-   * 3. Redirect to VNPay
-   */
   const handlePayment = async () => {
     setLoading(true);
 
@@ -57,14 +47,12 @@ const ConfirmPayment = () => {
       const user = authService.getCurrentUser();
       console.log("👤 Current user:", user);
 
-      // ✅ FIX: Extract memberId correctly
-      // Member có thể có: member_id, memberId, id, userId
       const memberId =
         user.member_id ||
         user.memberId ||
         user.id ||
         user.userId ||
-        user.username; // Fallback to username if no ID
+        user.username;
 
       if (!memberId) {
         message.error(
@@ -75,7 +63,7 @@ const ConfirmPayment = () => {
       }
 
       const bookingData = {
-        memberId: memberId, // ✅ FIXED: Use memberId
+        memberId: memberId,
         showTimeId: showtimeId,
         cinemaId: cinemaId,
         seats: selectedSeats.map((seat) => seat.seatId),
@@ -101,7 +89,6 @@ const ConfirmPayment = () => {
 
       message.destroy();
 
-      // ✅ FIX: Handle payment response correctly
       const paymentUrl = paymentResponse?.url || paymentResponse?.result?.url;
 
       if (paymentUrl) {
@@ -144,7 +131,6 @@ const ConfirmPayment = () => {
     navigate(-1);
   };
 
-  // ✅ Loading state
   if (!movie || !roomData) {
     return (
       <div className="flex h-screen items-center justify-center bg-gray-50">
@@ -153,7 +139,6 @@ const ConfirmPayment = () => {
     );
   }
 
-  // ✅ Prepare showtime object for Ticket component
   const showtimeData = {
     showTime: roomData.showTime || new Date().toISOString(), // Fallback
   };
@@ -161,7 +146,6 @@ const ConfirmPayment = () => {
   return (
     <div className="confirm-payment-page min-h-screen bg-gray-50 py-10 px-4">
       <div className="payment-container max-w-6xl mx-auto flex flex-col lg:flex-row gap-8 justify-center items-start">
-        {/* LEFT: Instructions */}
         <div className="flex-1 w-full">
           <Card className="instructions-card rounded-3xl shadow-sm border-none p-4">
             <h2 className="text-2xl font-black text-gray-800 uppercase mb-2">
@@ -243,7 +227,6 @@ const ConfirmPayment = () => {
           </Card>
         </div>
 
-        {/* RIGHT: Ticket summary */}
         <div className="w-full lg:w-[380px]">
           <Ticket
             movie={movie}

@@ -1,4 +1,3 @@
-// frontend/src/user/components/MovieFilter/MovieFilter.jsx
 import { useState } from "react";
 import { Select, Button, Tag } from "antd";
 import { FilterOutlined, CloseCircleOutlined } from "@ant-design/icons";
@@ -14,7 +13,6 @@ const MovieFilter = ({ onFilterChange, totalMovies }) => {
 
   const [isExpanded, setIsExpanded] = useState(false);
 
-  // ✅ Danh sách thể loại phổ biến
   const genres = [
     { value: "all", label: "Tất cả thể loại" },
     { value: "Hành động", label: "Hành động" },
@@ -28,7 +26,6 @@ const MovieFilter = ({ onFilterChange, totalMovies }) => {
     { value: "Khoa học", label: "Khoa học" },
   ];
 
-  // ✅ Độ tuổi
   const ageRatings = [
     { value: "all", label: "Tất cả độ tuổi" },
     { value: "P", label: "P - Phổ thông" },
@@ -37,7 +34,6 @@ const MovieFilter = ({ onFilterChange, totalMovies }) => {
     { value: "18", label: "T18 - 18+" },
   ];
 
-  // ✅ Sắp xếp
   const sortOptions = [
     { value: "latest", label: "Mới nhất" },
     { value: "name-asc", label: "Tên phim (A-Z)" },
@@ -92,7 +88,6 @@ const MovieFilter = ({ onFilterChange, totalMovies }) => {
 
       <div className={`filter-content ${isExpanded ? "expanded" : ""}`}>
         <div className="filter-row">
-          {/* Thể loại */}
           <div className="filter-item">
             <label>Thể loại</label>
             <Select
@@ -104,7 +99,6 @@ const MovieFilter = ({ onFilterChange, totalMovies }) => {
             />
           </div>
 
-          {/* Độ tuổi */}
           <div className="filter-item">
             <label>Độ tuổi</label>
             <Select
@@ -116,7 +110,6 @@ const MovieFilter = ({ onFilterChange, totalMovies }) => {
             />
           </div>
 
-          {/* Sắp xếp */}
           <div className="filter-item">
             <label>Sắp xếp</label>
             <Select
@@ -128,7 +121,6 @@ const MovieFilter = ({ onFilterChange, totalMovies }) => {
             />
           </div>
 
-          {/* Reset button */}
           {hasActiveFilters && (
             <div className="filter-item">
               <label>&nbsp;</label>
@@ -144,7 +136,6 @@ const MovieFilter = ({ onFilterChange, totalMovies }) => {
           )}
         </div>
 
-        {/* Active filters tags */}
         {hasActiveFilters && (
           <div className="active-filters">
             <span className="active-filters-label">Đang lọc:</span>

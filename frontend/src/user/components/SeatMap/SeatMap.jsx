@@ -1,4 +1,3 @@
-// frontend/src/user/components/SeatMap/SeatMap.jsx
 import { useEffect, useState, useMemo } from "react";
 import PropTypes from "prop-types";
 import { Spin, message } from "antd";
@@ -21,7 +20,6 @@ const SeatMap = ({ showtimeId, selectedSeats = [], onSeatSelect }) => {
         console.log("🎬 Raw room data:", data);
         console.log("💺 Total seats from API:", data?.seats?.length);
 
-        // ✅ DEDUPLICATE SEATS BY seatId
         if (data?.seats) {
           const uniqueSeatsMap = new Map();
           data.seats.forEach((seat) => {
@@ -42,7 +40,6 @@ const SeatMap = ({ showtimeId, selectedSeats = [], onSeatSelect }) => {
             );
           }
 
-          // ✅ Replace seats array with deduplicated version
           data.seats = uniqueSeats;
         }
 

@@ -1,4 +1,3 @@
-// frontend/src/user/pages/MovieDetail/MovieDetail.jsx
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { Button, Spin, message, Modal, Tag } from "antd";
@@ -78,7 +77,7 @@ const MovieDetail = () => {
   };
 
   const handleShowtimeSelect = (showtimeId) => {
-    console.log("🎯 Selected showtimeId:", showtimeId); // ✅ Thêm log
+    console.log("🎯 Selected showtimeId:", showtimeId);
     setShowScheduleModal(false);
     navigate("/seat-selection", {
       state: {
@@ -119,7 +118,6 @@ const MovieDetail = () => {
 
   return (
     <div className="movie-detail-page">
-      {/* Hero Section with Background */}
       <div className="movie-hero">
         <div
           className="hero-background"
@@ -129,13 +127,11 @@ const MovieDetail = () => {
         </div>
 
         <div className="hero-content">
-          {/* Back Button */}
           <button className="back-button" onClick={() => navigate("/")}>
             <ArrowLeftOutlined /> Quay lại
           </button>
 
           <div className="movie-info-container">
-            {/* Movie Poster */}
             <div className="movie-poster-wrapper">
               <img
                 src={movie.poster}
@@ -152,11 +148,9 @@ const MovieDetail = () => {
               </div>
             </div>
 
-            {/* Movie Details */}
             <div className="movie-details-wrapper">
               <h1 className="movie-title">{movie.title}</h1>
 
-              {/* Genre Tags */}
               <div className="movie-meta">
                 <Tag color="blue" className="genre-tag">
                   {movie.genre}
@@ -169,10 +163,8 @@ const MovieDetail = () => {
                 )}
               </div>
 
-              {/* Description */}
               <p className="movie-description">{movie.description}</p>
 
-              {/* Info Grid */}
               <div className="info-grid">
                 <div className="info-item">
                   <UserOutlined className="info-icon" />
@@ -207,7 +199,6 @@ const MovieDetail = () => {
                 </div>
               </div>
 
-              {/* Action Button */}
               <Button
                 type="primary"
                 size="large"
@@ -222,7 +213,6 @@ const MovieDetail = () => {
         </div>
       </div>
 
-      {/* Trailer Section */}
       {movie.trailer_url && (
         <section className="trailer-section">
           <div className="trailer-container">

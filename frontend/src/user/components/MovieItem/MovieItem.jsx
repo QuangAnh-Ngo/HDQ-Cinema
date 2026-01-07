@@ -1,4 +1,3 @@
-// frontend/src/user/components/MovieItem/MovieItem.jsx
 import { useState } from "react";
 import { Card, Button, Modal, Tag, Skeleton } from "antd";
 import { useNavigate } from "react-router-dom";
@@ -6,7 +5,6 @@ import PropTypes from "prop-types";
 import { ShoppingOutlined } from "@ant-design/icons";
 import "./MovieItem.scss";
 
-// ✅ Placeholder mặc định (base64 để tránh request)
 const PLACEHOLDER_IMAGE =
   "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjQ1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMWExYTJlIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNiIgZmlsbD0iIzY2NiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg==";
 
@@ -17,13 +15,11 @@ const MovieItem = ({ movie, onMovieClick, onBuyTicket, cinemaId }) => {
 
   const isTitleOverflow = movie.title && movie.title.length > 18;
 
-  // ✅ Kiểm tra URL poster hợp lệ
   const isValidUrl = (url) => {
     if (!url) return false;
     return url.startsWith("http://") || url.startsWith("https://");
   };
 
-  // ✅ Lấy poster URL hoặc placeholder
   const getPosterUrl = () => {
     if (imageError || !isValidUrl(movie.poster)) {
       return PLACEHOLDER_IMAGE;
@@ -84,7 +80,6 @@ const MovieItem = ({ movie, onMovieClick, onBuyTicket, cinemaId }) => {
         className="border-none shadow-sm"
         cover={
           <div className="relative overflow-hidden group poster-container">
-            {/* ✅ Skeleton loading */}
             {!imageLoaded && (
               <Skeleton.Image
                 active
@@ -93,7 +88,6 @@ const MovieItem = ({ movie, onMovieClick, onBuyTicket, cinemaId }) => {
               />
             )}
 
-            {/* ✅ Lazy loading với loading="lazy" */}
             <img
               alt={movie.title}
               src={getPosterUrl()}
@@ -106,7 +100,6 @@ const MovieItem = ({ movie, onMovieClick, onBuyTicket, cinemaId }) => {
               onError={handleImageError}
             />
 
-            {/* Tag độ tuổi */}
             <div className="absolute top-2 left-2 z-10">
               <Tag color="#f50" className="font-bold border-none m-0 uppercase">
                 T{movie.limitAge}

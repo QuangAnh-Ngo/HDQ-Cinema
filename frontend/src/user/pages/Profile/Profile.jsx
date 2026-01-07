@@ -1,4 +1,3 @@
-// frontend/src/user/pages/Profile/Profile.jsx
 import { useState, useEffect } from "react";
 import {
   Form,
@@ -95,14 +94,12 @@ const Profile = () => {
         return;
       }
 
-      // ✅ Không gửi username (không cho đổi)
       const payload = {
         email: values.email,
         phoneNumber: values.phoneNumber,
         dob: values.dob ? values.dob.format("YYYY-MM-DD") : null,
       };
 
-      // Chỉ gửi password nếu có nhập
       if (values.newPassword && values.newPassword.trim()) {
         payload.password = values.newPassword;
       }
@@ -111,7 +108,6 @@ const Profile = () => {
 
       await memberService.update(memberId, payload);
 
-      // ✅ Nếu đổi password → yêu cầu đăng nhập lại
       if (values.newPassword && values.newPassword.trim()) {
         Modal.success({
           title: "Cập nhật thành công!",
@@ -125,7 +121,6 @@ const Profile = () => {
       } else {
         message.success("Cập nhật thông tin thành công!");
 
-        // Cập nhật UI
         setMemberInfo({
           ...memberInfo,
           email: values.email,
@@ -133,7 +128,6 @@ const Profile = () => {
           dob: values.dob ? values.dob.format("YYYY-MM-DD") : null,
         });
 
-        // Reset password fields
         form.setFieldsValue({
           newPassword: "",
           confirmPassword: "",
@@ -158,7 +152,6 @@ const Profile = () => {
             </div>
           ) : (
             <>
-              {/* Header */}
               <div className="profile-header">
                 <Avatar
                   size={100}
@@ -214,7 +207,6 @@ const Profile = () => {
                     </Form.Item>
                   </div>
 
-                  {/* ✅ Username - DISABLED */}
                   <Form.Item name="username" label="Tên đăng nhập">
                     <Input
                       prefix={<UserOutlined />}

@@ -1,4 +1,3 @@
-// frontend/src/admin/pages/Cinemas.jsx
 import { useState, useEffect } from "react";
 import {
   FiPlus,
@@ -41,11 +40,10 @@ const Cinemas = () => {
       setLoading(true);
       const data = await cinemaService.getAll();
 
-      // ✅ Set default status if missing
       const cinemasWithStatus = (Array.isArray(data) ? data : []).map(
         (cinema) => ({
           ...cinema,
-          status: cinema.status || "active", // ✅ Default to active
+          status: cinema.status || "active",
         })
       );
 

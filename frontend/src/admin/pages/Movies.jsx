@@ -1,4 +1,3 @@
-// frontend/src/admin/pages/Movies.jsx
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { FiPlus, FiSearch, FiEdit, FiTrash2, FiCalendar } from "react-icons/fi";
 import { movieService } from "../../services";
@@ -20,12 +19,11 @@ const Movies = () => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [movieToDelete, setMovieToDelete] = useState(null);
 
-  // ✅ Memoize calculateMovieStatus to prevent unnecessary recalculations
   const calculateMovieStatus = useCallback((movie) => {
     if (!movie.dayStart || !movie.dayEnd) return "ended";
 
     const today = new Date();
-    today.setHours(0, 0, 0, 0); // Reset time for accurate date comparison
+    today.setHours(0, 0, 0, 0);
 
     const startDate = new Date(movie.dayStart);
     startDate.setHours(0, 0, 0, 0);
@@ -38,17 +36,15 @@ const Movies = () => {
     return "ended";
   }, []);
 
-  // ✅ Fetch movies only once on mount
   useEffect(() => {
     fetchMovies();
-  }, []); // Empty dependency array - only run once
+  }, []);
 
   const fetchMovies = async () => {
     try {
       setLoading(true);
       const data = await movieService.getAll();
 
-      // ✅ Process data once and set state
       const moviesWithStatus = (Array.isArray(data) ? data : []).map(
         (movie) => ({
           ...movie,
@@ -67,7 +63,6 @@ const Movies = () => {
     }
   };
 
-  // ✅ Use useMemo to calculate filtered movies
   const filteredMovies = useMemo(() => {
     let filtered = [...movies];
 
@@ -87,7 +82,6 @@ const Movies = () => {
     return filtered;
   }, [movies, searchTerm, statusFilter]);
 
-  // ✅ Memoize stats to prevent recalculation
   const stats = useMemo(() => {
     return {
       total: movies.length,
@@ -114,10 +108,8 @@ const Movies = () => {
   const handleSubmitMovie = async (movieData) => {
     try {
       if (selectedMovie) {
-        // ✅ Update existing movie
         const updated = await movieService.update(selectedMovie.id, movieData);
 
-        // ✅ Recalculate status after update
         const updatedWithStatus = {
           ...updated,
           status: calculateMovieStatus(updated),
@@ -129,10 +121,8 @@ const Movies = () => {
 
         message.success("Cập nhật phim thành công!");
       } else {
-        // ✅ Add new movie
         const newMovie = await movieService.create(movieData);
 
-        // ✅ Calculate status for new movie
         const newMovieWithStatus = {
           ...newMovie,
           status: calculateMovieStatus(newMovie),
@@ -146,7 +136,6 @@ const Movies = () => {
       setShowMovieForm(false);
       setSelectedMovie(null);
 
-      // ✅ Refresh data to ensure sync
       setTimeout(() => {
         fetchMovies();
       }, 500);
@@ -160,14 +149,12 @@ const Movies = () => {
     try {
       await movieService.delete(movieToDelete.id);
 
-      // ✅ Update local state
       setMovies((prev) => prev.filter((m) => m.id !== movieToDelete.id));
 
       message.success("Xóa phim thành công!");
       setShowDeleteDialog(false);
       setMovieToDelete(null);
 
-      // ✅ Force refresh to ensure backend sync
       setTimeout(() => {
         fetchMovies();
       }, 500);
@@ -200,7 +187,6 @@ const Movies = () => {
     const handleError = () => {
       if (!hasError) {
         setHasError(true);
-        // ✅ Use a data URI as fallback to prevent network request
         setImgSrc(
           "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjMwMCIgZmlsbD0iI2UwZTBlMCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTYiIGZpbGw9IiM5OTk5OTkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5ObyBJbWFnZTwvdGV4dD48L3N2Zz4="
         );

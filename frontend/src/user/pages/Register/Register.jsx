@@ -1,4 +1,3 @@
-// frontend/src/user/pages/Register/Register.jsx
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Spin } from "antd";
@@ -32,7 +31,6 @@ const Register = () => {
     }));
   };
 
-  // ✅ Validation với Toast
   const validateForm = () => {
     const {
       username,
@@ -45,7 +43,6 @@ const Register = () => {
       dob,
     } = formData;
 
-    // Username
     if (!username.trim()) {
       toast.warning("Vui lòng nhập tên đăng nhập");
       return false;
@@ -66,7 +63,6 @@ const Register = () => {
       return false;
     }
 
-    // Họ Tên
     if (!firstName.trim()) {
       toast.warning("Vui lòng nhập họ");
       return false;
@@ -77,7 +73,6 @@ const Register = () => {
       return false;
     }
 
-    // Email
     if (!email.trim()) {
       toast.warning("Vui lòng nhập email");
       return false;
@@ -88,7 +83,6 @@ const Register = () => {
       return false;
     }
 
-    // Phone
     if (!phone.trim()) {
       toast.warning("Vui lòng nhập số điện thoại");
       return false;
@@ -99,7 +93,6 @@ const Register = () => {
       return false;
     }
 
-    // Date of Birth
     if (!dob) {
       toast.warning("Vui lòng chọn ngày sinh");
       return false;
@@ -126,7 +119,6 @@ const Register = () => {
       return false;
     }
 
-    // Password
     if (!password) {
       toast.warning("Vui lòng nhập mật khẩu");
       return false;
@@ -137,7 +129,6 @@ const Register = () => {
       return false;
     }
 
-    // Confirm Password
     if (!confirmPassword) {
       toast.warning("Vui lòng xác nhận mật khẩu");
       return false;
@@ -173,7 +164,6 @@ const Register = () => {
 
       toast.success("🎉 Đăng ký tài khoản thành công!");
 
-      // Auto login after register
       try {
         console.log("🔄 Auto-login after register...");
 

@@ -1,4 +1,3 @@
-// frontend/src/admin/components/MovieForm.jsx
 import { useState, useEffect } from "react";
 import { FiX } from "react-icons/fi";
 import "../styles/AdminLayout.scss";
@@ -9,13 +8,13 @@ const MovieForm = ({ movie, onClose, onSubmit }) => {
     title: "",
     description: "",
     duration: "",
-    dayStart: "", // ✅ Changed from releaseDate
-    dayEnd: "", // ✅ Added
+    dayStart: "",
+    dayEnd: "",
     director: "",
     genre: "",
     language: "Tiếng Việt",
-    limitAge: "", // ✅ Changed from rating
-    trailer_url: "", // ✅ Changed from trailer
+    limitAge: "",
+    trailer_url: "",
     poster: "",
   });
 
@@ -23,7 +22,6 @@ const MovieForm = ({ movie, onClose, onSubmit }) => {
 
   useEffect(() => {
     if (movie) {
-      // ✅ Map backend data to form
       setFormData({
         title: movie.title || "",
         description: movie.description || "",
@@ -62,7 +60,6 @@ const MovieForm = ({ movie, onClose, onSubmit }) => {
     if (!formData.genre.trim()) newErrors.genre = "Vui lòng chọn thể loại";
     if (!formData.poster.trim()) newErrors.poster = "Vui lòng nhập URL poster";
 
-    // ✅ Validate date range
     if (formData.dayStart && formData.dayEnd) {
       const start = new Date(formData.dayStart);
       const end = new Date(formData.dayEnd);
@@ -71,7 +68,6 @@ const MovieForm = ({ movie, onClose, onSubmit }) => {
       }
     }
 
-    // ✅ Validate URL format
     if (formData.poster.trim()) {
       try {
         new URL(formData.poster);
@@ -87,7 +83,6 @@ const MovieForm = ({ movie, onClose, onSubmit }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (validate()) {
-      // ✅ Transform data to match backend API
       const submitData = {
         title: formData.title,
         poster: formData.poster,
@@ -118,7 +113,6 @@ const MovieForm = ({ movie, onClose, onSubmit }) => {
 
         <form onSubmit={handleSubmit} className="modal-body admin-form">
           <div className="form-grid">
-            {/* Left Column */}
             <div>
               <div className="form-group">
                 <label>
@@ -225,7 +219,6 @@ const MovieForm = ({ movie, onClose, onSubmit }) => {
               </div>
             </div>
 
-            {/* Right Column */}
             <div>
               <div className="form-group">
                 <label>
@@ -243,7 +236,6 @@ const MovieForm = ({ movie, onClose, onSubmit }) => {
                   <p className="error-message">{errors.poster}</p>
                 )}
 
-                {/* ✅ Preview poster if URL is valid */}
                 {formData.poster && !errors.poster && (
                   <div className="poster-preview" style={{ marginTop: 12 }}>
                     <img

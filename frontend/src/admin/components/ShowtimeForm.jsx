@@ -1,4 +1,3 @@
-// frontend/src/admin/components/ShowtimeForm.jsx
 import { useState, useEffect } from "react";
 import { FiX, FiAlertCircle, FiCheck } from "react-icons/fi";
 import { movieService, cinemaService } from "../../services";
@@ -27,7 +26,6 @@ const ShowtimeForm = ({ showtime, onClose, onSubmit }) => {
 
   useEffect(() => {
     if (showtime) {
-      // ✅ Parse existing showtime data
       const firstShowTimeRoom = showtime.showTimeRooms?.[0];
       const showTimeISO = firstShowTimeRoom?.showTime || "";
       const [date, time] = showTimeISO.split("T");
@@ -40,7 +38,6 @@ const ShowtimeForm = ({ showtime, onClose, onSubmit }) => {
         startTime: time?.substring(0, 5) || "",
       });
 
-      // Load rooms for selected cinema
       if (showtime.cinemaId) {
         fetchRoomsByCinema(showtime.cinemaId);
       }
@@ -74,14 +71,12 @@ const ShowtimeForm = ({ showtime, onClose, onSubmit }) => {
     }
   };
 
-  // ✅ Get rooms from cinema.rooms (API returns rooms inside cinema)
   const fetchRoomsByCinema = async (cinemaId) => {
     try {
       const cinema = cinemas.find((c) => String(c.id) === String(cinemaId));
       if (cinema?.rooms) {
         setRooms(cinema.rooms);
       } else {
-        // Fallback: fetch cinema by ID
         const cinemaData = await cinemaService.getById(cinemaId);
         setRooms(cinemaData?.rooms || []);
       }
@@ -95,7 +90,6 @@ const ShowtimeForm = ({ showtime, onClose, onSubmit }) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
 
-    // Clear room when cinema changes
     if (name === "cinemaId") {
       setFormData((prev) => ({ ...prev, roomId: "" }));
     }
@@ -129,7 +123,6 @@ const ShowtimeForm = ({ showtime, onClose, onSubmit }) => {
 
     if (!validate()) return;
 
-    // ✅ Transform data to match API format
     const submitData = {
       movieId: parseInt(formData.movieId, 10),
       showTimeRooms: [
@@ -181,7 +174,6 @@ const ShowtimeForm = ({ showtime, onClose, onSubmit }) => {
 
         <form onSubmit={handleSubmit} className="modal-body">
           <div className="form-grid">
-            {/* Left Column */}
             <div className="form-column">
               <div className="form-group">
                 <label>
@@ -259,7 +251,6 @@ const ShowtimeForm = ({ showtime, onClose, onSubmit }) => {
               </div>
             </div>
 
-            {/* Right Column */}
             <div className="form-column">
               <div className="form-group">
                 <label>
@@ -298,7 +289,6 @@ const ShowtimeForm = ({ showtime, onClose, onSubmit }) => {
                 )}
               </div>
 
-              {/* Movie Info Summary */}
               {getSelectedMovie() && (
                 <div className="movie-summary">
                   <h4>Thông tin phim</h4>
@@ -317,7 +307,6 @@ const ShowtimeForm = ({ showtime, onClose, onSubmit }) => {
             </div>
           </div>
 
-          {/* Conflict Alert */}
           {conflict && (
             <div
               className={`alert ${

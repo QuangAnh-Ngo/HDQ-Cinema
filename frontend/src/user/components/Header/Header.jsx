@@ -1,4 +1,3 @@
-// frontend/src/user/components/Header/Header.jsx
 import {
   Layout,
   Cascader,
@@ -36,7 +35,6 @@ const Header = () => {
   const [searchResults, setSearchResults] = useState([]);
   const [searchLoading, setSearchLoading] = useState(false);
 
-  // Lấy danh sách rạp khi component mount
   useEffect(() => {
     const fetchCinemas = async () => {
       try {
@@ -49,26 +47,20 @@ const Header = () => {
     fetchCinemas();
   }, []);
 
-  // Theo dõi trạng thái đăng nhập mỗi khi đường dẫn thay đổi
   useEffect(() => {
     const currentUser = authService.getCurrentUser();
     setUser(currentUser);
   }, [location.pathname]);
 
-  /**
-   * Nhóm rạp theo Thành phố -> Quận/Huyện -> Tên Rạp
-   */
   const cascaderOptions = useMemo(() => {
     const options = [];
     cinemas.forEach((cinema) => {
-      // Tìm hoặc tạo Thành phố
       let city = options.find((o) => o.value === cinema.city);
       if (!city) {
         city = { value: cinema.city, label: cinema.city, children: [] };
         options.push(city);
       }
 
-      // Tìm hoặc tạo Quận/Huyện
       let district = city.children.find((o) => o.value === cinema.district);
       if (!district) {
         district = {
@@ -79,7 +71,6 @@ const Header = () => {
         city.children.push(district);
       }
 
-      // Thêm Rạp (Backend dùng 'id')
       district.children.push({
         value: cinema.id,
         label: cinema.name,
@@ -91,7 +82,7 @@ const Header = () => {
   const handleCinemaChange = (value) => {
     if (!value || value.length === 0) return;
 
-    const cinemaId = value[value.length - 1]; // ← Lấy cinema ID
+    const cinemaId = value[value.length - 1];
     console.log("Cinema selected:", cinemaId);
 
     localStorage.setItem("selectedCinemaId", cinemaId);
@@ -109,7 +100,6 @@ const Header = () => {
     navigate("/login");
   };
 
-  // Logic Tìm kiếm với Debounce (chờ 500ms sau khi ngừng gõ mới gọi API)
   useEffect(() => {
     if (searchTerm.trim().length < 2) {
       setSearchResults([]);
@@ -135,7 +125,6 @@ const Header = () => {
     return () => clearTimeout(delayDebounceFn);
   }, [searchTerm]);
 
-  // ✅ Menu items với trang Profile
   const userMenuItems = [
     {
       key: "profile",
@@ -163,14 +152,12 @@ const Header = () => {
     <AntHeader className="header">
       <div className="header-container">
         <div className="wrap">
-          {/* Logo */}
           <div className="logo">
             <Link to="/" state={{ cinemaId: location.state?.cinemaId }}>
               <img src={logo} alt="HDQ Cinema Logo" />
             </Link>
           </div>
 
-          {/* Cinema Selector */}
           <Cascader
             options={cascaderOptions}
             onChange={handleCinemaChange}
@@ -184,7 +171,6 @@ const Header = () => {
             expandTrigger="hover"
           />
 
-          {/* Search Box */}
           <div className="header-search">
             <Input
               placeholder="Tìm phim..."
@@ -202,7 +188,6 @@ const Header = () => {
               }
             />
 
-            {/* Dropdown kết quả tìm kiếm */}
             {searchTerm && (
               <div className="search-dropdown">
                 <div className="search-header">Kết quả tìm kiếm</div>
@@ -254,7 +239,6 @@ const Header = () => {
             )}
           </div>
 
-          {/* User Section */}
           <div className="user-section">
             {user ? (
               <Dropdown
