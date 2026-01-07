@@ -19,4 +19,5 @@ public class EmployeeAccountResponse {
     String email;
 
     Set<Role> roles;
+    String employeeId;
 }

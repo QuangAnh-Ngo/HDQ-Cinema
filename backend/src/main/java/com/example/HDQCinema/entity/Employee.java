@@ -31,4 +31,7 @@ public class Employee {
 
     @Column(unique = true)
     String email;
+
+    @OneToOne(mappedBy = "employee", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    EmployeeAccount account;
 }

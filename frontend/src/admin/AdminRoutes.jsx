@@ -27,17 +27,18 @@ const AdminRoutes = () => {
               element={<Navigate to="/admin/dashboard" replace />}
             />
 
-            {/* ===== ALL STAFF ===== */}
+            {/* ===== ALL STAFF: EMPLOYEE, MANAGER, ADMIN ===== */}
             <Route
               path="/dashboard"
               element={
-                <AdminProtectedRoute>
+                <AdminProtectedRoute
+                  allowedRoles={["EMPLOYEE", "MANAGER", "ADMIN"]}
+                >
                   <AdminDashboard />
                 </AdminProtectedRoute>
               }
             />
 
-            {/* ===== EMPLOYEE, MANAGER, ADMIN ===== */}
             <Route
               path="/movies"
               element={
@@ -71,26 +72,7 @@ const AdminRoutes = () => {
               }
             />
 
-            {/* ===== MANAGER, ADMIN ===== */}
-            <Route
-              path="/cinemas"
-              element={
-                <AdminProtectedRoute allowedRoles={["MANAGER", "ADMIN"]}>
-                  <Cinemas />
-                </AdminProtectedRoute>
-              }
-            />
-
-            <Route
-              path="/rooms"
-              element={
-                <AdminProtectedRoute allowedRoles={["MANAGER", "ADMIN"]}>
-                  <Rooms />
-                </AdminProtectedRoute>
-              }
-            />
-
-            {/* ===== MANAGER, ADMIN - Employee Management ===== */}
+            {/* ===== MANAGER + ADMIN: Quản lý nhân viên ===== */}
             <Route
               path="/employees"
               element={
@@ -100,12 +82,29 @@ const AdminRoutes = () => {
               }
             />
 
+            {/* ===== ADMIN ONLY ===== */}
             <Route
-              path="members"
+              path="/cinemas"
               element={
-                <AdminProtectedRoute
-                  allowedRoles={["ADMIN", "MANAGER", "EMPLOYEE"]}
-                >
+                <AdminProtectedRoute allowedRoles={["ADMIN"]}>
+                  <Cinemas />
+                </AdminProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/rooms"
+              element={
+                <AdminProtectedRoute allowedRoles={["ADMIN"]}>
+                  <Rooms />
+                </AdminProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/members"
+              element={
+                <AdminProtectedRoute allowedRoles={["ADMIN"]}>
                   <Members />
                 </AdminProtectedRoute>
               }

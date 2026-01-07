@@ -10,6 +10,7 @@ const Sidebar = () => {
   const userName = authService.getCurrentUser()?.fullName || "User";
 
   const menuItems = [
+    // ===== ALL STAFF =====
     {
       path: "/admin/dashboard",
       label: "Dashboard",
@@ -34,29 +35,33 @@ const Sidebar = () => {
       icon: "fa-ticket",
       roles: ["EMPLOYEE", "MANAGER", "ADMIN"],
     },
+
+    // ===== MANAGER + ADMIN =====
+    {
+      path: "/admin/employees",
+      label: "Quản lý nhân viên",
+      icon: "fa-user-tie",
+      roles: ["MANAGER", "ADMIN"],
+    },
+
+    // ===== ADMIN ONLY =====
     {
       path: "/admin/cinemas",
       label: "Quản lý rạp",
       icon: "fa-building",
-      roles: ["MANAGER", "ADMIN"],
+      roles: ["ADMIN"],
     },
     {
       path: "/admin/rooms",
       label: "Quản lý phòng",
       icon: "fa-door-open",
-      roles: ["MANAGER", "ADMIN"],
-    },
-    {
-      path: "/admin/employees",
-      label: "Quản lý nhân viên",
-      icon: "fa-users",
-      roles: ["MANAGER", "ADMIN"],
+      roles: ["ADMIN"],
     },
     {
       path: "/admin/members",
       label: "Quản lý thành viên",
-      icon: "fa-user-friends",
-      roles: ["ADMIN", "MANAGER", "EMPLOYEE"],
+      icon: "fa-users",
+      roles: ["ADMIN"],
     },
   ];
 
@@ -67,6 +72,15 @@ const Sidebar = () => {
       EMPLOYEE: "role-employee",
     };
     return classes[role] || "role-default";
+  };
+
+  const getRoleLabel = (role) => {
+    const labels = {
+      ADMIN: "Quản trị viên",
+      MANAGER: "Quản lý",
+      EMPLOYEE: "Nhân viên",
+    };
+    return labels[role] || role;
   };
 
   return (
@@ -80,7 +94,7 @@ const Sidebar = () => {
           <div className="user-details">
             <span className="user-name">{userName}</span>
             <span className={`user-role ${getRoleBadgeClass(userRole)}`}>
-              {userRole}
+              {getRoleLabel(userRole)}
             </span>
           </div>
         </div>
