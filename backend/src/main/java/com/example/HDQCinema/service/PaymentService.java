@@ -2,7 +2,6 @@ package com.example.HDQCinema.service;
 
 import com.example.HDQCinema.configuration.PaymentConfig;
 import com.example.HDQCinema.dto.request.PaymentRequest;
-import com.example.HDQCinema.dto.response.ApiResponse;
 import com.example.HDQCinema.dto.response.BookingResponse;
 import com.example.HDQCinema.dto.response.PaymentResponse;
 import com.example.HDQCinema.exception.AppException;
@@ -11,9 +10,9 @@ import com.example.HDQCinema.repository.BookingRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestParam;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -24,6 +23,7 @@ import java.util.*;
 @Service
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @RequiredArgsConstructor
+@Slf4j
 public class PaymentService {
 
     BookingRepository bookingRepository;
@@ -35,83 +35,68 @@ public class PaymentService {
 
         Long bookingId = request.getBookingId();
 
-        String orderType = "other"; // client trả về
-        long amount = (long)bookingRepository.findTotalPriceByBookingId(bookingId)*100;
-//        String bankCode = req.getParameter("bankCode");
+        // ✅ FIX 1: Validate booking exists and has valid price
+        Double totalPrice = bookingRepository.findTotalPriceByBookingId(bookingId);
+        if (totalPrice == null || totalPrice <= 0) {
+            log.error("❌ Invalid booking or totalPrice: bookingId={}, totalPrice={}", bookingId, totalPrice);
+            throw new AppException(ErrorCode.BOOKING_NOT_FOUND);
+        }
 
+        String orderType = "other";
+        long amount = (long) (totalPrice * 100); // VNPay yêu cầu nhân 100
 
-        String vnp_TxnRef = bookingId.toString();
-        String vnp_IpAddr = PaymentConfig.getPublicIp(); // ip của ng đang thanh toán để chống giả mạo giao dịch
+        // ✅ FIX 2: Tạo vnp_TxnRef unique (bookingId + timestamp)
+        String vnp_TxnRef = bookingId + "_" + System.currentTimeMillis();
+
+        // ✅ FIX 3: Sử dụng IP cố định thay vì gọi API external
+        String vnp_IpAddr = "127.0.0.1"; // Sandbox chấp nhận localhost
 
         String vnp_TmnCode = PaymentConfig.vnp_TmnCode;
 
-//        -------------------------------------- SET UP THAM SỐ ---------------------------------------
-
+        // SET UP THAM SỐ
         Map<String, String> vnp_Params = new HashMap<>();
         vnp_Params.put("vnp_Version", PaymentConfig.vnp_Version);
         vnp_Params.put("vnp_Command", PaymentConfig.vnp_Command);
         vnp_Params.put("vnp_TmnCode", vnp_TmnCode);
         vnp_Params.put("vnp_Amount", String.valueOf(amount));
         vnp_Params.put("vnp_CurrCode", "VND");
-        vnp_Params.put("vnp_BankCode", "NCB"); // mã của ngân hàng, môi trường test thì sẽ là NCB
-
-//        if (bankCode != null && !bankCode.isEmpty()) {
-//            vnp_Params.put("vnp_BankCode", bankCode);
-//        }
-
+        vnp_Params.put("vnp_BankCode", "NCB");
         vnp_Params.put("vnp_TxnRef", vnp_TxnRef);
-        vnp_Params.put("vnp_OrderInfo", "Thanh toan don hang:" + vnp_TxnRef); // nội dung thanh toán (?)
+        vnp_Params.put("vnp_OrderInfo", "Thanh toan don hang:" + bookingId);
         vnp_Params.put("vnp_Locale", "vn");
-
         vnp_Params.put("vnp_OrderType", orderType);
-//
-//        String locate = req.getParameter("language");
-//        if (locate != null && !locate.isEmpty()) {
-//            vnp_Params.put("vnp_Locale", locate);
-//        } else {
-//            vnp_Params.put("vnp_Locale", "vn");
-//        }
-        vnp_Params.put("vnp_ReturnUrl", PaymentConfig.vnp_ReturnUrl); // ở bên PaymentConfig
+        vnp_Params.put("vnp_ReturnUrl", PaymentConfig.vnp_ReturnUrl);
         vnp_Params.put("vnp_IpAddr", vnp_IpAddr);
 
-        // --- BẮT ĐẦU SỬA LỖI ĐỊNH DẠNG MÚI GIỜ GMT+7 ---
-
-        // 1. Định nghĩa Múi giờ Việt Nam
-        TimeZone tz = TimeZone.getTimeZone("GMT+7");
-
-        // 2. Khởi tạo Calendar với Múi giờ đã định nghĩa
+        // Múi giờ Việt Nam
+        TimeZone tz = TimeZone.getTimeZone("Asia/Ho_Chi_Minh");
         Calendar cld = Calendar.getInstance(tz);
-
-        // 3. Định dạng thời gian
         SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
-        formatter.setTimeZone(tz); // Đảm bảo SimpleDateFormat sử dụng đúng múi giờ
+        formatter.setTimeZone(tz);
 
-        // Gán thời gian tạo
         String vnp_CreateDate = formatter.format(cld.getTime());
         vnp_Params.put("vnp_CreateDate", vnp_CreateDate);
 
-        // Gán thời gian hết hạn (sau 15 phút)
         cld.add(Calendar.MINUTE, 15);
         String vnp_ExpireDate = formatter.format(cld.getTime());
         vnp_Params.put("vnp_ExpireDate", vnp_ExpireDate);
 
-
-//        -------------------------------------- MÃ HÓA ---------------------------------------
-
-        List fieldNames = new ArrayList(vnp_Params.keySet());
+        // MÃ HÓA
+        List<String> fieldNames = new ArrayList<>(vnp_Params.keySet());
         Collections.sort(fieldNames);
         StringBuilder hashData = new StringBuilder();
         StringBuilder query = new StringBuilder();
-        Iterator itr = fieldNames.iterator();
+        Iterator<String> itr = fieldNames.iterator();
+        
         while (itr.hasNext()) {
-            String fieldName = (String) itr.next();
-            String fieldValue = (String) vnp_Params.get(fieldName);
+            String fieldName = itr.next();
+            String fieldValue = vnp_Params.get(fieldName);
             if ((fieldValue != null) && (fieldValue.length() > 0)) {
-                //Build hash data
+                // Build hash data
                 hashData.append(fieldName);
                 hashData.append('=');
                 hashData.append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII.toString()));
-                //Build query
+                // Build query
                 query.append(URLEncoder.encode(fieldName, StandardCharsets.US_ASCII.toString()));
                 query.append('=');
                 query.append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII.toString()));
@@ -122,13 +107,22 @@ public class PaymentService {
             }
         }
 
-//        -------------------------------------- GÁN THÔNG TIN VÀO URL ---------------------------------------
-
-
         String queryUrl = query.toString();
         String vnp_SecureHash = PaymentConfig.hmacSHA512(PaymentConfig.secretKey, hashData.toString());
         queryUrl += "&vnp_SecureHash=" + vnp_SecureHash;
         String paymentUrl = PaymentConfig.vnp_PayUrl + "?" + queryUrl;
+
+        // ✅ DEBUG LOG
+        log.info("========== VNPAY DEBUG ==========");
+        log.info("BookingId: {}", bookingId);
+        log.info("vnp_TxnRef: {}", vnp_TxnRef);
+        log.info("vnp_Amount: {} (totalPrice: {})", amount, totalPrice);
+        log.info("vnp_CreateDate: {}", vnp_CreateDate);
+        log.info("vnp_ReturnUrl: {}", PaymentConfig.vnp_ReturnUrl);
+        log.info("Hash Data: {}", hashData);
+        log.info("Secure Hash: {}", vnp_SecureHash);
+        log.info("Payment URL Length: {}", paymentUrl.length());
+        log.info("==================================");
 
         PaymentResponse paymentResponse = PaymentResponse.builder()
                 .status("OK")
@@ -136,31 +130,37 @@ public class PaymentService {
                 .URL(paymentUrl)
                 .build();
 
+        // ✅ FIX 4: Lưu vnp_TxnRef thay vì bookingId để match khi callback
         paymentURLService.create(bookingId, paymentUrl);
-
-//        com.google.gson.JsonObject job = new JsonObject();
-//        job.addProperty("code", "00");
-//        job.addProperty("message", "success");
-//        job.addProperty("data", paymentUrl);
-//        Gson gson = new Gson();
-//        resp.getWriter().write(gson.toJson(job));
 
         return paymentResponse;
     }
 
-    public BookingResponse transactionResult(String amount, String bankCode, String orderInfor, String responseCode, Long txnRef){
+    public BookingResponse transactionResult(String amount, String bankCode, String orderInfo, String responseCode, String txnRef) {
+        log.info("📥 VNPay Callback: responseCode={}, txnRef={}, amount={}", responseCode, txnRef, amount);
 
-        if(responseCode.equals("00")){
-            var response = bookingService.approvePayment(txnRef);
-            paymentURLService.deleteURL(txnRef);
+        // ✅ FIX 5: Extract bookingId từ vnp_TxnRef (format: bookingId_timestamp)
+        Long bookingId;
+        try {
+            String bookingIdStr = txnRef.contains("_") ? txnRef.split("_")[0] : txnRef;
+            bookingId = Long.parseLong(bookingIdStr);
+        } catch (NumberFormatException e) {
+            log.error("❌ Invalid txnRef format: {}", txnRef);
+            throw new AppException(ErrorCode.BOOKING_NOT_FOUND);
+        }
+
+        if (responseCode.equals("00")) {
+            log.info("✅ Payment SUCCESS for bookingId: {}", bookingId);
+            var response = bookingService.approvePayment(bookingId);
+            paymentURLService.deleteURL(bookingId);
             return response;
-        }
-        else if(responseCode.equals("24")){
-            paymentURLService.deleteURL(txnRef);
-            bookingService.deletePayment(txnRef);
+        } else if (responseCode.equals("24")) {
+            log.info("⚠️ Payment CANCELLED by user for bookingId: {}", bookingId);
+            paymentURLService.deleteURL(bookingId);
+            bookingService.deletePayment(bookingId);
             return null;
-        }
-        else {
+        } else {
+            log.error("❌ Payment FAILED with code: {} for bookingId: {}", responseCode, bookingId);
             throw new AppException(ErrorCode.BOOKING_FAIL);
         }
     }

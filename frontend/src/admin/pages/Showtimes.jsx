@@ -39,7 +39,7 @@ const Showtimes = () => {
     page: 0,
     size: 20,
     sortBy: "startTime",
-    sortDir: "desc",
+    sortDir: "asc",
   });
 
   const [showShowtimeForm, setShowShowtimeForm] = useState(false);
