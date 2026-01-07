@@ -13,7 +13,7 @@ import java.util.List;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Builder
-public class BookingResponse {
+public class    BookingResponse {
     Long id;
     double totalPrice;
     LocalDateTime createTime;
