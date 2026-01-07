@@ -3,9 +3,9 @@ import { useState, useEffect, useMemo } from "react";
 import PropTypes from "prop-types";
 import { Modal, Spin, message, Empty } from "antd";
 import {
-  movieService,
-  cinemaService,
   showtimeService,
+  cinemaService,
+  movieService,
 } from "../../../services";
 import "./ScheduleModal.scss";
 
@@ -20,52 +20,43 @@ const ScheduleModal = ({
   const [movie, setMovie] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState(null);
-  const [showtimesMap, setShowtimesMap] = useState({});
+  const [showtimes, setShowtimes] = useState([]);
 
-  // ✅ Tạo danh sách 7 ngày từ hôm nay
+  // ✅ Tạo danh sách 7 ngày
   const next7Days = useMemo(() => {
     const days = [];
     const today = new Date();
-
     for (let i = 0; i < 7; i++) {
       const date = new Date(today);
       date.setDate(today.getDate() + i);
       days.push(date.toISOString().split("T")[0]);
     }
-
     return days;
   }, []);
 
   useEffect(() => {
-    if (!visible || !movieId || !cinemaId) {
-      return;
-    }
+    if (!visible || !movieId || !cinemaId) return;
 
     const fetchData = async () => {
       setLoading(true);
       try {
-        const [movieData, cinemaData, allShowtimes] = await Promise.all([
+        // ✅ Use optimized endpoint
+        const [movieData, cinemaData, showtimeData] = await Promise.all([
           movieService.getById(movieId),
           cinemaService.getById(cinemaId),
-          showtimeService.getAll(),
+          showtimeService.getByMovie(movieId),
         ]);
 
         setMovie(movieData);
         setCinema(cinemaData);
 
-        const numericMovieId = Number(movieId);
+        // Filter by cinema's rooms
+        const cinemaRoomIds = cinemaData.rooms?.map((r) => r.roomId) || [];
+        const filteredShowtimes = showtimeData.filter((st) =>
+          cinemaRoomIds.includes(st.roomId)
+        );
 
-        const stMap = {};
-        allShowtimes.forEach((st) => {
-          if (Number(st.movieId) === numericMovieId) {
-            st.showTimeRooms?.forEach((str) => {
-              const key = `${str.showTime}_${str.roomId}`;
-              stMap[key] = st.showtimeId;
-            });
-          }
-        });
-
-        setShowtimesMap(stMap);
+        setShowtimes(filteredShowtimes);
         setSelectedDate(next7Days[0]);
       } catch (error) {
         console.error("Error fetching schedule:", error);
@@ -78,62 +69,36 @@ const ScheduleModal = ({
     fetchData();
   }, [visible, movieId, cinemaId, next7Days]);
 
-  /**
-   * Nhóm suất chiếu theo ngày
-   */
+  // ✅ Group by date (already flat structure from backend)
   const groupedShowtimes = useMemo(() => {
-    if (!movie?.showtimes || !cinema?.rooms) return {};
+    return showtimeService.groupByDate(showtimes);
+  }, [showtimes]);
 
-    const roomMap = {};
-    cinema.rooms.forEach((r) => {
-      roomMap[r.roomId] = r.roomName;
-    });
-    const roomIds = cinema.rooms.map((r) => r.roomId);
-
-    return movie.showtimes
-      .filter((st) => roomIds.includes(st.roomId))
-      .reduce((acc, st) => {
-        const date = st.showTime.split("T")[0];
-        if (!acc[date]) acc[date] = [];
-        acc[date].push({
-          ...st,
-          roomName: roomMap[st.roomId] || "Phòng chiếu",
-        });
-        return acc;
-      }, {});
-  }, [movie, cinema]);
-
-  // ✅ Lấy showtimes cho ngày đang chọn + filter suất đã qua
+  // ✅ Get showtimes for selected date
   const currentShowtimes = useMemo(() => {
     if (!selectedDate) return [];
 
-    const showtimes = groupedShowtimes[selectedDate] || [];
+    const dayShowtimes = groupedShowtimes[selectedDate] || [];
     const today = new Date().toISOString().split("T")[0];
 
-    // ✅ Nếu là ngày hôm nay → filter bỏ suất đã qua
+    // Filter past showtimes for today
     if (selectedDate === today) {
       const now = new Date();
-
-      return showtimes.filter((st) => {
-        const showDateTime = new Date(st.showTime);
-        return showDateTime > now;
-      });
+      return dayShowtimes.filter((st) => new Date(st.startTime) > now);
     }
 
-    return showtimes;
+    return dayShowtimes;
   }, [selectedDate, groupedShowtimes]);
 
-  // ✅ Kiểm tra ngày có suất chiếu còn lại không (cho styling tab)
-  const getAvailableShowtimesCount = (date) => {
-    const showtimes = groupedShowtimes[date] || [];
+  const getAvailableCount = (date) => {
+    const dayShowtimes = groupedShowtimes[date] || [];
     const today = new Date().toISOString().split("T")[0];
 
     if (date === today) {
       const now = new Date();
-      return showtimes.filter((st) => new Date(st.showTime) > now).length;
+      return dayShowtimes.filter((st) => new Date(st.startTime) > now).length;
     }
-
-    return showtimes.length;
+    return dayShowtimes.length;
   };
 
   const formatDateTab = (dateStr, index) => {
@@ -142,23 +107,14 @@ const ScheduleModal = ({
     const month = (date.getMonth() + 1).toString().padStart(2, "0");
     const weekdays = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
 
-    if (index === 0) {
-      return { day: "Hôm nay", date: `${day}/${month}` };
-    }
-
-    return { day: weekdays[date.getDay()], date: `${day}/${month}` };
+    return {
+      day: index === 0 ? "Hôm nay" : weekdays[date.getDay()],
+      date: `${day}/${month}`,
+    };
   };
 
   const handleShowtimeClick = (showtime) => {
-    const key = `${showtime.showTime}_${showtime.roomId}`;
-    const showtimeId = showtimesMap[key];
-
-    if (!showtimeId) {
-      message.error("Không tìm thấy suất chiếu này");
-      return;
-    }
-
-    onSelectShowtime(showtimeId);
+    onSelectShowtime(showtime.showtimeId);
   };
 
   if (!visible) return null;
@@ -182,7 +138,7 @@ const ScheduleModal = ({
       width={700}
       centered
       className="schedule-modal-custom"
-      destroyOnHidden
+      destroyOnClose
     >
       {loading ? (
         <div className="modal-loading">
@@ -191,20 +147,17 @@ const ScheduleModal = ({
         </div>
       ) : (
         <>
-          {/* ✅ Custom Date Tabs */}
           <div className="date-tabs">
             {next7Days.map((date, index) => {
               const { day, date: dateStr } = formatDateTab(date, index);
-              const isActive = selectedDate === date;
-              // ✅ Dùng function mới để check có suất còn lại không
-              const hasShowtimes = getAvailableShowtimesCount(date) > 0;
+              const hasShowtimes = getAvailableCount(date) > 0;
 
               return (
                 <button
                   key={date}
-                  className={`date-tab ${isActive ? "active" : ""} ${
-                    !hasShowtimes ? "no-showtime" : ""
-                  }`}
+                  className={`date-tab ${
+                    selectedDate === date ? "active" : ""
+                  } ${!hasShowtimes ? "no-showtime" : ""}`}
                   onClick={() => setSelectedDate(date)}
                 >
                   <span className="tab-day">{day}</span>
@@ -214,32 +167,27 @@ const ScheduleModal = ({
             })}
           </div>
 
-          {/* ✅ Nội dung */}
           <div className="schedule-content">
             {currentShowtimes.length > 0 ? (
               <div className="day-schedule">
                 {currentShowtimes
-                  .sort((a, b) => a.showTime.localeCompare(b.showTime))
-                  .map((st, idx) => (
+                  .sort((a, b) => a.startTime.localeCompare(b.startTime))
+                  .map((st) => (
                     <button
-                      key={idx}
+                      key={st.showtimeId}
                       className="show-time"
                       onClick={() => handleShowtimeClick(st)}
                     >
-                      <span className="time-text">
-                        {st.showTime.split("T")[1].substring(0, 5)}
-                      </span>
+                      <span className="time-text">{st.time}</span>
                       <span className="room-text"> - {st.roomName}</span>
                     </button>
                   ))}
               </div>
             ) : (
-              <div className="no-showtime-message">
-                <Empty
-                  image={Empty.PRESENTED_IMAGE_SIMPLE}
-                  description="Không có suất chiếu trong ngày này"
-                />
-              </div>
+              <Empty
+                image={Empty.PRESENTED_IMAGE_SIMPLE}
+                description="Không có suất chiếu trong ngày này"
+              />
             )}
           </div>
         </>
