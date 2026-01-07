@@ -3,7 +3,7 @@ import axiosInstance from "./axiosInstance";
 
 export const bookingService = {
   /**
-   * ✅ Lấy danh sách booking của member
+   * Lấy danh sách booking của member
    * GET /bookings/member/{memberId}
    */
   getByMember: async (memberId) => {
@@ -17,12 +17,11 @@ export const bookingService = {
   },
 
   /**
-   * ✅ Lấy danh sách booking theo ngày
+   * Lấy danh sách booking theo ngày
    * GET /bookings/date/{date}
    */
   getByDate: async (date) => {
     try {
-      // date format: "YYYY-MM-DD"
       const response = await axiosInstance.get(`/bookings/date/${date}`);
       return response || [];
     } catch (error) {
@@ -32,7 +31,7 @@ export const bookingService = {
   },
 
   /**
-   * ✅ Lấy số lượng booking pending
+   * Lấy số lượng booking pending
    * GET /bookings/pending
    */
   getPendingCount: async () => {
@@ -46,18 +45,19 @@ export const bookingService = {
   },
 
   /**
-   * ✅ Tạo booking mới
+   * ✅ FIX: Tạo booking mới
    * POST /bookings
-   * Request: { userId, showTimeId, cinemaId, bookingDetailRequests: [{ seatId }] }
+   * Request: { memberId, showTimeId, cinemaId, bookingDetailRequests: [{ seatId }] }
    */
   create: async (data) => {
     try {
+      // ✅ FIX: Use memberId instead of userId
       const payload = {
-        userId: data.userId,
-        showTimeId: data.showTimeId,
-        cinemaId: data.cinemaId,
+        memberId: data.memberId || data.userId, // ✅ FIXED!
+        showTimeId: parseInt(data.showTimeId, 10),
+        cinemaId: parseInt(data.cinemaId, 10),
         bookingDetailRequests: data.seats.map((seatId) => ({
-          seatId: seatId,
+          seatId: parseInt(seatId, 10),
         })),
       };
 
@@ -67,16 +67,15 @@ export const bookingService = {
 
       console.log("✅ Booking response:", response);
 
-      // Response structure: { id, totalPrice, createTime, username, showTime, seats }
       return response;
     } catch (error) {
-      console.error("Create booking error:", error);
+      console.error("❌ Create booking error:", error);
       throw error;
     }
   },
 
   /**
-   * ✅ Utility: Format booking cho UI
+   * Utility: Format booking cho UI
    */
   formatBooking: (booking) => {
     return {

@@ -1,41 +1,10 @@
 // frontend/src/services/seatService.js
 import axiosInstance from "./axiosInstance";
+import roomService from "./roomService";
 
 export const seatService = {
-  /**
-   * ✅ FIX: Lấy seats theo showtime từ room-controller
-   * API: GET /rooms?showtimeId={showtimeId}
-   * Response: { code, message, result: { roomId, showtimeId, roomName, cinemaName, seats: [...] } }
-   */
   getSeatsByShowtime: async (showtimeId) => {
-    try {
-      console.log("🔍 Fetching seats for showtime:", showtimeId);
-
-      const response = await axiosInstance.get("/rooms", {
-        params: { showtimeId },
-      });
-
-      console.log("📦 Raw API response:", response);
-      console.log("📦 Response.result:", response?.result);
-
-      // ✅ Handle response structure
-      if (!response) {
-        console.error("❌ No response from API");
-        return null;
-      }
-
-      // Backend returns: { code, message, result: { roomId, roomName, cinemaName, seats } }
-      const result = response.result || response;
-
-      console.log("✅ Processed result:", result);
-      console.log("💺 Seats count:", result?.seats?.length || 0);
-
-      return result;
-    } catch (error) {
-      console.error("❌ Get seats by showtime error:", error);
-      console.error("❌ Error response:", error.response?.data);
-      throw error;
-    }
+    return roomService.getRoomByShowtime(showtimeId);
   },
 
   /**

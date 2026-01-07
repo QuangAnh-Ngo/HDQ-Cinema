@@ -57,8 +57,25 @@ const ConfirmPayment = () => {
       const user = authService.getCurrentUser();
       console.log("👤 Current user:", user);
 
+      // ✅ FIX: Extract memberId correctly
+      // Member có thể có: member_id, memberId, id, userId
+      const memberId =
+        user.member_id ||
+        user.memberId ||
+        user.id ||
+        user.userId ||
+        user.username; // Fallback to username if no ID
+
+      if (!memberId) {
+        message.error(
+          "Không tìm thấy thông tin người dùng. Vui lòng đăng nhập lại."
+        );
+        navigate("/login");
+        return;
+      }
+
       const bookingData = {
-        userId: user.id || user.memberId || user.userId,
+        memberId: memberId, // ✅ FIXED: Use memberId
         showTimeId: showtimeId,
         cinemaId: cinemaId,
         seats: selectedSeats.map((seat) => seat.seatId),
@@ -70,7 +87,7 @@ const ConfirmPayment = () => {
       const bookingResponse = await bookingService.create(bookingData);
       console.log("✅ Booking created:", bookingResponse);
 
-      const bookingId = bookingResponse.id;
+      const bookingId = bookingResponse?.id;
 
       if (!bookingId) {
         throw new Error("Không nhận được mã đặt vé từ server");
@@ -80,14 +97,17 @@ const ConfirmPayment = () => {
       message.loading("Đang khởi tạo thanh toán...", 0);
 
       const paymentResponse = await paymentService.create(bookingId);
-      console.log("✅ Payment created:", paymentResponse);
+      console.log("✅ Payment response:", paymentResponse);
 
       message.destroy();
 
-      if (paymentResponse?.url) {
+      // ✅ FIX: Handle payment response correctly
+      const paymentUrl = paymentResponse?.url || paymentResponse?.result?.url;
+
+      if (paymentUrl) {
         message.success("Chuyển hướng đến cổng thanh toán...", 1);
         setTimeout(() => {
-          window.location.href = paymentResponse.url;
+          window.location.href = paymentUrl;
         }, 1000);
       } else {
         throw new Error("Không nhận được URL thanh toán từ VNPay");
@@ -96,28 +116,17 @@ const ConfirmPayment = () => {
       console.error("❌ Payment flow error:", error);
       message.destroy();
 
-      // ✅ Handle mock mode error with detailed message
       if (error.needRealAuth || error.mockMode) {
-        const errorMsg = error.message || "Backend chưa hỗ trợ mock payment";
-
         message.error({
           content: (
             <div style={{ whiteSpace: "pre-line" }}>
               <strong>⚠️ Thanh toán yêu cầu đăng nhập thật</strong>
               <br />
               <br />
-              {errorMsg}
-              <br />
-              <br />
-              <strong>Giải pháp:</strong>
-              <br />
-              1. Đăng xuất và đăng ký/đăng nhập với tài khoản thật
-              <br />
-              2. Hoặc yêu cầu backend hỗ trợ X-Mock-Mode headers
+              {error.message || "Backend chưa hỗ trợ mock payment"}
             </div>
           ),
           duration: 10,
-          style: { maxWidth: 500 },
         });
       } else {
         message.error(

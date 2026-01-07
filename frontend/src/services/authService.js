@@ -1,28 +1,41 @@
 // frontend/src/services/authService.js
 import axiosInstance from "./axiosInstance";
 
-// ✅ DISABLE MOCK MODE for real authentication
-const ENABLE_MOCK = false; // ← CHANGE TO FALSE
+const ENABLE_MOCK = false;
+
+// ✅ ADD: Helper function to decode JWT
+const decodeJWT = (token) => {
+  try {
+    const base64Url = token.split(".")[1];
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split("")
+        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+        .join("")
+    );
+    return JSON.parse(jsonPayload);
+  } catch (error) {
+    console.error("❌ Failed to decode JWT:", error);
+    return null;
+  }
+};
 
 const mockUsers = {
-  // ... keep existing mock users for testing
+  // ... keep existing mock users
 };
 
 export const authService = {
   /**
-   * ✅ Login - Fixed to handle API response correctly
+   * ✅ Login - Decode JWT to get memberId
    */
   login: async (username, password) => {
-    // ✅ MOCK MODE - for development testing
+    // MOCK MODE
     if (ENABLE_MOCK && mockUsers[username]) {
       const mockUser = mockUsers[username];
 
       if (mockUser.password !== password) {
-        throw {
-          status: 401,
-          message: "Sai mật khẩu",
-          code: 1001,
-        };
+        throw { status: 401, message: "Sai mật khẩu", code: 1001 };
       }
 
       await new Promise((resolve) => setTimeout(resolve, 500));
@@ -30,25 +43,17 @@ export const authService = {
       localStorage.setItem("token", mockUser.token);
       localStorage.setItem("user", JSON.stringify(mockUser.user));
 
-      console.log("🎭 Mock login successful:", mockUser.username);
-
-      return {
-        token: mockUser.token,
-        user: mockUser.user,
-      };
+      return { token: mockUser.token, user: mockUser.user };
     }
 
     // ✅ REAL API MODE
     try {
       console.log("🔐 Attempting login for:", username);
 
-      // Step 1: Get token
       const response = await axiosInstance.post("/auth/token", {
         username,
         password,
       });
-
-      console.log("🔑 Token response:", response);
 
       const token = response?.token;
 
@@ -56,24 +61,20 @@ export const authService = {
         throw new Error("Login failed - no token received");
       }
 
-      // Step 2: Save token
       localStorage.setItem("token", token);
 
-      // Step 3: Fetch user info (API /auth/token doesn't return user)
-      console.log("👤 Fetching user info...");
+      // ✅ FIX: Decode JWT to get memberId
+      const decoded = decodeJWT(token);
+      console.log("🔓 Decoded token:", decoded);
 
-      const userInfo = await authService.fetchAndStoreUserInfo();
+      // ✅ Fetch user info and merge with decoded data
+      const userInfo = await authService.fetchAndStoreUserInfo(decoded);
 
       console.log("✅ Login complete:", { username, userInfo });
 
-      return {
-        token,
-        user: userInfo,
-      };
+      return { token, user: userInfo };
     } catch (error) {
       console.error("❌ Login error:", error);
-
-      // Clear any partial data
       localStorage.removeItem("token");
       localStorage.removeItem("user");
 
@@ -86,26 +87,48 @@ export const authService = {
   },
 
   /**
-   * ✅ Fetch user info after login
+   * ✅ FIX: Fetch user info and merge with decoded token
    */
-  fetchAndStoreUserInfo: async () => {
-    // Try member endpoint first
+  fetchAndStoreUserInfo: async (decodedToken = null) => {
+    // Decode token if not passed
+    if (!decodedToken) {
+      const token = localStorage.getItem("token");
+      if (token && !token.startsWith("mock-token")) {
+        try {
+          const base64Url = token.split(".")[1];
+          const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+          decodedToken = JSON.parse(atob(base64));
+          console.log("🔓 Decoded token:", decodedToken);
+        } catch (e) {
+          console.error("Failed to decode token:", e);
+        }
+      }
+    }
+
+    // Try member endpoint
     try {
       console.log("📡 Trying /members/my-info...");
 
       const response = await axiosInstance.get("/members/my-info");
 
       if (response) {
-        // ✅ Add MEMBER role if not present
+        // ✅ FIX: Use accountId from token as memberId
         const userWithRole = {
           ...response,
+          memberId:
+            decodedToken?.accountId || // ✅ accountId is the real memberId!
+            decodedToken?.sub ||
+            response.member_id ||
+            response.memberId,
           role: "MEMBER",
           roles: response.roles || ["MEMBER"],
         };
 
         localStorage.setItem("user", JSON.stringify(userWithRole));
-
-        console.log("✅ Member info stored:", userWithRole);
+        console.log(
+          "✅ Member info stored with memberId:",
+          userWithRole.memberId
+        );
 
         return userWithRole;
       }
@@ -120,7 +143,6 @@ export const authService = {
       const response = await axiosInstance.get("/accounts/my-info");
 
       if (response) {
-        // ✅ Extract role from roles array
         const roles = response.roles?.map((r) => r.name || r) || [];
         const highestRole = roles.includes("ADMIN")
           ? "ADMIN"
@@ -132,12 +154,16 @@ export const authService = {
 
         const userWithRole = {
           ...response,
+          memberId:
+            decodedToken?.sub ||
+            decodedToken?.memberId ||
+            response.employee_account_id ||
+            response.employeeAccountId,
           role: highestRole,
           roles: roles,
         };
 
         localStorage.setItem("user", JSON.stringify(userWithRole));
-
         console.log("✅ Account info stored:", userWithRole);
 
         return userWithRole;
@@ -146,23 +172,18 @@ export const authService = {
       console.error("❌ Failed to fetch user info:", accountError);
     }
 
-    // If both fail, create minimal user object
+    // Fallback
     const fallbackUser = {
-      username: "unknown",
+      username: decodedToken?.sub || "unknown",
+      memberId: decodedToken?.sub,
       role: "MEMBER",
       roles: ["MEMBER"],
     };
 
     localStorage.setItem("user", JSON.stringify(fallbackUser));
-
     return fallbackUser;
   },
 
-  // ... keep all other existing methods
-
-  /**
-   * Logout
-   */
   logout: async () => {
     try {
       const token = localStorage.getItem("token");
@@ -177,9 +198,6 @@ export const authService = {
     }
   },
 
-  /**
-   * Introspect token
-   */
   introspect: async () => {
     try {
       const token = localStorage.getItem("token");
@@ -208,16 +226,12 @@ export const authService = {
 
   getRoles: () => {
     const user = authService.getCurrentUser();
-    if (!user) return [];
-
-    if (!user.roles) return [];
+    if (!user || !user.roles) return [];
 
     if (Array.isArray(user.roles)) {
       return user.roles
         .map((role) => {
-          if (typeof role === "string") {
-            return role.replace(/^ROLE_/, "");
-          }
+          if (typeof role === "string") return role.replace(/^ROLE_/, "");
           return role.name?.replace(/^ROLE_/, "") || "";
         })
         .filter(Boolean);
@@ -230,24 +244,15 @@ export const authService = {
     return [];
   },
 
-  hasRole: (roleName) => {
-    const roles = authService.getRoles();
-    return roles.includes(roleName);
-  },
-
-  hasAnyRole: (...roleNames) => {
-    const roles = authService.getRoles();
-    return roleNames.some((role) => roles.includes(role));
-  },
+  hasRole: (roleName) => authService.getRoles().includes(roleName),
+  hasAnyRole: (...roleNames) =>
+    roleNames.some((role) => authService.getRoles().includes(role)),
 
   getHighestRole: () => {
     const roles = authService.getRoles();
-    const hierarchy = ["ADMIN", "MANAGER", "EMPLOYEE", "MEMBER"];
-
-    for (const role of hierarchy) {
+    for (const role of ["ADMIN", "MANAGER", "EMPLOYEE", "MEMBER"]) {
       if (roles.includes(role)) return role;
     }
-
     return "GUEST";
   },
 

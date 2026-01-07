@@ -3,15 +3,15 @@ import axiosInstance from "./axiosInstance";
 
 export const paymentService = {
   /**
-   * ✅ Tạo payment URL
+   * ✅ FIX: Tạo payment URL
    * POST /payment/create_payment
    * Request: { bookingId }
-   * Response: { status, message, url }
+   * Response: { code, message, result: { status, message, url } }
    */
   create: async (bookingId) => {
     try {
       const payload = {
-        bookingId: bookingId,
+        bookingId: parseInt(bookingId, 10), // ✅ Ensure number type
       };
 
       console.log("💳 Creating payment for booking:", bookingId);
@@ -23,18 +23,24 @@ export const paymentService = {
 
       console.log("✅ Payment response:", response);
 
-      // Response structure: { status, message, url }
-      return response;
+      // ✅ FIX: Handle nested response structure
+      // Response could be: response.result or just response
+      const result = response?.result || response;
+
+      return {
+        status: result?.status,
+        message: result?.message,
+        url: result?.url,
+      };
     } catch (error) {
-      console.error("Create payment error:", error);
+      console.error("❌ Create payment error:", error);
       throw error;
     }
   },
 
   /**
-   * ✅ Xử lý VNPay callback
+   * ✅ FIX: Xử lý VNPay callback
    * GET /payment/payment_infor
-   * Query params: vnp_Amount, vnp_BankCode, vnp_OrderInfo, vnp_ResponseCode, vnp_TxnRef
    */
   handleCallback: async (vnpayParams) => {
     try {
@@ -46,7 +52,7 @@ export const paymentService = {
           vnp_BankCode: vnpayParams.vnp_BankCode,
           vnp_OrderInfo: vnpayParams.vnp_OrderInfo,
           vnp_ResponseCode: vnpayParams.vnp_ResponseCode,
-          vnp_TxnRef: vnpayParams.vnp_TxnRef,
+          vnp_TxnRef: parseInt(vnpayParams.vnp_TxnRef, 10), // ✅ Must be integer
         },
       });
 
@@ -54,13 +60,13 @@ export const paymentService = {
 
       return response;
     } catch (error) {
-      console.error("Payment callback error:", error);
+      console.error("❌ Payment callback error:", error);
       throw error;
     }
   },
 
   /**
-   * ✅ Lấy lịch sử payment của member
+   * Lấy lịch sử payment của member
    * GET /paymenturls/{memberId}
    */
   getHistoryByMember: async (memberId) => {
@@ -73,35 +79,8 @@ export const paymentService = {
     }
   },
 
-  /**
-   * Utility: Kiểm tra payment thành công
-   */
   isPaymentSuccessful: (responseCode) => {
     return responseCode === "00";
-  },
-
-  /**
-   * Utility: Parse callback URL
-   */
-  parseVNPayCallback: (url) => {
-    const urlObj = new URL(url);
-    const params = {};
-    urlObj.searchParams.forEach((value, key) => {
-      params[key] = value;
-    });
-    return params;
-  },
-
-  /**
-   * Utility: Format payment history
-   */
-  formatHistory: (history) => {
-    return history.map((payment) => ({
-      ...payment,
-      formattedDate: new Date(payment.createdAt).toLocaleString("vi-VN"),
-      formattedAmount:
-        new Intl.NumberFormat("vi-VN").format(payment.amount) + " VNĐ",
-    }));
   },
 };
 
