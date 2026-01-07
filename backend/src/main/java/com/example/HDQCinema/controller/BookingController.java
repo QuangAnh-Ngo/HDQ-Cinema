@@ -32,24 +32,28 @@ public class BookingController {
                 .build();
     }
 
+    // ✅ FIX: MANAGE_BOOKING -> MANAGE_BOOKINGS
     @GetMapping("/date/{date}")
-    @PreAuthorize("hasAuthority('MANAGE_BOOKING') or hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('MANAGE_BOOKINGS')")
     ApiResponse<List<BookingResponse>> getBookingsByDate(@PathVariable("date") LocalDate date){
         var response = bookingService.getBookingsByDate(date);
         return ApiResponse.<List<BookingResponse>>builder()
                 .result(response)
                 .build();
     }
+
+    // ✅ FIX: MANAGE_BOOKING -> MANAGE_BOOKINGS
     @GetMapping("/member/{memberId}")
-    @PreAuthorize("hasAuthority('MANAGE_BOOKING') or #memberId == principal.claims['accountId']")
+    @PreAuthorize("hasAuthority('MANAGE_BOOKINGS') or #memberId == principal.claims['accountId']")
     ApiResponse<List<BookingResponse>> getBookingsByMember(@PathVariable("memberId") String memberId){
         return ApiResponse.<List<BookingResponse>>builder()
                 .result(bookingService.getBookingsByMember(memberId))
                 .build();
     }
 
+    // ✅ FIX: MANAGE_BOOKING -> MANAGE_BOOKINGS
     @GetMapping("/pending")
-    @PreAuthorize("hasAuthority('MANAGE_BOOKING') or hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('MANAGE_BOOKINGS')")
     ApiResponse<AmountOfPendingBookingResponse> getAmountOfPending(){
         var response = bookingService.countPendingBooking();
         return ApiResponse.<AmountOfPendingBookingResponse>builder()

@@ -1,3 +1,4 @@
+// frontend/src/user/components/Header/Header.jsx
 import {
   Layout,
   Cascader,
@@ -16,6 +17,7 @@ import {
   LogoutOutlined,
   HistoryOutlined,
   EnvironmentOutlined,
+  SettingOutlined,
 } from "@ant-design/icons";
 import { useEffect, useState, useMemo } from "react";
 import { cinemaService, movieService, authService } from "../../../services";
@@ -133,7 +135,14 @@ const Header = () => {
     return () => clearTimeout(delayDebounceFn);
   }, [searchTerm]);
 
+  // ✅ Menu items với trang Profile
   const userMenuItems = [
+    {
+      key: "profile",
+      label: "Thông tin cá nhân",
+      icon: <SettingOutlined />,
+      onClick: () => navigate("/profile"),
+    },
     {
       key: "history",
       label: "Lịch sử đặt vé",

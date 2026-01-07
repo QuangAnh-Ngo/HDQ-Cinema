@@ -1,0 +1,247 @@
+// frontend/src/user/pages/Profile/Profile.scss
+.profile-page {
+  min-height: calc(100vh - 80px);
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f0f23 100%);
+  padding: 40px 20px;
+
+  .profile-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px;
+    color: #fff;
+
+    p {
+      margin-top: 16px;
+      color: rgba(255, 255, 255, 0.7);
+    }
+  }
+
+  .profile-container {
+    max-width: 700px;
+    margin: 0 auto;
+  }
+
+  .profile-card {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    overflow: hidden;
+
+    .ant-card-body {
+      padding: 32px;
+    }
+  }
+
+  .profile-header {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    margin-bottom: 8px;
+
+    .profile-avatar {
+      background: linear-gradient(135deg, #8b5cf6, #6366f1);
+      font-size: 40px;
+      flex-shrink: 0;
+    }
+
+    .profile-info {
+      h1 {
+        color: #fff;
+        font-size: 28px;
+        font-weight: 700;
+        margin: 0 0 4px 0;
+      }
+
+      .username {
+        color: #8b5cf6;
+        font-size: 16px;
+        margin: 0 0 4px 0;
+      }
+
+      .member-since {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 14px;
+        margin: 0;
+      }
+    }
+  }
+
+  .ant-divider {
+    border-color: rgba(255, 255, 255, 0.1);
+    margin: 24px 0;
+  }
+
+  .profile-form {
+    .form-section {
+      h3 {
+        color: #fff;
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 16px;
+      }
+
+      .section-hint {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 13px;
+        margin-top: -12px;
+        margin-bottom: 16px;
+      }
+    }
+
+    .form-row {
+      display: flex;
+      gap: 16px;
+
+      .form-item-half {
+        flex: 1;
+      }
+    }
+
+    .ant-form-item-label > label {
+      color: rgba(255, 255, 255, 0.85);
+      font-weight: 500;
+    }
+
+    .ant-input,
+    .ant-input-password,
+    .ant-picker {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 8px;
+      color: #fff;
+      height: 44px;
+
+      &::placeholder {
+        color: rgba(255, 255, 255, 0.4);
+      }
+
+      &:hover,
+      &:focus {
+        border-color: #8b5cf6;
+        background: rgba(255, 255, 255, 0.08);
+      }
+
+      .ant-input-prefix {
+        color: rgba(255, 255, 255, 0.5);
+        margin-right: 8px;
+      }
+    }
+
+    .ant-input-affix-wrapper {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 8px;
+      padding: 0 12px;
+
+      &:hover,
+      &:focus,
+      &-focused {
+        border-color: #8b5cf6;
+        background: rgba(255, 255, 255, 0.08);
+      }
+
+      .ant-input {
+        background: transparent;
+        border: none;
+        height: 42px;
+
+        &:focus {
+          box-shadow: none;
+        }
+      }
+    }
+
+    .input-disabled {
+      background: rgba(255, 255, 255, 0.02) !important;
+      color: rgba(255, 255, 255, 0.5) !important;
+      cursor: not-allowed;
+
+      &.ant-input-affix-wrapper-disabled {
+        .ant-input {
+          color: rgba(255, 255, 255, 0.5) !important;
+        }
+      }
+    }
+
+    .date-picker-full {
+      width: 100%;
+
+      .ant-picker-input > input {
+        color: #fff;
+
+        &::placeholder {
+          color: rgba(255, 255, 255, 0.4);
+        }
+      }
+
+      .ant-picker-suffix {
+        color: rgba(255, 255, 255, 0.5);
+      }
+
+      .ant-picker-clear {
+        background: transparent;
+        color: rgba(255, 255, 255, 0.5);
+
+        &:hover {
+          color: #fff;
+        }
+      }
+    }
+
+    .ant-form-item-explain-error {
+      color: #ff6b6b;
+      font-size: 12px;
+    }
+  }
+
+  .form-actions {
+    display: flex;
+    justify-content: center;
+    margin-top: 32px;
+
+    .save-btn {
+      min-width: 200px;
+      height: 48px;
+      font-size: 16px;
+      font-weight: 600;
+      border-radius: 24px;
+      background: linear-gradient(135deg, #8b5cf6, #6366f1);
+      border: none;
+      box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);
+      transition: all 0.3s ease;
+
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(139, 92, 246, 0.5);
+      }
+    }
+  }
+}
+
+// Responsive
+@media (max-width: 576px) {
+  .profile-page {
+    padding: 20px 16px;
+
+    .profile-card .ant-card-body {
+      padding: 20px;
+    }
+
+    .profile-header {
+      flex-direction: column;
+      text-align: center;
+
+      .profile-info h1 {
+        font-size: 22px;
+      }
+    }
+
+    .profile-form .form-row {
+      flex-direction: column;
+      gap: 0;
+    }
+  }
+}

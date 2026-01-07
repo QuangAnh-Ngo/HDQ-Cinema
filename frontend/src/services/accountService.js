@@ -4,6 +4,7 @@ import axiosInstance from "./axiosInstance";
 export const accountService = {
   /**
    * Get all employee accounts (GET /accounts)
+   * Response: [{ employeeAccountId, username, email, roles[], employeeId }]
    */
   getAll: async () => {
     try {
@@ -30,17 +31,20 @@ export const accountService = {
 
   /**
    * Create employee account (POST /accounts)
-   * @param {Object} data - { username, password, email, roles[], employee }
+   * Request: { username, password, email, roles[], employeeId }
    */
   create: async (data) => {
     try {
       const payload = {
         username: data.username,
-        password: data.password, // Min 8 chars
+        password: data.password,
         email: data.email,
-        roles: data.roles || [], // Array of role names: ["ADMIN", "MANAGER", "EMPLOYEE"]
-        employee: data.employeeId || data.employee, // Employee ID to link
+        roles: data.roles || ["EMPLOYEE"],
+        employeeId: data.employeeId,
       };
+
+      console.log("📤 Create account payload:", payload);
+
       const response = await axiosInstance.post("/accounts", payload);
       return response;
     } catch (error) {
@@ -51,16 +55,24 @@ export const accountService = {
 
   /**
    * Update employee account (PUT /accounts/{employeeAccountId})
-   * @param {string} employeeAccountId - Account ID
-   * @param {Object} data - { password?, roles[], employee? }
+   * Request: { password?, roles[], employeeId? }
    */
   update: async (employeeAccountId, data) => {
     try {
       const payload = {
-        ...(data.password && { password: data.password }),
         roles: data.roles || [],
-        ...(data.employee && { employee: data.employee }),
       };
+
+      if (data.password && data.password.trim()) {
+        payload.password = data.password;
+      }
+
+      if (data.employeeId) {
+        payload.employeeId = data.employeeId;
+      }
+
+      console.log("📤 Update account payload:", payload);
+
       const response = await axiosInstance.put(
         `/accounts/${employeeAccountId}`,
         payload
@@ -85,23 +97,15 @@ export const accountService = {
   },
 
   /**
-   * Extract roles from account object
+   * Extract role names from account
    */
   extractRoles: (account) => {
-    if (!account || !account.roles) return [];
+    if (!account?.roles) return [];
     return account.roles.map((role) => role.name || role);
   },
 
   /**
-   * Check if account has specific role
-   */
-  hasRole: (account, roleName) => {
-    const roles = accountService.extractRoles(account);
-    return roles.includes(roleName);
-  },
-
-  /**
-   * Get highest role (ADMIN > MANAGER > EMPLOYEE)
+   * Get highest role
    */
   getHighestRole: (account) => {
     const roles = accountService.extractRoles(account);

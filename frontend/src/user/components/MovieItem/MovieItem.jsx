@@ -1,19 +1,40 @@
 // frontend/src/user/components/MovieItem/MovieItem.jsx
-import { Card, Button, Modal, Tag } from "antd";
+import { useState } from "react";
+import { Card, Button, Modal, Tag, Skeleton } from "antd";
 import { useNavigate } from "react-router-dom";
 import PropTypes from "prop-types";
 import { ShoppingOutlined } from "@ant-design/icons";
 import "./MovieItem.scss";
 
+// ✅ Placeholder mặc định (base64 để tránh request)
+const PLACEHOLDER_IMAGE =
+  "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjQ1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMWExYTJlIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNiIgZmlsbD0iIzY2NiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg==";
+
 const MovieItem = ({ movie, onMovieClick, onBuyTicket, cinemaId }) => {
   const navigate = useNavigate();
-  // Giới hạn ký tự để kích hoạt hiệu ứng chạy chữ (marquee)
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [imageError, setImageError] = useState(false);
+
   const isTitleOverflow = movie.title && movie.title.length > 18;
+
+  // ✅ Kiểm tra URL poster hợp lệ
+  const isValidUrl = (url) => {
+    if (!url) return false;
+    return url.startsWith("http://") || url.startsWith("https://");
+  };
+
+  // ✅ Lấy poster URL hoặc placeholder
+  const getPosterUrl = () => {
+    if (imageError || !isValidUrl(movie.poster)) {
+      return PLACEHOLDER_IMAGE;
+    }
+    return movie.poster;
+  };
 
   const handleTitleClick = (e) => {
     e.preventDefault();
     if (onMovieClick) {
-      onMovieClick(movie.id); // Backend dùng id
+      onMovieClick(movie.id);
     } else {
       navigate(`/movie-detail/${movie.id}`, {
         state: { cinemaId },
@@ -47,22 +68,45 @@ const MovieItem = ({ movie, onMovieClick, onBuyTicket, cinemaId }) => {
     onBuyTicket(movie.id);
   };
 
+  const handleImageLoad = () => {
+    setImageLoaded(true);
+  };
+
+  const handleImageError = () => {
+    setImageError(true);
+    setImageLoaded(true); // Ẩn skeleton
+  };
+
   return (
     <div className="movieitem_container">
       <Card
         hoverable
         className="border-none shadow-sm"
         cover={
-          <div className="relative overflow-hidden group">
+          <div className="relative overflow-hidden group poster-container">
+            {/* ✅ Skeleton loading */}
+            {!imageLoaded && (
+              <Skeleton.Image
+                active
+                className="poster-skeleton"
+                style={{ width: "100%", height: "100%" }}
+              />
+            )}
+
+            {/* ✅ Lazy loading với loading="lazy" */}
             <img
               alt={movie.title}
-              src={movie.poster} // Backend dùng poster
-              className="transition-transform duration-500 group-hover:scale-105"
-              onError={(e) => {
-                e.target.src = "/placeholder-poster.jpg";
-              }}
+              src={getPosterUrl()}
+              loading="lazy"
+              decoding="async"
+              className={`poster-image transition-transform duration-500 group-hover:scale-105 ${
+                imageLoaded ? "loaded" : "loading"
+              }`}
+              onLoad={handleImageLoad}
+              onError={handleImageError}
             />
-            {/* Tag độ tuổi hiển thị đè lên ảnh */}
+
+            {/* Tag độ tuổi */}
             <div className="absolute top-2 left-2 z-10">
               <Tag color="#f50" className="font-bold border-none m-0 uppercase">
                 T{movie.limitAge}
