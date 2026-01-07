@@ -22,7 +22,7 @@ public interface ShowTimeRepository extends JpaRepository<ShowTime, Long> {
             "on st.movie_id = m.movie_id " +
             "where m.movie_id = :movie_id and st.start_time > NOW() " +
             "order by st.start_time;",
-    nativeQuery = true)
+            nativeQuery = true)
 
     List<ShowTime> toShowTimes(@Param("movie_id") Long movieId);
 
