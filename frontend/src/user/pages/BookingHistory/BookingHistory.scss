@@ -1,21 +1,22 @@
 // frontend/src/user/pages/BookingHistory/BookingHistory.scss
 
-// ✅ Color Variables - Đen, Be, Xám, Trắng
-$bg-dark: #1a1a1a;
-$bg-card: #242424;
-$bg-card-hover: #2a2a2a;
-$beige: #d4a574;
-$beige-light: #e8c9a8;
-$beige-dark: #b8956a;
-$gray-light: #a0a0a0;
-$gray-medium: #6b6b6b;
-$gray-dark: #404040;
+// ✅ Color Variables - Tươi sáng hơn
+$bg-main: #f5f5f0; // Nền sáng kem nhẹ
+$bg-card: #ffffff; // Card trắng
+$bg-card-hover: #fafafa;
+$beige: #c9a86c; // Be vàng tươi
+$beige-light: #e5d4b3;
+$beige-dark: #a68b4b;
+$gold: #d4af37; // Vàng gold
+$gray-text: #4a4a4a; // Text xám đậm
+$gray-light: #888888;
+$gray-border: #e0e0e0;
+$black: #1a1a1a;
 $white: #ffffff;
-$white-muted: rgba(255, 255, 255, 0.8);
 
 .booking-history-page {
   min-height: calc(100vh - 80px);
-  background: $bg-dark;
+  background: linear-gradient(135deg, $bg-main 0%, #e8e4da 100%);
   padding: 40px 20px;
 
   .page-container {
@@ -33,7 +34,7 @@ $white-muted: rgba(255, 255, 255, 0.8);
     gap: 20px;
 
     p {
-      color: $gray-light;
+      color: $gray-text;
       font-size: 16px;
     }
   }
@@ -45,7 +46,7 @@ $white-muted: rgba(255, 255, 255, 0.8);
     align-items: center;
     margin-bottom: 32px;
     padding-bottom: 24px;
-    border-bottom: 1px solid $gray-dark;
+    border-bottom: 2px solid $beige-light;
 
     .header-content {
       display: flex;
@@ -53,14 +54,15 @@ $white-muted: rgba(255, 255, 255, 0.8);
       gap: 16px;
 
       .header-icon {
-        font-size: 40px;
+        font-size: 44px;
         color: $beige;
+        filter: drop-shadow(0 2px 4px rgba($beige, 0.3));
       }
 
       h1 {
-        font-size: 28px;
+        font-size: 30px;
         font-weight: 700;
-        color: $white;
+        color: $black;
         margin: 0;
       }
 
@@ -75,22 +77,24 @@ $white-muted: rgba(255, 255, 255, 0.8);
       display: flex;
       flex-direction: column;
       align-items: center;
-      background: rgba($beige, 0.1);
-      border: 1px solid rgba($beige, 0.3);
-      border-radius: 12px;
-      padding: 12px 24px;
+      background: linear-gradient(135deg, $beige 0%, $gold 100%);
+      border-radius: 16px;
+      padding: 16px 28px;
+      box-shadow: 0 4px 15px rgba($beige, 0.3);
 
       .count {
-        font-size: 32px;
+        font-size: 36px;
         font-weight: 700;
-        color: $beige;
+        color: $white;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
       }
 
       .label {
-        font-size: 12px;
-        color: $gray-light;
+        font-size: 11px;
+        color: rgba($white, 0.9);
         text-transform: uppercase;
-        letter-spacing: 0.5px;
+        letter-spacing: 1px;
+        font-weight: 600;
       }
     }
   }
@@ -104,6 +108,10 @@ $white-muted: rgba(255, 255, 255, 0.8);
     justify-content: center;
     min-height: 300px;
     gap: 24px;
+    background: $white;
+    border-radius: 20px;
+    padding: 40px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
 
     .ant-empty-description {
       color: $gray-light;
@@ -111,20 +119,20 @@ $white-muted: rgba(255, 255, 255, 0.8);
 
     .browse-btn,
     .retry-btn {
-      padding: 12px 32px;
-      background: $beige;
-      color: $bg-dark;
+      padding: 14px 36px;
+      background: linear-gradient(135deg, $beige 0%, $gold 100%);
+      color: $white;
       border: none;
-      border-radius: 25px;
-      font-size: 14px;
+      border-radius: 30px;
+      font-size: 15px;
       font-weight: 600;
       cursor: pointer;
       transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba($beige, 0.3);
 
       &:hover {
-        background: $beige-light;
-        transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba($beige, 0.3);
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba($beige, 0.4);
       }
     }
   }
@@ -139,46 +147,47 @@ $white-muted: rgba(255, 255, 255, 0.8);
   // Booking Card
   .booking-card {
     position: relative;
-    background: $bg-card;
-    border: 1px solid $gray-dark;
-    border-radius: 16px;
+    background: $white;
+    border: 1px solid $gray-border;
+    border-radius: 20px;
     overflow: hidden;
     transition: all 0.3s ease;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
 
     &:hover {
-      background: $bg-card-hover;
-      border-color: rgba($beige, 0.4);
-      transform: translateY(-2px);
-      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+      border-color: $beige-light;
+      transform: translateY(-4px);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
     }
 
     // Status Badge
     .status-badge {
       position: absolute;
-      top: 16px;
-      right: 16px;
-      padding: 6px 14px;
-      border-radius: 20px;
+      top: 20px;
+      right: 20px;
+      padding: 8px 16px;
+      border-radius: 25px;
       font-size: 12px;
-      font-weight: 600;
+      font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.5px;
 
       &.upcoming {
-        background: $beige;
-        color: $bg-dark;
+        background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
+        color: $white;
+        box-shadow: 0 3px 10px rgba(34, 197, 94, 0.3);
       }
 
       &.completed {
-        background: $gray-dark;
-        color: $gray-light;
+        background: linear-gradient(135deg, $beige-light 0%, $beige 100%);
+        color: $black;
       }
     }
 
     // Card Content
     .card-content {
       display: flex;
-      padding: 24px;
+      padding: 28px;
       gap: 32px;
 
       @media (max-width: 640px) {
@@ -192,30 +201,32 @@ $white-muted: rgba(255, 255, 255, 0.8);
       flex: 1;
 
       .booking-id {
-        margin-bottom: 20px;
+        margin-bottom: 24px;
 
         .label {
           display: block;
           font-size: 11px;
-          color: $gray-medium;
+          color: $gray-light;
           text-transform: uppercase;
-          letter-spacing: 1px;
-          margin-bottom: 4px;
+          letter-spacing: 1.5px;
+          margin-bottom: 6px;
+          font-weight: 600;
         }
 
         .value {
-          font-size: 24px;
-          font-weight: 700;
+          font-size: 28px;
+          font-weight: 800;
           color: $beige;
           font-family: "Monaco", "Menlo", monospace;
+          text-shadow: 0 1px 2px rgba($beige, 0.2);
         }
       }
 
       .info-row {
         display: flex;
         align-items: flex-start;
-        gap: 12px;
-        margin-bottom: 16px;
+        gap: 14px;
+        margin-bottom: 18px;
 
         &:last-child {
           margin-bottom: 0;
@@ -223,7 +234,7 @@ $white-muted: rgba(255, 255, 255, 0.8);
 
         .icon {
           color: $beige;
-          font-size: 18px;
+          font-size: 20px;
           margin-top: 2px;
           flex-shrink: 0;
         }
@@ -232,14 +243,15 @@ $white-muted: rgba(255, 255, 255, 0.8);
           .label {
             display: block;
             font-size: 12px;
-            color: $gray-medium;
+            color: $gray-light;
             margin-bottom: 4px;
+            font-weight: 500;
           }
 
           .value {
             font-size: 15px;
-            color: $white;
-            font-weight: 500;
+            color: $black;
+            font-weight: 600;
           }
         }
 
@@ -247,16 +259,17 @@ $white-muted: rgba(255, 255, 255, 0.8);
           display: flex;
           flex-wrap: wrap;
           gap: 8px;
-          margin-top: 4px;
+          margin-top: 6px;
 
           .seat-badge {
-            padding: 4px 12px;
-            background: rgba($beige, 0.15);
-            border: 1px solid rgba($beige, 0.4);
-            border-radius: 6px;
-            color: $beige-light;
+            padding: 6px 14px;
+            background: linear-gradient(135deg, $beige-light 0%, $beige 100%);
+            border: none;
+            border-radius: 8px;
+            color: $black;
             font-size: 13px;
-            font-weight: 600;
+            font-weight: 700;
+            box-shadow: 0 2px 6px rgba($beige, 0.2);
           }
         }
       }
@@ -270,7 +283,7 @@ $white-muted: rgba(255, 255, 255, 0.8);
       align-items: flex-end;
       min-width: 180px;
       padding-left: 32px;
-      border-left: 1px solid $gray-dark;
+      border-left: 2px solid $gray-border;
 
       @media (max-width: 640px) {
         flex-direction: row;
@@ -278,22 +291,29 @@ $white-muted: rgba(255, 255, 255, 0.8);
         padding-left: 0;
         padding-top: 20px;
         border-left: none;
-        border-top: 1px solid $gray-dark;
+        border-top: 2px solid $gray-border;
         min-width: auto;
       }
 
       .price-info {
+        text-align: right;
+
+        @media (max-width: 640px) {
+          text-align: left;
+        }
+
         .label {
           display: block;
           font-size: 12px;
-          color: $gray-medium;
+          color: $gray-light;
           margin-bottom: 4px;
+          font-weight: 500;
         }
 
         .amount {
-          font-size: 24px;
-          font-weight: 700;
-          color: $beige;
+          font-size: 28px;
+          font-weight: 800;
+          color: $beige-dark;
         }
       }
 
@@ -307,13 +327,14 @@ $white-muted: rgba(255, 255, 255, 0.8);
         .label {
           display: block;
           font-size: 11px;
-          color: $gray-medium;
+          color: $gray-light;
           margin-bottom: 2px;
         }
 
         .value {
           font-size: 13px;
-          color: $gray-light;
+          color: $gray-text;
+          font-weight: 500;
         }
       }
     }
@@ -322,21 +343,23 @@ $white-muted: rgba(255, 255, 255, 0.8);
     .info-notice {
       display: flex;
       align-items: center;
-      gap: 8px;
-      padding: 10px 24px;
-      background: rgba($beige-dark, 0.1);
-      border-top: 1px solid rgba($beige-dark, 0.2);
-      color: $beige;
-      font-size: 12px;
+      gap: 10px;
+      padding: 12px 28px;
+      background: linear-gradient(90deg, #fffbeb 0%, #fef3c7 100%);
+      border-top: 1px solid #fde68a;
+      color: #b45309;
+      font-size: 13px;
+      font-weight: 500;
 
       svg {
         flex-shrink: 0;
+        color: #f59e0b;
       }
     }
 
     // No data text
     .no-data {
-      color: $gray-medium;
+      color: $gray-light;
       font-style: italic;
       font-size: 13px;
     }
