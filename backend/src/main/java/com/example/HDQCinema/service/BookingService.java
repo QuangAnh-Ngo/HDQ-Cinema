@@ -145,13 +145,41 @@ public class BookingService {
 
     public PageResponse<BookingResponse> getBookingsPaged(int page, int size, String keyword,
             BookingStatus status, String sortBy, String sortDir) {
+
+        // 🔍 DEBUG: Log input parameters
+        log.info("📥 [BookingService] getBookingsPaged called with: page={}, size={}, keyword={}, status={}, sortBy={}, sortDir={}",
+                page, size, keyword, status, sortBy, sortDir);
+
         Sort sort = Sort.by(sortDir.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC,
                 sortBy != null ? sortBy : "id");
         Pageable pageable = PageRequest.of(page, size, sort);
 
+        log.info("🔍 [BookingService] Created pageable: {}", pageable);
+
         Page<Booking> bookingPage = bookingRepository.searchBookings(keyword, status, pageable);
 
+        // 🔍 DEBUG: Log query result
+        log.info("📊 [BookingService] Query returned: totalElements={}, totalPages={}, currentPageSize={}",
+                bookingPage.getTotalElements(), bookingPage.getTotalPages(), bookingPage.getContent().size());
+
+        // 🔍 DEBUG: Log first booking details if exists
+        if (!bookingPage.getContent().isEmpty()) {
+            Booking firstBooking = bookingPage.getContent().get(0);
+            log.info("🔍 [BookingService] First booking: id={}, status={}, member={}",
+                    firstBooking.getId(),
+                    firstBooking.getBookingStatus(),
+                    firstBooking.getMember() != null ? firstBooking.getMember().getFirstName() : "null");
+        }
+
         List<BookingResponse> bookingResponses = bookingMapper.toResponses(bookingPage.getContent());
+
+        // 🔍 DEBUG: Log mapped responses
+        log.info("📤 [BookingService] Mapped {} booking responses", bookingResponses.size());
+        if (!bookingResponses.isEmpty()) {
+            BookingResponse firstResponse = bookingResponses.get(0);
+            log.info("🔍 [BookingService] First response: id={}, bookingStatus={}, username={}",
+                    firstResponse.getId(), firstResponse.getBookingStatus(), firstResponse.getUsername());
+        }
 
         return PageResponse.<BookingResponse>builder()
                 .currentPage(page)

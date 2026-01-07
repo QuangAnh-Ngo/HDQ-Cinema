@@ -115,6 +115,27 @@ public class ShowTimeService {
                 .build();
     }
 
+    // Phân trang và tìm kiếm showtime với filter date và status
+    public PageResponse<ShowTimeResponse> getShowTimesPaged(int page, int size, String keyword,
+            String sortBy, String sortDir, java.time.LocalDate filterDate, String status) {
+        Sort sort = Sort.by(sortDir.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC,
+                sortBy != null ? sortBy : "startTime");
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        // Sử dụng query mới với filter
+        Page<ShowTime> showTimePage = showTimeRepository.searchShowTimesWithFilters(keyword, filterDate, status, pageable);
+
+        List<ShowTimeResponse> showTimeResponses = showTimeMapper.toResponses(showTimePage.getContent());
+
+        return PageResponse.<ShowTimeResponse>builder()
+                .currentPage(page)
+                .pageSize(size)
+                .totalElements(showTimePage.getTotalElements())
+                .totalPages(showTimePage.getTotalPages())
+                .data(showTimeResponses)
+                .build();
+    }
+
     // Lấy suất chiếu trong 7 ngày tới với phân trang
     public PageResponse<ShowTimeResponse> getShowTimesNext7DaysPaged(int page, int size, Long cinemaId, Long movieId) {
         LocalDateTime now = LocalDateTime.now();
@@ -161,4 +182,3 @@ public class ShowTimeService {
         return showTimeMapper.toResponse(showTime);
     }
 }
-

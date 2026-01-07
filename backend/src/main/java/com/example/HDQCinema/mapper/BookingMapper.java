@@ -1,23 +1,16 @@
 package com.example.HDQCinema.mapper;
 
-import com.example.HDQCinema.dto.request.BookingRequest;
 import com.example.HDQCinema.dto.response.BookingResponse;
 import com.example.HDQCinema.entity.Booking;
 import com.example.HDQCinema.entity.BookingDetail;
 import com.example.HDQCinema.entity.Seat;
-import com.example.HDQCinema.entity.ShowTime;
 import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 @Mapper(componentModel = "spring")
 public interface BookingMapper {
-//    @Mapping(target = "seats", ignore = true)
-//    @Mapping(target = "showTime", ignore = true)
-//    BookingResponse toResponse(Booking booking);
 
     default List<String> toSeat(Booking booking) {
         if (booking == null) {
@@ -40,11 +33,19 @@ public interface BookingMapper {
             bookingResponse.id(booking.getId());
             bookingResponse.totalPrice(booking.getTotalPrice());
             bookingResponse.createTime(booking.getCreateTime());
+            bookingResponse.bookingStatus(booking.getBookingStatus()); // Thêm bookingStatus
             bookingResponse.seats(toSeat(booking));
+
+            // Thêm username từ member
+            if (booking.getMember() != null) {
+                String firstName = booking.getMember().getFirstName() != null ? booking.getMember().getFirstName() : "";
+                String lastName = booking.getMember().getLastName() != null ? booking.getMember().getLastName() : "";
+                bookingResponse.username((firstName + " " + lastName).trim());
+            }
+
             return bookingResponse.build();
         }
     }
 
-    Booking toBooking(BookingRequest request);
     List<BookingResponse> toResponses(List<Booking> bookings);
 }

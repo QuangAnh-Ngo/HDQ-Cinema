@@ -53,14 +53,21 @@ export const showtimeService = {
   },
 
   /**
-   * Lấy suất chiếu phân trang với tìm kiếm
+   * Lấy suất chiếu phân trang với tìm kiếm và filter
    */
-  getPaged: async (page = 0, size = 50, keyword = "", sortBy = "startTime", sortDir = "asc") => {
+  getPaged: async (page = 0, size = 50, keyword = "", sortBy = "startTime", sortDir = "desc", filterDate = null, status = null) => {
     try {
       const params = new URLSearchParams({ page, size, sortBy, sortDir });
       if (keyword) params.append("keyword", keyword);
+      if (filterDate) params.append("filterDate", filterDate);
+      if (status && status !== "all") params.append("status", status);
+
+      console.log("📤 [ShowtimeService] getPaged params:", { page, size, keyword, sortBy, sortDir, filterDate, status });
 
       const response = await axiosInstance.get(`/showtimes/paged?${params.toString()}`);
+
+      console.log("📥 [ShowtimeService] getPaged response:", response);
+
       return response;
     } catch (error) {
       console.error("Get showtimes paged error:", error);

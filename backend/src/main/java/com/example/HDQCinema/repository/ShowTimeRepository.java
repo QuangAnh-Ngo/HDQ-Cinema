@@ -114,4 +114,33 @@ public interface ShowTimeRepository extends JpaRepository<ShowTime, Long> {
     @Override
     @EntityGraph(attributePaths = {"movie", "room", "room.cinema"})
     List<ShowTime> findAll();
+
+    // Phân trang showtime với filter date và status
+    @Query(value = "SELECT st FROM ShowTime st " +
+            "JOIN FETCH st.movie " +
+            "JOIN FETCH st.room r " +
+            "JOIN FETCH r.cinema " +
+            "WHERE (:keyword IS NULL OR :keyword = '' OR " +
+            "LOWER(st.movie.title) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+            "LOWER(st.room.roomName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+            "LOWER(r.cinema.name) LIKE LOWER(CONCAT('%', :keyword, '%'))) " +
+            "AND (:filterDate IS NULL OR CAST(st.startTime AS date) = :filterDate) " +
+            "AND (:status IS NULL OR :status = '' OR :status = 'all' OR " +
+            "(:status = 'upcoming' AND st.startTime > CURRENT_TIMESTAMP) OR " +
+            "(:status = 'ended' AND st.startTime < CURRENT_TIMESTAMP))",
+            countQuery = "SELECT COUNT(st) FROM ShowTime st " +
+            "JOIN st.room r " +
+            "WHERE (:keyword IS NULL OR :keyword = '' OR " +
+            "LOWER(st.movie.title) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+            "LOWER(st.room.roomName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+            "LOWER(r.cinema.name) LIKE LOWER(CONCAT('%', :keyword, '%'))) " +
+            "AND (:filterDate IS NULL OR CAST(st.startTime AS date) = :filterDate) " +
+            "AND (:status IS NULL OR :status = '' OR :status = 'all' OR " +
+            "(:status = 'upcoming' AND st.startTime > CURRENT_TIMESTAMP) OR " +
+            "(:status = 'ended' AND st.startTime < CURRENT_TIMESTAMP))")
+    Page<ShowTime> searchShowTimesWithFilters(
+            @Param("keyword") String keyword,
+            @Param("filterDate") java.time.LocalDate filterDate,
+            @Param("status") String status,
+            Pageable pageable);
 }

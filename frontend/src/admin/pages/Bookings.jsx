@@ -1,109 +1,116 @@
 // frontend/src/admin/pages/Bookings.jsx
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   FiSearch,
   FiEye,
-  FiX,
-  FiDollarSign,
-  FiClock,
-  FiUser,
-  FiCalendar,
-  FiCheckCircle,
   FiAlertCircle,
+  FiChevronLeft,
+  FiChevronRight,
 } from "react-icons/fi";
 import Breadcrumb from "../components/Common/Breadcrumb";
 import Loading from "../components/Common/Loading";
-import ConfirmDialog from "../components/Common/ConfirmDialog";
 import { bookingService } from "../../services";
 import { message } from "antd";
 import "../styles/AdminLayout.scss";
 
 const Bookings = () => {
   const [bookings, setBookings] = useState([]);
-  const [filteredBookings, setFilteredBookings] = useState([]);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [hasPermission, setHasPermission] = useState(true); // ✅ Track permission
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [dateFilter, setDateFilter] = useState("");
+  const [hasPermission, setHasPermission] = useState(true);
 
-  const [selectedBooking, setSelectedBooking] = useState(null);
-  const [showDetailModal, setShowDetailModal] = useState(false);
-  const [showCancelDialog, setShowCancelDialog] = useState(false);
-  const [bookingToCancel, setBookingToCancel] = useState(null);
+  // Filter params - gửi lên server
+  const [searchKeyword, setSearchKeyword] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
+  const pageSize = 50;
 
-  useEffect(() => {
-    filterBookings();
-  }, [bookings, searchTerm, statusFilter, dateFilter]);
+  // Ref để track nếu cần fetch lại (tránh double fetch)
+  const shouldFetch = useRef(true);
 
-  const fetchData = async () => {
+  // Status options cho dropdown
+  const statusOptions = [
+    { value: "", label: "Tất cả trạng thái" },
+    { value: "PENDING", label: "Chờ thanh toán" },
+    { value: "CONFIRM", label: "Đã xác nhận" },
+    { value: "CANCELLED", label: "Đã hủy" },
+  ];
+
+  // Hàm fetch bookings từ server với filter/sort
+  const fetchBookings = useCallback(async (page, keyword, status) => {
+    // 🔍 DEBUG: Log function call
+    console.log("🔄 [Bookings] fetchBookings called with:", { page, keyword, status });
+
     try {
       setLoading(true);
-      let bookingsData = [];
 
-      // ✅ Try to fetch bookings
-      if (bookingService.getByDate) {
-        const today = new Date();
-        const dates = [];
+      const params = {
+        page: page,
+        size: pageSize,
+        keyword: keyword || null,
+        status: status || null,
+        sortBy: "id",
+        sortDir: "desc",
+      };
 
-        // Get last 7 days
-        for (let i = 0; i < 7; i++) {
-          const date = new Date(today);
-          date.setDate(date.getDate() - i);
-          dates.push(date.toISOString().split("T")[0]);
+      console.log("🔄 [Bookings] Calling bookingService.getPaged with params:", params);
+
+      const response = await bookingService.getPaged(params);
+
+      // 🔍 DEBUG: Log response received
+      console.log("✅ [Bookings] Response received:", response);
+
+      if (response) {
+        // 🔍 DEBUG: Check data structure
+        console.log("📊 [Bookings] Setting bookings:", response.data);
+        console.log("📊 [Bookings] Data length:", response.data?.length);
+
+        setBookings(response.data || []);
+        setTotalPages(response.totalPages || 0);
+        setTotalElements(response.totalElements || 0);
+
+        // Calculate stats from response
+        const today = new Date().toISOString().split("T")[0];
+        console.log("📅 [Bookings] Today date for stats:", today);
+
+        const bookingsData = response.data || [];
+
+        // 🔍 DEBUG: Check bookingStatus field
+        if (bookingsData.length > 0) {
+          console.log("🔍 [Bookings] First booking bookingStatus:", bookingsData[0].bookingStatus);
+          console.log("🔍 [Bookings] First booking all fields:", bookingsData[0]);
         }
 
-        const results = await Promise.all(
-          dates.map((date) =>
-            bookingService.getByDate(date).catch((error) => {
-              // ✅ Handle 403 specifically
-              if (error.status === 403) {
-                console.warn(`⚠️ No permission for bookings on ${date}`);
-                setHasPermission(false);
-              }
-              return [];
-            })
-          )
-        );
+        const pendingCount = bookingsData.filter((b) => b.bookingStatus === "PENDING").length;
+        console.log("📊 [Bookings] Pending count calculated:", pendingCount);
 
-        bookingsData = results.flat();
-      }
-
-      // ✅ Show appropriate message
-      if (!hasPermission) {
-        message.warning({
-          content:
-            "Bạn không có quyền xem booking. Vui lòng đăng nhập với tài khoản thật.",
-          duration: 5,
+        setStats({
+          totalBookings: response.totalElements || 0,
+          todayRevenue: bookingsData
+            .filter((b) => b.createTime?.startsWith(today))
+            .reduce((sum, b) => sum + (b.totalPrice || 0), 0),
+          pendingCount: pendingCount,
         });
-      } else if (bookingsData.length === 0) {
-        message.info("Chưa có booking nào trong 7 ngày qua");
+      } else {
+        console.warn("⚠️ [Bookings] Response is null/undefined");
+        setBookings([]);
+        setStats({ totalBookings: 0, todayRevenue: 0, pendingCount: 0 });
       }
-
-      setBookings(Array.isArray(bookingsData) ? bookingsData : []);
-
-      // Calculate stats
-      const today = new Date().toISOString().split("T")[0];
-      setStats({
-        totalBookings: bookingsData.length,
-        todayRevenue: bookingsData
-          .filter((b) => b.createTime?.startsWith(today))
-          .reduce((sum, b) => sum + (b.totalPrice || 0), 0),
-        pendingCount: 0,
-      });
     } catch (error) {
-      console.error("Error fetching data:", error);
+      // 🔍 DEBUG: Log error details
+      console.error("❌ [Bookings] Error fetching bookings:", error);
+      console.error("❌ [Bookings] Error type:", typeof error);
+      console.error("❌ [Bookings] Error status:", error?.status);
+      console.error("❌ [Bookings] Error response:", error?.response);
 
       if (error.status === 403) {
         setHasPermission(false);
         message.error({
-          content:
-            "Không có quyền truy cập. Vui lòng đăng nhập với tài khoản thật.",
+          content: "Không có quyền truy cập. Vui lòng đăng nhập với tài khoản có quyền.",
           duration: 5,
         });
       } else {
@@ -114,32 +121,81 @@ const Bookings = () => {
       setStats({ totalBookings: 0, todayRevenue: 0, pendingCount: 0 });
     } finally {
       setLoading(false);
+      console.log("🏁 [Bookings] fetchBookings completed");
+    }
+  }, [pageSize]);
+
+  // Fetch khi component mount
+  useEffect(() => {
+    console.log("🔄 [Bookings] Initial useEffect - mounting component");
+    fetchBookings(0, "", "");
+  }, [fetchBookings]);
+
+  // Fetch khi đổi trang (không phải lần đầu)
+  useEffect(() => {
+    // Skip initial render
+    if (!shouldFetch.current) {
+      shouldFetch.current = true;
+      return;
+    }
+
+    console.log("🔄 [Bookings] Page change useEffect - currentPage:", currentPage);
+    // Khi đổi trang, fetch với keyword và status hiện tại
+    fetchBookings(currentPage, searchKeyword, statusFilter);
+  }, [currentPage]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Xử lý tìm kiếm - reset về trang đầu và fetch lại
+  const handleSearch = () => {
+    console.log("🔍 [Bookings] handleSearch - keyword:", searchKeyword, "status:", statusFilter);
+    // Luôn fetch với giá trị mới, reset về trang 0
+    setCurrentPage(0);
+    shouldFetch.current = false; // Prevent double fetch from useEffect
+    fetchBookings(0, searchKeyword, statusFilter);
+  };
+
+  // Xử lý khi nhấn Enter trong ô tìm kiếm
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter") {
+      handleSearch();
     }
   };
 
-  const filterBookings = () => {
-    let filtered = [...bookings];
+  // Xử lý thay đổi status filter
+  const handleStatusChange = (e) => {
+    const newStatus = e.target.value;
+    console.log("🔄 [Bookings] handleStatusChange - newStatus:", newStatus);
+    setStatusFilter(newStatus);
+    setCurrentPage(0);
+    shouldFetch.current = false; // Prevent double fetch from useEffect
+    fetchBookings(0, searchKeyword, newStatus);
+  };
 
-    if (searchTerm) {
-      filtered = filtered.filter(
-        (booking) =>
-          booking.id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          booking.username?.toLowerCase().includes(searchTerm.toLowerCase())
-      );
+  // Pagination handlers
+  const handlePrevPage = () => {
+    if (currentPage > 0) {
+      console.log("⬅️ [Bookings] handlePrevPage - going to page:", currentPage - 1);
+      setCurrentPage(currentPage - 1);
     }
+  };
 
-    if (statusFilter !== "all") {
-      filtered = filtered.filter((booking) => booking.status === statusFilter);
+  const handleNextPage = () => {
+    if (currentPage < totalPages - 1) {
+      console.log("➡️ [Bookings] handleNextPage - going to page:", currentPage + 1);
+      setCurrentPage(currentPage + 1);
     }
+  };
 
-    if (dateFilter) {
-      filtered = filtered.filter((booking) =>
-        booking.createTime?.startsWith(dateFilter)
-      );
+  const getStatusBadge = (status) => {
+    switch (status) {
+      case "CONFIRM":
+        return <span className="badge success">Đã xác nhận</span>;
+      case "PENDING":
+        return <span className="badge warning">Chờ thanh toán</span>;
+      case "CANCELLED":
+        return <span className="badge danger">Đã hủy</span>;
+      default:
+        return <span className="badge gray">{status}</span>;
     }
-
-    filtered.sort((a, b) => new Date(b.createTime) - new Date(a.createTime));
-    setFilteredBookings(filtered);
   };
 
   const formatDate = (dateString) => {
@@ -153,7 +209,7 @@ const Bookings = () => {
     });
   };
 
-  if (loading) {
+  if (loading && bookings.length === 0) {
     return <Loading text="Đang tải danh sách đặt vé..." />;
   }
 
@@ -165,20 +221,20 @@ const Bookings = () => {
         <h1>Quản lý đặt vé</h1>
       </div>
 
-      {/* ✅ Show permission warning */}
+      {/* Permission warning */}
       {!hasPermission && (
         <div className="alert warning" style={{ marginBottom: 24 }}>
           <FiAlertCircle size={20} />
           <div>
             <strong>Không có quyền truy cập</strong>
             <p>
-              Tính năng này yêu cầu đăng nhập với tài khoản thật. Mock
-              authentication không được hỗ trợ cho endpoint booking.
+              Tính năng này yêu cầu đăng nhập với tài khoản có quyền MANAGE_BOOKING.
             </p>
           </div>
         </div>
       )}
 
+      {/* Stats */}
       <div className="stats-grid">
         <div className="stat-card">
           <div className="stat-content">
@@ -201,43 +257,55 @@ const Bookings = () => {
         <div className="stat-card">
           <div className="stat-content">
             <div className="stat-info">
-              <p>Trong 7 ngày qua</p>
-              <h3 style={{ color: "#2563eb" }}>{stats?.totalBookings || 0}</h3>
+              <p>Chờ thanh toán</p>
+              <h3 style={{ color: "#f59e0b" }}>{stats?.pendingCount || 0}</h3>
             </div>
           </div>
         </div>
       </div>
 
+      {/* Filters - Server-side */}
       <div className="filters-bar">
         <div className="filters-content">
           <div className="search-input">
             <FiSearch size={20} />
             <input
               type="text"
-              placeholder="Tìm kiếm mã booking, username..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Tìm kiếm mã booking, tên, email..."
+              value={searchKeyword}
+              onChange={(e) => setSearchKeyword(e.target.value)}
+              onKeyPress={handleKeyPress}
             />
+            <button className="btn-primary" onClick={handleSearch} style={{ marginLeft: 8 }}>
+              Tìm kiếm
+            </button>
           </div>
 
-          <div className="search-input date-filter">
-            <FiCalendar size={20} />
-            <input
-              type="date"
-              value={dateFilter}
-              onChange={(e) => setDateFilter(e.target.value)}
-            />
-          </div>
+          <select
+            value={statusFilter}
+            onChange={handleStatusChange}
+            className="filter-select"
+          >
+            {statusOptions.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
 
+      {/* Bookings Table */}
       <div className="admin-table">
-        {filteredBookings.length > 0 ? (
+        {loading ? (
+          <Loading text="Đang tải..." />
+        ) : bookings.length > 0 ? (
           <table>
             <thead>
               <tr>
                 <th>Mã booking</th>
                 <th>Khách hàng</th>
+                <th>Trạng thái</th>
                 <th>Suất chiếu</th>
                 <th>Ghế</th>
                 <th>Tổng tiền</th>
@@ -246,12 +314,13 @@ const Bookings = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredBookings.map((booking) => (
+              {bookings.map((booking) => (
                 <tr key={booking.id}>
                   <td>
                     <strong className="booking-code">{booking.id}</strong>
                   </td>
                   <td>{booking.username || "N/A"}</td>
+                  <td>{getStatusBadge(booking.bookingStatus)}</td>
                   <td>{formatDate(booking.showTime)}</td>
                   <td>
                     <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
@@ -287,11 +356,38 @@ const Bookings = () => {
         ) : (
           <div className="empty">
             {!hasPermission
-              ? "Không có quyền xem booking. Vui lòng đăng nhập với tài khoản thật."
+              ? "Không có quyền xem booking. Vui lòng đăng nhập với tài khoản có quyền."
               : "Không tìm thấy booking nào"}
           </div>
         )}
       </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="pagination">
+          <button
+            className="pagination-btn"
+            onClick={handlePrevPage}
+            disabled={currentPage === 0}
+          >
+            <FiChevronLeft size={18} />
+            Trước
+          </button>
+
+          <span className="pagination-info">
+            Trang {currentPage + 1} / {totalPages} (Tổng: {totalElements} booking)
+          </span>
+
+          <button
+            className="pagination-btn"
+            onClick={handleNextPage}
+            disabled={currentPage >= totalPages - 1}
+          >
+            Sau
+            <FiChevronRight size={18} />
+          </button>
+        </div>
+      )}
     </div>
   );
 };

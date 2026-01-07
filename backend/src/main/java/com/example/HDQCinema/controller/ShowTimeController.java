@@ -43,9 +43,11 @@ public class ShowTimeController {
             @RequestParam(defaultValue = "50") int size,
             @RequestParam(required = false) String keyword,
             @RequestParam(defaultValue = "startTime") String sortBy,
-            @RequestParam(defaultValue = "asc") String sortDir) {
+            @RequestParam(defaultValue = "desc") String sortDir,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) java.time.LocalDate filterDate,
+            @RequestParam(required = false) String status) {
         return ApiResponse.<PageResponse<ShowTimeResponse>>builder()
-                .result(showTimeService.getShowTimesPaged(page, size, keyword, sortBy, sortDir))
+                .result(showTimeService.getShowTimesPaged(page, size, keyword, sortBy, sortDir, filterDate, status))
                 .build();
     }
 

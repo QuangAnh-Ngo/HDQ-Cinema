@@ -1,5 +1,5 @@
 // frontend/src/admin/pages/Showtimes.jsx
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   FiPlus,
   FiSearch,
@@ -48,37 +48,30 @@ const Showtimes = () => {
     fetchInitialData();
   }, []);
 
-  useEffect(() => {
-    fetchShowtimes();
-  }, [currentPage, searchTerm]);
-
-  // Fetch movies and cinemas once for form dropdowns
-  const fetchInitialData = async () => {
-    try {
-      const [moviesData, cinemasData] = await Promise.all([
-        movieService.getAll().catch(() => []),
-        cinemaService.getAll().catch(() => []),
-      ]);
-      setMovies(moviesData);
-      setCinemas(cinemasData);
-    } catch (error) {
-      console.error("Error fetching initial data:", error);
-    }
-  };
-
-  // ✅ SỬA: Sử dụng API phân trang thay vì getAll()
-  const fetchShowtimes = async () => {
+  // ✅ SỬA: Fetch lại khi bất kỳ filter nào thay đổi
+  const fetchShowtimes = useCallback(async () => {
     try {
       setLoading(true);
 
-      // Gọi API phân trang
+      console.log("🔄 [Showtimes] Fetching with:", {
+        currentPage,
+        searchTerm,
+        dateFilter,
+        statusFilter
+      });
+
+      // Gọi API phân trang với tất cả các filter
       const response = await showtimeService.getPaged(
         currentPage,
         pageSize,
         searchTerm,
         "startTime",
-        "desc"
+        "desc",
+        dateFilter || null,  // filterDate
+        statusFilter !== "all" ? statusFilter : null  // status
       );
+
+      console.log("📥 [Showtimes] Response:", response);
 
       // Transform data
       const transformed = (response.data || []).map((st) => ({
@@ -100,11 +93,30 @@ const Showtimes = () => {
       setTotalPages(response.totalPages || 0);
       setTotalElements(response.totalElements || 0);
     } catch (error) {
-      console.error("Error fetching showtimes:", error);
+      console.error("❌ [Showtimes] Error fetching:", error);
       message.error("Lỗi khi tải danh sách lịch chiếu");
       setShowtimes([]);
     } finally {
       setLoading(false);
+    }
+  }, [currentPage, searchTerm, dateFilter, statusFilter, pageSize]);
+
+  // ✅ SỬA: Gọi fetchShowtimes khi dependencies thay đổi
+  useEffect(() => {
+    fetchShowtimes();
+  }, [fetchShowtimes]);
+
+  // Fetch movies and cinemas once for form dropdowns
+  const fetchInitialData = async () => {
+    try {
+      const [moviesData, cinemasData] = await Promise.all([
+        movieService.getAll().catch(() => []),
+        cinemaService.getAll().catch(() => []),
+      ]);
+      setMovies(moviesData);
+      setCinemas(cinemasData);
+    } catch (error) {
+      console.error("Error fetching initial data:", error);
     }
   };
 
@@ -122,28 +134,31 @@ const Showtimes = () => {
     return "ended";
   };
 
-  // ✅ Filter locally cho dateFilter và statusFilter (vì đã có data từ server)
-  const filteredShowtimes = showtimes.filter((st) => {
-    let matches = true;
+  // ✅ SỬA: Xử lý tìm kiếm - reset về trang đầu
+  const handleSearch = () => {
+    console.log("🔍 [Showtimes] Search triggered:", searchTerm);
+    setCurrentPage(0);
+  };
 
-    if (dateFilter) {
-      matches = matches && st.date === dateFilter;
-    }
+  // ✅ SỬA: Xử lý thay đổi date filter
+  const handleDateFilterChange = (e) => {
+    console.log("📅 [Showtimes] Date filter changed:", e.target.value);
+    setDateFilter(e.target.value);
+    setCurrentPage(0);
+  };
 
-    if (statusFilter !== "all") {
-      matches = matches && st.status === statusFilter;
-    }
+  // ✅ SỬA: Xử lý thay đổi status filter
+  const handleStatusFilterChange = (e) => {
+    console.log("🔄 [Showtimes] Status filter changed:", e.target.value);
+    setStatusFilter(e.target.value);
+    setCurrentPage(0);
+  };
 
-    return matches;
-  });
-
-  // Debounce search
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setCurrentPage(0); // Reset to first page when search changes
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [searchTerm]);
+  // ✅ SỬA: Xóa bộ lọc ngày
+  const handleClearDateFilter = () => {
+    setDateFilter("");
+    setCurrentPage(0);
+  };
 
   const handleAddShowtime = () => {
     setSelectedShowtime(null);
@@ -276,13 +291,13 @@ const Showtimes = () => {
             <input
               type="date"
               value={dateFilter}
-              onChange={(e) => setDateFilter(e.target.value)}
+              onChange={handleDateFilterChange}
             />
           </div>
 
           <select
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
+            onChange={handleStatusFilterChange}
           >
             <option value="all">Tất cả trạng thái</option>
             <option value="upcoming">Sắp chiếu</option>
@@ -293,7 +308,7 @@ const Showtimes = () => {
           {dateFilter && (
             <button
               className="btn secondary"
-              onClick={() => setDateFilter("")}
+              onClick={handleClearDateFilter}
               style={{ marginLeft: "8px" }}
             >
               Xóa bộ lọc ngày
@@ -307,7 +322,7 @@ const Showtimes = () => {
           <div className="loading-overlay">
             <Loading text="Đang tải..." />
           </div>
-        ) : filteredShowtimes.length > 0 ? (
+        ) : showtimes.length > 0 ? (
           <table>
             <thead>
               <tr>
@@ -320,7 +335,7 @@ const Showtimes = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredShowtimes.map((showtime) => (
+              {showtimes.map((showtime) => (
                 <tr key={showtime.id}>
                   <td>
                     <strong>{showtime.movieTitle}</strong>
