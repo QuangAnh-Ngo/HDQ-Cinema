@@ -60,4 +60,12 @@ public class BookingController {
                 .result(response)
                 .build();
     }
+
+    @GetMapping
+    @PreAuthorize("hasAuthority('MANAGE_BOOKING') or hasRole('ADMIN')")
+    ApiResponse<List<BookingResponse>> getAllBookings(){
+        return ApiResponse.<List<BookingResponse>>builder()
+                .result(bookingService.getAll())
+                .build();
+    }
 }

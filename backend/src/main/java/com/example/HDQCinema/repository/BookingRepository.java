@@ -46,5 +46,6 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             """, nativeQuery = true)
     List<Booking> findBookingsByCreateTime_Date(@Param("selected_date") LocalDate date);
 
+    @Query("select b from Booking b where b.member.id = ?1")
     List<Booking> findAllByMemberId(String memberId);
 }
