@@ -73,7 +73,7 @@ public class MemberService {
         memberRepository.deleteById(employeeId);
     }
 
-    @PreAuthorize("#username == authentication.name or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or #memberId == principal.claims['accountId']")
     public MemberResponse updateMember(String memberId, MemberUpdateRequest request){
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new AppException(ErrorCode.MEMBER_NOT_FOUND));

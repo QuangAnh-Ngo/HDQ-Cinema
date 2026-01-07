@@ -39,15 +39,15 @@ public class MemberController {
                 .build();
     }
 
-    @DeleteMapping("/{employeeId}")
-    ApiResponse<String> deleteMember(@PathVariable String employeeId){
-        memberService.deleteMember(employeeId);
+    @DeleteMapping("/{memberId}")
+    ApiResponse<String> deleteMember(@PathVariable String memberId){
+        memberService.deleteMember(memberId);
         return ApiResponse.<String>builder()
                 .result("Delete user successfully")
                 .build();
     }
 
-    @PutMapping("/{employeeAccountId}")
+    @PutMapping("/{memberId}")
     ApiResponse<MemberResponse> updateMember(@PathVariable String memberId, @RequestBody @Valid MemberUpdateRequest request){
         return ApiResponse.<MemberResponse>builder()
                 .result(memberService.updateMember(memberId, request))

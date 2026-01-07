@@ -161,3 +161,39 @@
     width: calc(100% - 24px);
   }
 }
+
+// ✅ Poster container
+.poster-container {
+  position: relative;
+  aspect-ratio: 2/3;
+  background-color: #1a1a2e;
+  overflow: hidden;
+
+  .poster-skeleton {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100% !important;
+    height: 100% !important;
+
+    .ant-skeleton-image {
+      width: 100% !important;
+      height: 100% !important;
+    }
+  }
+
+  .poster-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: opacity 0.3s ease, transform 0.5s ease;
+
+    &.loading {
+      opacity: 0;
+    }
+
+    &.loaded {
+      opacity: 1;
+    }
+  }
+}
