@@ -19,6 +19,7 @@ import MovieDetail from "./user/pages/MovieDetail/MovieDetail";
 import SeatSelection from "./user/pages/SeatSelection/SeatSelection";
 import ConfirmPayment from "./user/pages/ConfirmPayment/ConfirmPayment";
 import PaymentResult from "./user/pages/PaymentResult/PaymentResult";
+import BookingHistory from "./user/pages/BookingHistory/BookingHistory";
 import LogIn from "./user/pages/LogIn/LogIn";
 import Register from "./user/pages/Register/Register";
 
@@ -94,6 +95,15 @@ const AppLayout = () => {
             element={
               <UserProtectedRoute requireAuth={true}>
                 <PaymentResult />
+              </UserProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/booking-history"
+            element={
+              <UserProtectedRoute requireAuth={true}>
+                <BookingHistory />
               </UserProtectedRoute>
             }
           />

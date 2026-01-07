@@ -138,7 +138,7 @@ const Header = () => {
       key: "history",
       label: "Lịch sử đặt vé",
       icon: <HistoryOutlined />,
-      onClick: () => navigate("/members/my-info"),
+      onClick: () => navigate("/booking-history"),
     },
     { type: "divider" },
     {
