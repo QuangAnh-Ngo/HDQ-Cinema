@@ -1,10 +1,8 @@
-// frontend/src/admin/components/CinemaForm.jsx
 import { useState, useEffect } from "react";
 import { FiX } from "react-icons/fi";
 import "../styles/AdminLayout.scss";
 
 const CinemaForm = ({ cinema, onClose, onSubmit }) => {
-  // ✅ Only fields that match API: name, city, district, address
   const [formData, setFormData] = useState({
     name: "",
     city: "",
@@ -14,7 +12,6 @@ const CinemaForm = ({ cinema, onClose, onSubmit }) => {
 
   const [errors, setErrors] = useState({});
 
-  // ✅ Vietnam cities and districts
   const citiesData = {
     "Hà Nội": [
       "Ba Đình",
@@ -66,12 +63,11 @@ const CinemaForm = ({ cinema, onClose, onSubmit }) => {
   const handleChange = (e) => {
     const { name, value } = e.target;
 
-    // Reset district when city changes
     if (name === "city") {
       setFormData((prev) => ({
         ...prev,
         [name]: value,
-        district: "", // Reset district
+        district: "",
       }));
     } else {
       setFormData((prev) => ({ ...prev, [name]: value }));
@@ -109,7 +105,6 @@ const CinemaForm = ({ cinema, onClose, onSubmit }) => {
     e.preventDefault();
 
     if (validate()) {
-      // ✅ Submit only API-required fields
       const submitData = {
         name: formData.name.trim(),
         city: formData.city,
@@ -122,7 +117,6 @@ const CinemaForm = ({ cinema, onClose, onSubmit }) => {
     }
   };
 
-  // Get available districts based on selected city
   const availableDistricts = formData.city
     ? citiesData[formData.city] || []
     : [];
@@ -138,7 +132,6 @@ const CinemaForm = ({ cinema, onClose, onSubmit }) => {
         </div>
 
         <form onSubmit={handleSubmit} className="modal-body admin-form">
-          {/* Tên rạp */}
           <div className="form-group">
             <label>
               Tên rạp <span className="required">*</span>
@@ -154,12 +147,10 @@ const CinemaForm = ({ cinema, onClose, onSubmit }) => {
             {errors.name && <p className="error-message">{errors.name}</p>}
           </div>
 
-          {/* City & District - 2 columns */}
           <div
             className="form-row"
             style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}
           >
-            {/* Thành phố */}
             <div className="form-group">
               <label>
                 Thành phố <span className="required">*</span>
@@ -180,7 +171,6 @@ const CinemaForm = ({ cinema, onClose, onSubmit }) => {
               {errors.city && <p className="error-message">{errors.city}</p>}
             </div>
 
-            {/* Quận/Huyện */}
             <div className="form-group">
               <label>
                 Quận/Huyện <span className="required">*</span>
@@ -207,7 +197,6 @@ const CinemaForm = ({ cinema, onClose, onSubmit }) => {
             </div>
           </div>
 
-          {/* Địa chỉ chi tiết */}
           <div className="form-group">
             <label>
               Địa chỉ chi tiết <span className="required">*</span>
@@ -225,7 +214,6 @@ const CinemaForm = ({ cinema, onClose, onSubmit }) => {
             )}
           </div>
 
-          {/* Preview */}
           {formData.name &&
             formData.city &&
             formData.district &&

@@ -120,7 +120,6 @@ const SeatEditor = ({ room, onClose, onSave }) => {
         </div>
 
         <div className="seat-editor-content">
-          {/* Toolbar */}
           <div className="seat-toolbar">
             <div className="seat-types">
               {seatTypes.map((type) => (
@@ -167,7 +166,6 @@ const SeatEditor = ({ room, onClose, onSave }) => {
             </div>
           </div>
 
-          {/* Seat Layout */}
           <div className="seat-layout-container">
             <div className="screen">
               <div className="screen-label">Màn hình</div>
@@ -201,7 +199,6 @@ const SeatEditor = ({ room, onClose, onSave }) => {
             </div>
           </div>
 
-          {/* Summary */}
           <div className="seat-summary">
             <h3>Thống kê ghế</h3>
             <div className="summary-grid">

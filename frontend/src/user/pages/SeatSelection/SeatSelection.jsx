@@ -1,4 +1,3 @@
-// frontend/src/user/pages/SeatSelection/SeatSelection.jsx
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Spin, message, Button } from "antd";
@@ -13,19 +12,14 @@ const SeatSelection = () => {
 
   console.log("🔍 Location state:", location.state);
 
-  // ✅ Lấy dữ liệu từ state (truyền từ ScheduleModal)
   const { showtimeId, movieId, cinemaId } = location.state || {};
 
   const [selectedSeats, setSelectedSeats] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // State lưu trữ thông tin
   const [movie, setMovie] = useState(null);
-  const [roomData, setRoomData] = useState(null); // ✅ From API /rooms?showtimeId
+  const [roomData, setRoomData] = useState(null);
 
-  /**
-   * ✅ Tải thông tin phim và room data
-   */
   useEffect(() => {
     const fetchData = async () => {
       if (!showtimeId || !movieId || !cinemaId) {
@@ -41,7 +35,6 @@ const SeatSelection = () => {
 
       setLoading(true);
       try {
-        // Parallel fetch
         const [movieData, roomResponse] = await Promise.all([
           movieService.getById(movieId),
           seatService.getSeatsByShowtime(showtimeId),
@@ -50,7 +43,6 @@ const SeatSelection = () => {
         console.log("🎬 Movie data:", movieData);
         console.log("🏢 Room response:", roomResponse);
 
-        // ✅ Check if room data exists
         if (!roomResponse) {
           message.error(
             "Không tìm thấy thông tin phòng chiếu cho suất chiếu này"
@@ -60,7 +52,6 @@ const SeatSelection = () => {
           return;
         }
 
-        // ✅ Check if seats exist
         if (!roomResponse.seats || roomResponse.seats.length === 0) {
           message.warning(
             "Suất chiếu này chưa có ghế. Vui lòng chọn suất chiếu khác."
@@ -91,9 +82,6 @@ const SeatSelection = () => {
     fetchData();
   }, [showtimeId, movieId, cinemaId, navigate]);
 
-  /**
-   * ✅ Tính toán tổng tiền
-   */
   const priceInfo = useMemo(() => {
     const total = selectedSeats.reduce((sum, seat) => sum + seat.price, 0);
     return {
@@ -102,16 +90,12 @@ const SeatSelection = () => {
     };
   }, [selectedSeats]);
 
-  /**
-   * ✅ Chuyển sang bước xác nhận thanh toán
-   */
   const handleContinueToPayment = () => {
     if (selectedSeats.length === 0) {
       message.warning("Vui lòng chọn ít nhất một ghế để tiếp tục");
       return;
     }
 
-    // Navigate với đầy đủ thông tin
     navigate("/confirm-payment", {
       state: {
         showtimeId,
@@ -120,7 +104,7 @@ const SeatSelection = () => {
         selectedSeats,
         priceInfo,
         movie,
-        roomData, // { roomId, roomName, cinemaName, showtimeId, seats }
+        roomData,
       },
     });
   };
@@ -152,7 +136,6 @@ const SeatSelection = () => {
   return (
     <div className="seat-selection-page">
       <div className="selection-container">
-        {/* ===== HEADER ===== */}
         <div className="selection-header">
           <button className="back-button" onClick={() => navigate(-1)}>
             <ArrowLeftOutlined /> Quay lại
@@ -168,9 +151,7 @@ const SeatSelection = () => {
           </div>
         </div>
 
-        {/* ===== MAIN CONTENT ===== */}
         <div className="selection-content">
-          {/* LEFT: Seat map */}
           <div className="seat-section">
             <div className="section-header">
               <h2>Chọn ghế ngồi</h2>
@@ -179,7 +160,6 @@ const SeatSelection = () => {
               </p>
             </div>
 
-            {/* Seat legend */}
             <div className="seat-legend">
               <div className="legend-item">
                 <div className="legend-icon available">
@@ -207,7 +187,6 @@ const SeatSelection = () => {
               </div>
             </div>
 
-            {/* Seat Map Component */}
             <SeatMap
               showtimeId={showtimeId}
               selectedSeats={selectedSeats}
@@ -215,19 +194,16 @@ const SeatSelection = () => {
             />
           </div>
 
-          {/* RIGHT: Summary */}
           <div className="summary-section">
             <div className="summary-card">
               <h3>Thông tin đặt vé</h3>
 
-              {/* Movie poster */}
               {movie?.poster && (
                 <div className="summary-poster">
                   <img src={movie.poster} alt={movie.title} />
                 </div>
               )}
 
-              {/* Movie info */}
               <div className="summary-details">
                 <div className="detail-row">
                   <span className="label">Phim</span>
@@ -243,7 +219,6 @@ const SeatSelection = () => {
                 </div>
               </div>
 
-              {/* Selected seats */}
               <div className="selected-seats-section">
                 <div className="section-title">Ghế đã chọn</div>
                 {selectedSeats.length > 0 ? (
@@ -259,7 +234,6 @@ const SeatSelection = () => {
                       ))}
                     </div>
 
-                    {/* Total */}
                     <div className="summary-total">
                       <span className="total-label">Tổng cộng</span>
                       <span className="total-amount">
@@ -275,7 +249,6 @@ const SeatSelection = () => {
                 )}
               </div>
 
-              {/* Continue button */}
               <Button
                 type="primary"
                 size="large"

@@ -1,4 +1,3 @@
-// frontend/src/admin/components/RoomForm.jsx
 import { useState, useEffect } from "react";
 import { FiX, FiAlertCircle, FiInfo } from "react-icons/fi";
 import { cinemaService } from "../../services";
@@ -87,7 +86,6 @@ const RoomForm = ({ room, onClose, onSubmit, cinemas }) => {
         </div>
 
         <form onSubmit={handleSubmit} className="modal-body">
-          {/* ✅ Thông báo nếu đang edit */}
           {room && (
             <div className="form-notice warning">
               <FiAlertCircle size={18} />
@@ -139,7 +137,6 @@ const RoomForm = ({ room, onClose, onSubmit, cinemas }) => {
             </p>
           </div>
 
-          {/* ✅ Info Box */}
           <div className="info-box">
             <h4>
               <FiInfo /> Lưu ý

@@ -1,4 +1,3 @@
-// frontend/src/admin/components/Common/Sidebar.jsx
 import { Link, useLocation } from "react-router-dom";
 import { authService } from "../../../services";
 import PermissionWrapper from "./PermissionWrapper";
@@ -10,7 +9,6 @@ const Sidebar = () => {
   const userName = authService.getCurrentUser()?.fullName || "User";
 
   const menuItems = [
-    // ===== ALL STAFF =====
     {
       path: "/admin/dashboard",
       label: "Dashboard",
@@ -36,7 +34,6 @@ const Sidebar = () => {
       roles: ["EMPLOYEE", "MANAGER", "ADMIN"],
     },
 
-    // ===== MANAGER + ADMIN =====
     {
       path: "/admin/employees",
       label: "Quản lý nhân viên",
@@ -44,7 +41,6 @@ const Sidebar = () => {
       roles: ["MANAGER", "ADMIN"],
     },
 
-    // ===== ADMIN ONLY =====
     {
       path: "/admin/cinemas",
       label: "Quản lý rạp",
@@ -85,7 +81,6 @@ const Sidebar = () => {
 
   return (
     <div className="admin-sidebar">
-      {/* User Info */}
       <div className="sidebar-header">
         <div className="user-info">
           <div className="user-avatar">
@@ -100,7 +95,6 @@ const Sidebar = () => {
         </div>
       </div>
 
-      {/* Menu */}
       <nav className="sidebar-menu">
         {menuItems.map((item) => (
           <PermissionWrapper key={item.path} allowedRoles={item.roles}>
@@ -117,7 +111,6 @@ const Sidebar = () => {
         ))}
       </nav>
 
-      {/* Logout */}
       <div className="sidebar-footer">
         <button className="logout-btn" onClick={() => authService.logout()}>
           <i className="fas fa-sign-out-alt"></i>

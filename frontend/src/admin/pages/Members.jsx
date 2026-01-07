@@ -1,4 +1,3 @@
-// frontend/src/admin/pages/Members.jsx
 import { useState, useEffect, useMemo } from "react";
 import {
   FiSearch,
@@ -21,8 +20,7 @@ const Members = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [memberToDelete, setMemberToDelete] = useState(null);
-  const [hasPermission, setHasPermission] = useState(true); // ✅ Add permission state
-
+  const [hasPermission, setHasPermission] = useState(true);
   useEffect(() => {
     fetchMembers();
   }, []);
@@ -34,12 +32,12 @@ const Members = () => {
 
       console.log("✅ Members loaded:", data.length);
       setMembers(Array.isArray(data) ? data : []);
-      setHasPermission(true); // ✅ Set permission true on success
+      setHasPermission(true);
     } catch (error) {
       console.error("Error fetching members:", error);
 
       if (error.status === 403) {
-        setHasPermission(false); // ✅ Set permission false on 403
+        setHasPermission(false);
         message.warning({
           content:
             "Bạn không có quyền xem danh sách thành viên. Chỉ ADMIN mới có quyền này.",
@@ -55,7 +53,6 @@ const Members = () => {
     }
   };
 
-  // ✅ IMPORTANT: Call ALL hooks BEFORE any conditional returns
   const filteredMembers = useMemo(() => {
     if (!searchTerm) return members;
 
@@ -77,7 +74,6 @@ const Members = () => {
     };
   }, [members, filteredMembers]);
 
-  // ✅ Handler functions
   const handleDeleteMember = (member) => {
     setMemberToDelete(member);
     setShowDeleteDialog(true);
@@ -111,12 +107,10 @@ const Members = () => {
     return new Date(dateString).toLocaleDateString("vi-VN");
   };
 
-  // ✅ NOW safe to do conditional renders AFTER all hooks
   if (loading) {
     return <Loading text="Đang tải danh sách thành viên..." />;
   }
 
-  // ✅ Show permission error if 403
   if (!hasPermission) {
     return (
       <div className="admin-page">
@@ -150,7 +144,6 @@ const Members = () => {
     );
   }
 
-  // ✅ Main render - normal UI
   return (
     <div className="admin-page">
       <Breadcrumb />

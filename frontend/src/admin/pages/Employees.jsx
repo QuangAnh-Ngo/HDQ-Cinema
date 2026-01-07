@@ -1,4 +1,3 @@
-// frontend/src/admin/pages/Employees.jsx
 import { useState, useEffect } from "react";
 import { FiSearch } from "react-icons/fi";
 import {
@@ -55,7 +54,6 @@ const Employees = () => {
       console.log("📦 Raw Employees:", empData);
       console.log("📦 Raw Accounts:", accData);
 
-      // Merge bằng EMAIL
       const merged = empData.map((emp) => {
         const account = accData.find((acc) => {
           if (acc.employeeId && String(acc.employeeId) === String(emp.id)) {
@@ -70,7 +68,6 @@ const Employees = () => {
           );
         }
 
-        // Extract role names
         const roleNames = (account?.roles || []).map((r) =>
           typeof r === "string" ? r : r.name
         );
@@ -84,7 +81,6 @@ const Employees = () => {
           username: account?.username || null,
           roles: account?.roles || [],
           roleNames: roleNames,
-          // ✅ Tính vai trò cao nhất để hiển thị
           highestRole: getHighestRoleFromList(roleNames),
         };
       });
@@ -103,7 +99,6 @@ const Employees = () => {
     }
   };
 
-  // ✅ Hàm lấy vai trò cao nhất
   const getHighestRoleFromList = (roleNames) => {
     if (!roleNames || roleNames.length === 0) return null;
     if (roleNames.includes("ADMIN")) return "ADMIN";
@@ -157,7 +152,6 @@ const Employees = () => {
       setLoading(true);
 
       if (modalMode === "create") {
-        // Step 1: Create employee
         const empPayload = {
           firstName: values.firstName,
           lastName: values.lastName,
@@ -169,7 +163,6 @@ const Employees = () => {
         const newEmployee = await employeeService.create(empPayload);
         console.log("✅ Employee created:", newEmployee);
 
-        // Step 2: Create account
         const accPayload = {
           username: values.username,
           password: values.password,
@@ -234,7 +227,6 @@ const Employees = () => {
         accountUsername: employee.accountUsername,
       });
 
-      // Step 1: Xóa Account trước (nếu có)
       if (employee.accountId) {
         try {
           console.log("📤 Deleting account by ID:", employee.accountId);
@@ -264,7 +256,6 @@ const Employees = () => {
         }
       }
 
-      // Step 2: Xóa Employee
       console.log("📤 Deleting employee:", employee.id);
       await employeeService.delete(employee.id);
       console.log("✅ Employee deleted successfully");
@@ -300,7 +291,6 @@ const Employees = () => {
     return false;
   };
 
-  // ✅ Màu sắc theo vai trò
   const getRoleColor = (role) => {
     const colors = {
       ADMIN: "red",
@@ -310,7 +300,6 @@ const Employees = () => {
     return colors[role] || "default";
   };
 
-  // ✅ Label tiếng Việt
   const getRoleLabel = (role) => {
     const labels = {
       ADMIN: "Quản trị viên",
@@ -354,7 +343,6 @@ const Employees = () => {
       width: 130,
     },
     {
-      // ✅ FIX: Hiển thị vai trò từ Account thay vì Position
       title: "Vai trò",
       key: "role",
       width: 130,

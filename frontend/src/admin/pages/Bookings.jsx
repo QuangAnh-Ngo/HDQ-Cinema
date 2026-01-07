@@ -1,4 +1,3 @@
-// frontend/src/admin/pages/Bookings.jsx
 import { useState, useEffect } from "react";
 import {
   FiSearch,
@@ -28,12 +27,10 @@ const Bookings = () => {
     new Date().toISOString().split("T")[0]
   );
 
-  // Stats
   const [pendingCount, setPendingCount] = useState(0);
   const [todayRevenue, setTodayRevenue] = useState(0);
   const [totalBookings, setTotalBookings] = useState(0);
 
-  // Modal
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
 
@@ -49,7 +46,6 @@ const Bookings = () => {
     try {
       setLoading(true);
 
-      // ✅ Fetch pending count
       let pending = 0;
       try {
         pending = await bookingService.getPendingCount();
@@ -58,7 +54,6 @@ const Bookings = () => {
         console.warn("Could not fetch pending count:", error);
       }
 
-      // ✅ Fetch bookings by date
       let bookingsData = [];
       try {
         bookingsData = await bookingService.getByDate(dateFilter);
@@ -76,7 +71,6 @@ const Bookings = () => {
       setBookings(Array.isArray(bookingsData) ? bookingsData : []);
       setTotalBookings(bookingsData.length);
 
-      // Calculate revenue
       const revenue = bookingsData.reduce(
         (sum, b) => sum + (b.totalPrice || 0),
         0
@@ -104,7 +98,6 @@ const Bookings = () => {
       );
     }
 
-    // Sort by createTime (newest first)
     filtered.sort((a, b) => new Date(b.createTime) - new Date(a.createTime));
     setFilteredBookings(filtered);
   };
@@ -155,7 +148,6 @@ const Bookings = () => {
         <h1>Quản lý đặt vé</h1>
       </div>
 
-      {/* Permission Warning */}
       {!hasPermission && (
         <div className="page-notice warning">
           <FiAlertCircle size={18} />
@@ -166,7 +158,6 @@ const Bookings = () => {
         </div>
       )}
 
-      {/* Stats */}
       <div className="stats-grid">
         <div className="stat-card">
           <div className="stat-content">
@@ -196,7 +187,6 @@ const Bookings = () => {
         </div>
       </div>
 
-      {/* Filters */}
       <div className="filters-bar">
         <div className="filters-content">
           <div className="search-input">
@@ -224,7 +214,6 @@ const Bookings = () => {
         </div>
       </div>
 
-      {/* Table */}
       <div className="admin-table">
         {filteredBookings.length > 0 ? (
           <table>
@@ -305,7 +294,6 @@ const Bookings = () => {
         )}
       </div>
 
-      {/* Detail Modal */}
       {showDetailModal && selectedBooking && (
         <div
           className="modal-overlay"
@@ -379,7 +367,6 @@ const Bookings = () => {
               </div>
             </div>
 
-            {/* ✅ Footer với nút đóng */}
             <div className="modal-footer">
               <button
                 className="btn secondary"

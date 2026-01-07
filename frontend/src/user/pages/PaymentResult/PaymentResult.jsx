@@ -1,4 +1,3 @@
-// frontend/src/user/pages/PaymentResult/PaymentResult.jsx
 import { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Button, Spin, Result, Card, Tag } from "antd";
@@ -25,7 +24,6 @@ const PaymentResult = () => {
   useEffect(() => {
     const verifyPayment = async () => {
       try {
-        // ✅ Get all params from URL
         const params = Object.fromEntries(searchParams.entries());
         const responseCode = params.vnp_ResponseCode;
         const bookingId = params.vnp_TxnRef;
@@ -35,18 +33,13 @@ const PaymentResult = () => {
         console.log("📝 Booking ID:", bookingId);
 
         if (responseCode === "00") {
-          // ✅ SUCCESS flow
           try {
-            // 1. Verify with backend
             await paymentService.handleCallback(params);
             console.log("✅ Payment verified");
 
-            // 2. Get booking details (if API exists)
-            // Note: Backend might not have getById endpoint for bookings
-            // So we construct booking info from available data
             const bookingDetails = {
               bookingId: bookingId,
-              totalPrice: parseInt(params.vnp_Amount) / 100, // VNPay returns in cents
+              totalPrice: parseInt(params.vnp_Amount) / 100,
               orderInfo: params.vnp_OrderInfo,
               transactionNo: params.vnp_TransactionNo,
               bankCode: params.vnp_BankCode,
@@ -57,7 +50,6 @@ const PaymentResult = () => {
             setStatus("success");
           } catch (error) {
             console.error("❌ Error getting booking details:", error);
-            // Still show success if payment verified
             setStatus("success");
             setBooking({
               bookingId: bookingId,
@@ -65,7 +57,6 @@ const PaymentResult = () => {
             });
           }
         } else {
-          // ✅ FAILED flow
           setStatus("failed");
           setError(getErrorMessage(responseCode));
         }
@@ -82,9 +73,6 @@ const PaymentResult = () => {
     verifyPayment();
   }, [searchParams]);
 
-  /**
-   * ✅ Get error message by VNPay response code
-   */
   const getErrorMessage = (code) => {
     const errorMessages = {
       "07": "Giao dịch bị nghi ngờ gian lận",
@@ -104,9 +92,6 @@ const PaymentResult = () => {
     );
   };
 
-  /**
-   * ✅ Copy booking ID to clipboard
-   */
   const handleCopyBookingId = () => {
     const bookingId = booking?.bookingId || searchParams.get("vnp_TxnRef");
     if (bookingId) {
@@ -115,14 +100,10 @@ const PaymentResult = () => {
     }
   };
 
-  /**
-   * ✅ Format amount
-   */
   const formatAmount = (amount) => {
     return new Intl.NumberFormat("vi-VN").format(amount) + " VNĐ";
   };
 
-  // ✅ Loading state
   if (status === "loading") {
     return (
       <div className="payment-result-page">
@@ -174,13 +155,11 @@ const PaymentResult = () => {
               ]}
             />
 
-            {/* Booking Details */}
             {booking && (
               <div className="booking-details">
                 <h3 className="details-title">🎫 Thông tin vé điện tử</h3>
 
                 <div className="details-content">
-                  {/* Booking ID */}
                   <div className="detail-row highlight">
                     <span className="label">Mã vé</span>
                     <div className="value-with-copy">
@@ -197,7 +176,6 @@ const PaymentResult = () => {
                     </div>
                   </div>
 
-                  {/* Amount */}
                   <div className="detail-row">
                     <span className="label">Số tiền</span>
                     <span className="value amount">
@@ -208,7 +186,6 @@ const PaymentResult = () => {
                     </span>
                   </div>
 
-                  {/* Transaction info */}
                   {booking.transactionNo && (
                     <div className="detail-row">
                       <span className="label">Mã giao dịch</span>

@@ -1,4 +1,3 @@
-// frontend/src/user/components/Ticket/Ticket.jsx
 import { Card, Button, Spin, Tag } from "antd";
 import PropTypes from "prop-types";
 import {
@@ -17,7 +16,6 @@ const Ticket = ({
   priceInfo,
   onContinue,
 }) => {
-  // ✅ Loading state
   if (!movie || !roomInfo) {
     return (
       <Card className="ticket-container">
@@ -28,14 +26,7 @@ const Ticket = ({
     );
   }
 
-  /**
-   * ✅ Format showtime
-   * showtime có thể từ:
-   * - SeatSelection: roomData (không có showTime field)
-   * - ConfirmPayment: { showTime: ISO string }
-   */
   const getShowTimeDate = () => {
-    // Try multiple sources
     const timeStr =
       showtime?.showTime || showtime?.time || new Date().toISOString();
     return new Date(timeStr);
@@ -53,16 +44,10 @@ const Ticket = ({
     minute: "2-digit",
   });
 
-  /**
-   * ✅ Format currency
-   */
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat("vi-VN").format(amount) + "đ";
   };
 
-  /**
-   * ✅ Group seats by type for better display
-   */
   const seatsByType = selectedSeats.reduce((acc, seat) => {
     const type = seat.seatType || "CLASSIC";
     if (!acc[type]) {
@@ -77,7 +62,6 @@ const Ticket = ({
   return (
     <Card className="ticket-container shadow-2xl border-none rounded-3xl overflow-hidden">
       <div className="ticket-detail">
-        {/* Movie Poster & Title */}
         <div className="movie-detail">
           <div className="movie-poster">
             <img
@@ -106,7 +90,6 @@ const Ticket = ({
 
         <div className="divider" />
 
-        {/* Showtime Info */}
         <div className="showtime-info">
           <div className="info-row">
             <HomeOutlined className="info-icon" />
@@ -143,13 +126,11 @@ const Ticket = ({
 
         <div className="divider" />
 
-        {/* Selected Seats */}
         <div className="selected-seats-section">
           <h4 className="section-title">Ghế đã chọn ({totalSeats})</h4>
 
           {totalSeats > 0 ? (
             <>
-              {/* Group by seat type */}
               {Object.entries(seatsByType).map(([type, seats]) => (
                 <div key={type} className="seat-group">
                   <div className="seat-type-header">
@@ -181,7 +162,6 @@ const Ticket = ({
 
         <div className="divider thick" />
 
-        {/* Price Summary */}
         <div className="price-summary">
           <div className="price-row subtotal">
             <span>Tạm tính</span>
@@ -196,7 +176,6 @@ const Ticket = ({
           </div>
         </div>
 
-        {/* Action Button */}
         <div className="button-container">
           <Button
             type="primary"

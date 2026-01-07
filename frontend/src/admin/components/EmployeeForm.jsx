@@ -12,7 +12,7 @@ const EmployeeForm = ({ employee, onClose, onSubmit }) => {
   });
 
   useEffect(() => {
-    if (employee) setFormData({ ...employee, password: "" }); // Không hiển thị lại mật khẩu cũ
+    if (employee) setFormData({ ...employee, password: "" });
   }, [employee]);
 
   const handleChange = (e) => {

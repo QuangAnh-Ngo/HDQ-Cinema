@@ -1,4 +1,3 @@
-// frontend/src/admin/pages/AdminDashboard.jsx
 import { useState, useEffect } from "react";
 import { FiFilm, FiMapPin, FiGrid, FiShoppingBag } from "react-icons/fi";
 import {
@@ -6,7 +5,7 @@ import {
   cinemaService,
   roomService,
   bookingService,
-} from "../../services"; // ✅ Fixed
+} from "../../services";
 import Breadcrumb from "../components/Common/Breadcrumb";
 import Loading from "../components/Common/Loading";
 import "../styles/AdminLayout.scss";
@@ -23,12 +22,11 @@ const AdminDashboard = () => {
     try {
       setLoading(true);
 
-      // ✅ Use proper service methods
       const [movies, cinemas, rooms, bookings] = await Promise.all([
         movieService.getAll(),
         cinemaService.getAll(),
         roomService.getAll(),
-        bookingService.getAll?.() || Promise.resolve([]), // If method doesn't exist
+        bookingService.getAll?.() || Promise.resolve([]),
       ]);
 
       const today = new Date().toISOString().split("T")[0];
