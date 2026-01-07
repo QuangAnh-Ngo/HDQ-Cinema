@@ -1,8 +1,8 @@
 // frontend/src/services/axiosInstance.js
 import axios from "axios";
 
-const API_BASE_URL = "http://localhost:8080/cinemas";
-// const API_BASE_URL = "/api/cinemas";
+// const API_BASE_URL = "http://localhost:8080/cinemas";
+const API_BASE_URL = "/api";
 
 const MOCK_AUTH_ONLY = true;
 
