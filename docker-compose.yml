@@ -7,7 +7,7 @@ services:
     restart: on-failure
     #    ports:
     #      - "8080:8080"
-    ports:
+    expose:
       - "8080"
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-db:5432/${POSTGRES_DB}
@@ -30,7 +30,7 @@ services:
     restart: unless-stopped
     #    ports:
     #      - "5173:5173"
-    ports:
+    expose:
       - "5173"
 
     volumes:

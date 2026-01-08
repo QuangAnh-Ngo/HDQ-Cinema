@@ -16,6 +16,10 @@ export default defineConfig({
       // ✅ Hot Module Replacement cho Docker
       clientPort: 5173,
     },
+    allowedHosts: [
+      'hdqcinema.io.vn',
+      'www.hdqcinema.io.vn'
+    ],
   },
 
   preview: {
@@ -35,4 +39,5 @@ export default defineConfig({
       "@": path.resolve(__dirname, "src"),
     },
   },
+
 });
