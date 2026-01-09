@@ -12,10 +12,7 @@ export default defineConfig({
     watch: {
       usePolling: true, // ✅ Cần cho Docker volume watching
     },
-    hmr: {
-      // ✅ Hot Module Replacement cho Docker
-      clientPort: 5173,
-    },
+    
     allowedHosts: [
       'hdqcinema.io.vn',
       'www.hdqcinema.io.vn'
@@ -24,7 +21,8 @@ export default defineConfig({
 
   preview: {
     host: true,
-    port: 5173,
+    port: 4173,
+    strictPort: true,
   },
   plugins: [
     react({

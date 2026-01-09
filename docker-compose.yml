@@ -31,7 +31,7 @@ services:
     #    ports:
     #      - "5173:5173"
     expose:
-      - "5173"
+      - "4173"
 
     volumes:
       # Vite thường để index.html ở root, nên mount cả thư mục project sẽ tốt hơn
@@ -42,16 +42,14 @@ services:
       - BROWSER=none
       # ✅ FIX: Đổi tên biến cho đúng
       - VITE_API_BASE_URL=${VITE_API_BASE_URL:-http://localhost:8080/cinemas}
+
       # ✅ Vite dev server cần host 0.0.0.0 để access từ bên ngoài container
-      - VITE_HOST=0.0.0.0
+      - VITE_HOST=0.0.0.0 
       - VITE_PORT=5173
     depends_on:
       - backend
     networks:
       - cinema-network
-    stdin_open: true
-    tty: true
-    command: npm run dev -- --host 0.0.0.0
 
   # PostgreSQL Database
   postgres-db:

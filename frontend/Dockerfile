@@ -13,19 +13,23 @@ ENV BROWSER=none
 COPY package*.json ./
 
 # Install dependencies
-RUN npm install
+# RUN npm install
+
+RUN npm ci
 
 # Copy source code
 COPY . .
 
+RUN npm run build
+
 # Expose port 3000
-EXPOSE 5173
+EXPOSE 4173
 
 
 # Healthcheck (Docker biết container còn sống hay không)
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-  CMD wget -q -O - http://localhost:3000 || exit 1
+  CMD wget -q -O - http://localhost:4173 || exit 1
 
 
 # Start development server
-CMD ["npm", "run", "dev", "--", "--host"]
+CMD ["npm", "run", "preview", "--", "--host", "0.0.0.0"]
