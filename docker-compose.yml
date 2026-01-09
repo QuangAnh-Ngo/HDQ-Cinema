@@ -1,57 +1,27 @@
 services:
-  # Backend Spring Boot
   backend:
-    #    image: hung07195/hdqcinema-backend:0.0.1 #sửa để có thể build image hoặc compose up
     build: ./backend
     container_name: hdq-cinema-backend
     restart: on-failure
-    #    ports:
-    #      - "8080:8080"
     expose:
       - "8080"
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-db:5432/${POSTGRES_DB}
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
-      SPRING_JPA_HIBERNATE_DDL_AUTO: update
-      SPRING_JPA_SHOW_SQL: "true"
-      SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.PostgreSQLDialect
       JWT_SIGNER_KEY: ${JWT_SIGNER_KEY}
     depends_on:
       - postgres-db
     networks:
       - cinema-network
 
-  # Frontend React
   frontend:
-    #    image: hung07195/hdqcinema-frontend:0.0.1
     build: ./frontend
     container_name: hdq-cinema-frontend
     restart: unless-stopped
-    #    ports:
-    #      - "5173:5173"
-    expose:
-      - "4173"
-
-    volumes:
-      # Vite thường để index.html ở root, nên mount cả thư mục project sẽ tốt hơn
-      - ./frontend:/app
-      # Giữ lại node_modules trong container
-      - /app/node_modules
-    environment:
-      - BROWSER=none
-      # ✅ FIX: Đổi tên biến cho đúng
-      - VITE_API_BASE_URL=${VITE_API_BASE_URL:-http://localhost:8080/cinemas}
-
-      # ✅ Vite dev server cần host 0.0.0.0 để access từ bên ngoài container
-      - VITE_HOST=0.0.0.0 
-      - VITE_PORT=5173
-    depends_on:
-      - backend
     networks:
       - cinema-network
 
-  # PostgreSQL Database
   postgres-db:
     image: postgres:17
     container_name: hdq-cinema-postgres
@@ -60,9 +30,6 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
-      TZ: "Asia/Ho_Chi_Minh"
-    ports:
-      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:

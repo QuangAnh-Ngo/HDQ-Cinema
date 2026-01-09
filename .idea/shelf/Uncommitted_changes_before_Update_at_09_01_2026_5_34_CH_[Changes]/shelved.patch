@@ -1,0 +1,127 @@
+Index: frontend/vite.config.js
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>import { defineConfig } from \"vite\";\r\nimport react from \"@vitejs/plugin-react\";\r\nimport tailwindcss from \"@tailwindcss/vite\";\r\nimport path from \"path\";\r\n\r\n// https://vite.dev/config/\r\nexport default defineConfig({\r\n  server: {\r\n    host: true, // ✅ Listen on 0.0.0.0\r\n    port: 5173,\r\n    strictPort: true,\r\n    watch: {\r\n      usePolling: true, // ✅ Cần cho Docker volume watching\r\n    },\r\n    hmr: {\r\n      // ✅ Hot Module Replacement cho Docker\r\n      clientPort: 5173,\r\n    },\r\n  },\r\n\r\n  preview: {\r\n    host: true,\r\n    port: 5173,\r\n  },\r\n  plugins: [\r\n    react({\r\n      babel: {\r\n        plugins: [[\"babel-plugin-react-compiler\"]],\r\n      },\r\n    }),\r\n    tailwindcss(),\r\n  ],\r\n  resolve: {\r\n    alias: {\r\n      \"@\": path.resolve(__dirname, \"src\"),\r\n    },\r\n  },\r\n});\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/frontend/vite.config.js b/frontend/vite.config.js
+--- a/frontend/vite.config.js	(revision 324daa5fb837d860e869d9dd8485ef2ad1e5ef9e)
++++ b/frontend/vite.config.js	(date 1767806087489)
+@@ -35,4 +35,5 @@
+       "@": path.resolve(__dirname, "src"),
+     },
+   },
++
+ });
+Index: frontend/src/services/axiosInstance.js
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>// frontend/src/services/axiosInstance.js\r\nimport axios from \"axios\";\r\n\r\n// const API_BASE_URL = \"http://localhost:8080/cinemas\";\r\nconst API_BASE_URL = \"/api\";\r\n\r\nconst MOCK_AUTH_ONLY = true;\r\n\r\n// ✅ CRITICAL: Very specific public endpoint patterns\r\nconst PUBLIC_ENDPOINT_PATTERNS = [\r\n  { path: \"/movies/showing\", exact: true },\r\n  { path: \"/movies/upcoming\", exact: true },\r\n  { path: \"/theaters\", method: \"GET\", exact: true }, // Only GET /theaters\r\n  { path: \"/auth/token\", exact: false },\r\n  { path: \"/auth/register\", exact: false },\r\n  { path: \"/auth/introspect\", exact: false },\r\n];\r\n\r\n// ✅ Admin endpoints that require authentication\r\nconst ADMIN_ENDPOINT_PATTERNS = [\r\n  { path: \"/movies\", methods: [\"POST\", \"PUT\", \"DELETE\"] },\r\n  { path: \"/rooms\", methods: [\"POST\", \"PUT\", \"DELETE\"] },\r\n  { path: \"/employees\", methods: [\"POST\", \"PUT\", \"DELETE\"] },\r\n  { path: \"/accounts\", methods: [\"POST\", \"PUT\", \"DELETE\"] },\r\n  { path: \"/showtimes\", methods: [\"POST\", \"PUT\", \"DELETE\"] },\r\n  { path: \"/theaters\", methods: [\"POST\", \"PUT\", \"DELETE\"] },\r\n  { path: \"/bookings\", methods: [\"GET\", \"POST\", \"PUT\", \"DELETE\"] },\r\n  { path: \"/members\", methods: [\"GET\", \"DELETE\"] },\r\n];\r\n\r\n/**\r\n * ✅ IMPROVED: Check if endpoint is public\r\n */\r\nconst isPublicEndpoint = (url, method = \"GET\") => {\r\n  if (!url) return false;\r\n\r\n  return PUBLIC_ENDPOINT_PATTERNS.some((pattern) => {\r\n    // Check method if specified\r\n    if (pattern.method && method.toUpperCase() !== pattern.method) {\r\n      return false;\r\n    }\r\n\r\n    // Exact match required\r\n    if (pattern.exact) {\r\n      return url === pattern.path || url === `${pattern.path}/`;\r\n    }\r\n\r\n    // Substring match\r\n    return url.includes(pattern.path);\r\n  });\r\n};\r\n\r\n/**\r\n * ✅ IMPROVED: Check if endpoint requires admin auth\r\n */\r\nconst isAdminEndpoint = (url, method = \"GET\") => {\r\n  if (!url) return false;\r\n\r\n  return ADMIN_ENDPOINT_PATTERNS.some((pattern) => {\r\n    // Check if URL matches pattern\r\n    const urlMatches =\r\n      url.startsWith(pattern.path) || url.includes(pattern.path);\r\n\r\n    if (!urlMatches) return false;\r\n\r\n    // Check method if specified\r\n    if (pattern.methods) {\r\n      return pattern.methods.includes(method.toUpperCase());\r\n    }\r\n\r\n    return true;\r\n  });\r\n};\r\n\r\nconst isPaymentEndpoint = (url) => {\r\n  if (!url) return false;\r\n  const paymentPaths = [\"/payment/\", \"/paymenturls/\"];\r\n  return paymentPaths.some((path) => url.includes(path));\r\n};\r\n\r\nconst isMockMode = () => {\r\n  const token = localStorage.getItem(\"token\");\r\n  return token && token.startsWith(\"mock-token-\");\r\n};\r\n\r\nconst axiosInstance = axios.create({\r\n  baseURL: API_BASE_URL,\r\n  headers: {\r\n    \"Content-Type\": \"application/json\",\r\n  },\r\n  timeout: 30000,\r\n});\r\n\r\n// ✅ REQUEST INTERCEPTOR\r\naxiosInstance.interceptors.request.use(\r\n  (config) => {\r\n    const token = localStorage.getItem(\"token\");\r\n    const user = localStorage.getItem(\"user\");\r\n    const method = config.method?.toUpperCase() || \"GET\";\r\n\r\n    console.log(\"\uD83D\uDD0D Request:\", {\r\n      url: config.url,\r\n      method: method,\r\n      hasToken: !!token,\r\n      isMock: isMockMode(),\r\n    });\r\n\r\n    // ✅ 1. Check if public endpoint\r\n    if (isPublicEndpoint(config.url, method)) {\r\n      console.log(\"✅ Public endpoint - no auth needed\");\r\n      return config;\r\n    }\r\n\r\n    // ✅ 2. Check if admin endpoint\r\n    const requiresAuth = isAdminEndpoint(config.url, method);\r\n\r\n    if (requiresAuth) {\r\n      console.log(\"\uD83D\uDD12 Admin endpoint - auth required\");\r\n    }\r\n\r\n    // ✅ 3. Real auth mode\r\n    if (token && !isMockMode()) {\r\n      config.headers.Authorization = `Bearer ${token}`;\r\n      console.log(\"✅ Real auth token attached\");\r\n      return config;\r\n    }\r\n\r\n    // ✅ 4. Mock mode\r\n    if (isMockMode() && user) {\r\n      const parsedUser = JSON.parse(user);\r\n      const userRole =\r\n        parsedUser.role ||\r\n        parsedUser.roles?.[0]?.replace(\"ROLE_\", \"\") ||\r\n        \"MEMBER\";\r\n      const isStaff = [\"ADMIN\", \"MANAGER\", \"EMPLOYEE\"].includes(\r\n        userRole.toUpperCase()\r\n      );\r\n\r\n      config.headers[\"X-Mock-User-Id\"] = parsedUser.id;\r\n      config.headers[\"X-Mock-User-Role\"] = userRole;\r\n      config.headers[\"X-Mock-Mode\"] = \"true\";\r\n\r\n      console.log(\"\uD83C\uDFAD Mock mode:\", { role: userRole, isStaff });\r\n\r\n      // Payment endpoints - allow all users\r\n      if (isPaymentEndpoint(config.url)) {\r\n        console.log(\"✅ Payment endpoint allowed\");\r\n        return config;\r\n      }\r\n\r\n      // Admin endpoints - check staff + block writes\r\n      if (requiresAuth) {\r\n        if (!isStaff) {\r\n          console.warn(\"\uD83D\uDEAB Non-staff blocked from admin endpoint\");\r\n          return Promise.reject({\r\n            status: 403,\r\n            message: \"Không có quyền truy cập\",\r\n            mockMode: true,\r\n          });\r\n        }\r\n\r\n        // Block write operations in mock mode\r\n        if ([\"POST\", \"PUT\", \"DELETE\", \"PATCH\"].includes(method)) {\r\n          console.warn(\"\uD83D\uDEAB Mock mode: Write operation blocked\");\r\n          return Promise.reject({\r\n            status: 401,\r\n            message:\r\n              \"Mock mode không hỗ trợ thao tác ghi dữ liệu. Vui lòng đăng nhập với tài khoản thật.\",\r\n            mockMode: true,\r\n          });\r\n        }\r\n\r\n        console.log(\"✅ Mock staff GET allowed\");\r\n        return config;\r\n      }\r\n\r\n      // Other endpoints - allow with mock headers\r\n      return config;\r\n    }\r\n\r\n    // ✅ 5. No auth available\r\n    if (requiresAuth) {\r\n      console.warn(\"\uD83D\uDEAB No authentication for protected endpoint\");\r\n      return Promise.reject({\r\n        status: 401,\r\n        message: \"Vui lòng đăng nhập\",\r\n      });\r\n    }\r\n\r\n    return config;\r\n  },\r\n  (error) => Promise.reject(error)\r\n);\r\n\r\n// ✅ RESPONSE INTERCEPTOR\r\naxiosInstance.interceptors.response.use(\r\n  (response) => {\r\n    const { data } = response;\r\n\r\n    if (data && data.code === 1000 && data.result !== undefined) {\r\n      return data.result;\r\n    }\r\n\r\n    if (data && data.result !== undefined) {\r\n      return data.result;\r\n    }\r\n\r\n    return data;\r\n  },\r\n  async (error) => {\r\n    const originalRequest = error.config;\r\n\r\n    if (!originalRequest) {\r\n      return Promise.reject({\r\n        status: 500,\r\n        message: \"Internal error\",\r\n      });\r\n    }\r\n\r\n    const method = originalRequest.method?.toUpperCase() || \"GET\";\r\n\r\n    console.error(\"❌ Response error:\", {\r\n      url: originalRequest.url,\r\n      method: method,\r\n      status: error.response?.status,\r\n      message: error.response?.data?.message,\r\n    });\r\n\r\n    // ✅ 1. Handle 401 for public endpoints only\r\n    if (error.response?.status === 401) {\r\n      // ONLY return empty data for actual public endpoints\r\n      if (isPublicEndpoint(originalRequest.url, method)) {\r\n        console.log(\"ℹ\uFE0F Public endpoint got 401 - returning empty data\");\r\n        return [];\r\n      }\r\n\r\n      // For protected endpoints, try token refresh (real auth only)\r\n      if (!isMockMode() && !originalRequest._retry) {\r\n        originalRequest._retry = true;\r\n        const currentToken = localStorage.getItem(\"token\");\r\n\r\n        if (currentToken) {\r\n          try {\r\n            console.log(\"\uD83D\uDD04 Attempting token refresh...\");\r\n\r\n            const res = await axios.post(`${API_BASE_URL}/auth/refresh`, {\r\n              token: currentToken,\r\n            });\r\n\r\n            const newToken = res.data.result.token;\r\n            localStorage.setItem(\"token\", newToken);\r\n            originalRequest.headers.Authorization = `Bearer ${newToken}`;\r\n\r\n            console.log(\"✅ Token refreshed, retrying request\");\r\n            return axiosInstance(originalRequest);\r\n          } catch (refreshError) {\r\n            console.error(\"❌ Token refresh failed\");\r\n            localStorage.clear();\r\n            window.location.href = \"/login\";\r\n            return Promise.reject(refreshError);\r\n          }\r\n        }\r\n      }\r\n\r\n      // If we reach here, 401 is genuine\r\n      return Promise.reject({\r\n        status: 401,\r\n        message: error.response?.data?.message || \"Unauthorized\",\r\n        code: error.response?.data?.code,\r\n      });\r\n    }\r\n\r\n    // ✅ 2. Handle 403 Forbidden\r\n    if (error.response?.status === 403) {\r\n      console.warn(\"⚠\uFE0F 403 Forbidden\");\r\n\r\n      if (originalRequest.url?.includes(\"/bookings\")) {\r\n        return Promise.resolve([]);\r\n      }\r\n\r\n      return Promise.reject({\r\n        status: 403,\r\n        message: error.response?.data?.message || \"Không có quyền truy cập\",\r\n        code: error.response?.data?.code,\r\n      });\r\n    }\r\n\r\n    // ✅ 3. General error\r\n    const errorMessage =\r\n      error.response?.data?.message ||\r\n      error.message ||\r\n      \"Đã xảy ra lỗi hệ thống\";\r\n\r\n    return Promise.reject({\r\n      status: error.response?.status,\r\n      message: errorMessage,\r\n      code: error.response?.data?.code,\r\n    });\r\n  }\r\n);\r\n\r\nexport default axiosInstance;\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/frontend/src/services/axiosInstance.js b/frontend/src/services/axiosInstance.js
+--- a/frontend/src/services/axiosInstance.js	(revision 324daa5fb837d860e869d9dd8485ef2ad1e5ef9e)
++++ b/frontend/src/services/axiosInstance.js	(date 1767949518998)
+@@ -1,8 +1,8 @@
+ // frontend/src/services/axiosInstance.js
+ import axios from "axios";
+ 
+-// const API_BASE_URL = "http://localhost:8080/cinemas";
+-const API_BASE_URL = "/api";
++const API_BASE_URL = "http://localhost:8080/cinemas";
++// const API_BASE_URL = "/api";
+ 
+ const MOCK_AUTH_ONLY = true;
+ 
+Index: backend/src/main/java/com/example/HDQCinema/repository/TicketPriceRepository.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.example.HDQCinema.repository;\r\n\r\nimport com.example.HDQCinema.entity.TicketPrice;\r\nimport com.example.HDQCinema.enums.SeatType;\r\nimport org.springframework.data.jpa.repository.JpaRepository;\r\nimport org.springframework.data.jpa.repository.Query;\r\nimport org.springframework.data.repository.query.Param;\r\nimport org.springframework.stereotype.Repository;\r\n\r\nimport java.util.Optional;\r\n\r\n\r\n@Repository\r\npublic interface TicketPriceRepository extends JpaRepository<TicketPrice, Long> {\r\n    @Query(value = \"\"\"\r\n            SELECT tp.price\r\n            FROM ticket_price tp\r\n            JOIN cinema c ON c.cinema_id = tp.cinema_id --:cinemaId\r\n            JOIN room r ON r.cinema_id = c.cinema_id\r\n            JOIN show_time st ON st.room_id = r.room_id --st.showtime_id = :showtimeId\r\n            LEFT JOIN day_type dt ON (st.start_time::date BETWEEN dt.day_start AND dt.day_end)\r\n            WHERE tp.seat_type = :seatType\r\n            AND c.cinema_id = :cinemaId\r\n            AND st.showtime_id = :showtimeId\r\n            AND tp.day_type = \r\n                CASE\r\n                   WHEN dt.day_type IS NOT NULL THEN dt.day_type\r\n                   WHEN EXTRACT(ISODOW FROM st.start_time) IN (6, 7) THEN 'WEEKEND'\r\n                   ELSE 'WEEKDAY'\r\n                 END\r\n            LIMIT 1\r\n            --COALESCE(dt.day_type, UPPER(TRIM(TO_CHAR(st.start_time, 'DAY'))))\r\n            ;\r\n            \"\"\",\r\n    nativeQuery = true) // COALESCE là hàm SQL trả về giá trị đầu tiên không NULL trong danh sách các giá trị được đưa vào.\r\n    Optional<Double> toPrice(@Param(\"seatType\") String seatType,\r\n                   @Param(\"showtimeId\") Long showtimeId,\r\n                   @Param(\"cinemaId\") Long cinemaId);\r\n\r\n\r\n    TicketPrice findTicketPriceById(Long id);\r\n\r\n    void deleteTicketPriceById(Long id);\r\n\r\n    //SELECT tp.price\r\n    //FROM ticket_price tp\r\n    //JOIN show_time st ON st.showtime_id = :showtimeId\r\n    //LEFT JOIN day_type dt\r\n    //  ON st.start_time BETWEEN dt.day_start AND dt.day_end + INTERVAL '1 day'\r\n    //WHERE tp.day_type = COALESCE(\r\n    //    dt.day_type,\r\n    //    UPPER(TRIM(TO_CHAR(st.start_time, 'DAY')))\r\n    //)\r\n    //AND tp.seat_type = :seatType\r\n    //LIMIT 1;\r\n}\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/backend/src/main/java/com/example/HDQCinema/repository/TicketPriceRepository.java b/backend/src/main/java/com/example/HDQCinema/repository/TicketPriceRepository.java
+--- a/backend/src/main/java/com/example/HDQCinema/repository/TicketPriceRepository.java	(revision 324daa5fb837d860e869d9dd8485ef2ad1e5ef9e)
++++ b/backend/src/main/java/com/example/HDQCinema/repository/TicketPriceRepository.java	(date 1767951158179)
+@@ -13,7 +13,7 @@
+ @Repository
+ public interface TicketPriceRepository extends JpaRepository<TicketPrice, Long> {
+     @Query(value = """
+-            SELECT tp.price
++            SELECT tp.price 
+             FROM ticket_price tp
+             JOIN cinema c ON c.cinema_id = tp.cinema_id --:cinemaId
+             JOIN room r ON r.cinema_id = c.cinema_id
+Index: docker-compose.yml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>services:\r\n  # Backend Spring Boot\r\n  backend:\r\n    #    image: hung07195/hdqcinema-backend:0.0.1 #sửa để có thể build image hoặc compose up\r\n    build: ./backend\r\n    container_name: hdq-cinema-backend\r\n    restart: on-failure\r\n    #    ports:\r\n    #      - \"8080:8080\"\r\n    ports:\r\n      - \"8080\"\r\n    environment:\r\n      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-db:5432/${POSTGRES_DB}\r\n      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}\r\n      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}\r\n      SPRING_JPA_HIBERNATE_DDL_AUTO: update\r\n      SPRING_JPA_SHOW_SQL: \"true\"\r\n      SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.PostgreSQLDialect\r\n      JWT_SIGNER_KEY: ${JWT_SIGNER_KEY}\r\n    depends_on:\r\n      - postgres-db\r\n    networks:\r\n      - cinema-network\r\n\r\n  # Frontend React\r\n  frontend:\r\n    #    image: hung07195/hdqcinema-frontend:0.0.1\r\n    build: ./frontend\r\n    container_name: hdq-cinema-frontend\r\n    restart: unless-stopped\r\n    #    ports:\r\n    #      - \"5173:5173\"\r\n    ports:\r\n      - \"5173\"\r\n\r\n    volumes:\r\n      # Vite thường để index.html ở root, nên mount cả thư mục project sẽ tốt hơn\r\n      - ./frontend:/app\r\n      # Giữ lại node_modules trong container\r\n      - /app/node_modules\r\n    environment:\r\n      - BROWSER=none\r\n      # ✅ FIX: Đổi tên biến cho đúng\r\n      - VITE_API_BASE_URL=${VITE_API_BASE_URL:-http://localhost:8080/cinemas}\r\n      # ✅ Vite dev server cần host 0.0.0.0 để access từ bên ngoài container\r\n      - VITE_HOST=0.0.0.0\r\n      - VITE_PORT=5173\r\n    depends_on:\r\n      - backend\r\n    networks:\r\n      - cinema-network\r\n    stdin_open: true\r\n    tty: true\r\n    command: npm run dev -- --host 0.0.0.0\r\n\r\n  # PostgreSQL Database\r\n  postgres-db:\r\n    image: postgres:17\r\n    container_name: hdq-cinema-postgres\r\n    restart: unless-stopped\r\n    environment:\r\n      POSTGRES_USER: ${POSTGRES_USER}\r\n      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}\r\n      POSTGRES_DB: ${POSTGRES_DB}\r\n      TZ: \"Asia/Ho_Chi_Minh\"\r\n    ports:\r\n      - \"5433:5432\"\r\n    volumes:\r\n      - postgres_data:/var/lib/postgresql/data\r\n    networks:\r\n      - cinema-network\r\n\r\n  nginx:\r\n    image: nginx:latest\r\n    container_name: hdq-cinema-nginx\r\n    restart: unless-stopped\r\n    ports:\r\n      - \"80:80\"\r\n    volumes:\r\n      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf\r\n    depends_on:\r\n      - frontend\r\n      - backend\r\n    networks:\r\n      - cinema-network\r\n\r\nvolumes:\r\n  postgres_data:\r\n\r\nnetworks:\r\n  cinema-network:\r\n    driver: bridge
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/docker-compose.yml b/docker-compose.yml
+--- a/docker-compose.yml	(revision 324daa5fb837d860e869d9dd8485ef2ad1e5ef9e)
++++ b/docker-compose.yml	(date 1767949519024)
+@@ -5,10 +5,10 @@
+     build: ./backend
+     container_name: hdq-cinema-backend
+     restart: on-failure
+-    #    ports:
+-    #      - "8080:8080"
+     ports:
+-      - "8080"
++      - "8080:8080"
++#    ports:
++#      - "8080"
+     environment:
+       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-db:5432/${POSTGRES_DB}
+       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
+@@ -28,10 +28,10 @@
+     build: ./frontend
+     container_name: hdq-cinema-frontend
+     restart: unless-stopped
+-    #    ports:
+-    #      - "5173:5173"
+     ports:
+-      - "5173"
++      - "5173:5173"
++#    ports:
++#      - "5173"
+ 
+     volumes:
+       # Vite thường để index.html ở root, nên mount cả thư mục project sẽ tốt hơn
+@@ -70,19 +70,19 @@
+     networks:
+       - cinema-network
+ 
+-  nginx:
+-    image: nginx:latest
+-    container_name: hdq-cinema-nginx
+-    restart: unless-stopped
+-    ports:
+-      - "80:80"
+-    volumes:
+-      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+-    depends_on:
+-      - frontend
+-      - backend
+-    networks:
+-      - cinema-network
++#  nginx:
++#    image: nginx:latest
++#    container_name: hdq-cinema-nginx
++#    restart: unless-stopped
++#    ports:
++#      - "80:80"
++#    volumes:
++#      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
++#    depends_on:
++#      - frontend
++#      - backend
++#    networks:
++#      - cinema-network
+ 
+ volumes:
+   postgres_data:

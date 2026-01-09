@@ -13,7 +13,7 @@ import java.util.Optional;
 @Repository
 public interface TicketPriceRepository extends JpaRepository<TicketPrice, Long> {
     @Query(value = """
-            SELECT tp.price
+            SELECT tp.price 
             FROM ticket_price tp
             JOIN cinema c ON c.cinema_id = tp.cinema_id --:cinemaId
             JOIN room r ON r.cinema_id = c.cinema_id
