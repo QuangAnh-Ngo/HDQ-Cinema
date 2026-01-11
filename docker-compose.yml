@@ -16,9 +16,18 @@ services:
       - cinema-network
 
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
     container_name: hdq-cinema-frontend
     restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf    # <-- mount host default.conf
+      - ./frontend/dist:/usr/share/nginx/html                  # <-- mount dist nếu muốn
+    depends_on:
+      - backend
     networks:
       - cinema-network
 
@@ -32,20 +41,6 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    networks:
-      - cinema-network
-
-  nginx:
-    image: nginx:latest
-    container_name: hdq-cinema-nginx
-    restart: unless-stopped
-    ports:
-      - "80:80"
-    volumes:
-      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
-    depends_on:
-      - frontend
-      - backend
     networks:
       - cinema-network
 
