@@ -9,7 +9,9 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-db:5432/${POSTGRES_DB}
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: "5"
       JWT_SIGNER_KEY: ${JWT_SIGNER_KEY}
+      JAVA_OPTS: "-Xms256m -Xmx768m"
     depends_on:
       - postgres-db
     networks:
