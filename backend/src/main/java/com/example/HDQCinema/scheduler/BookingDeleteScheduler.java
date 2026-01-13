@@ -24,7 +24,7 @@ public class BookingDeleteScheduler {
 
     BookingService bookingService;
 
-    @Scheduled(fixedRate = 5 * 60 * 1000)
+    @Scheduled(fixedRate = 1 * 60 * 1000)
     @Transactional
     public void autoDelete(){
 //        String url = "http://localhost:8080/cinemas/showtimes";
