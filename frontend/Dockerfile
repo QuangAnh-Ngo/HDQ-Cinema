@@ -1,31 +1,16 @@
-# Dockerfile cho React Frontend (Dev Mode)
-FROM node:20-alpine
-
+# Stage 1: build frontend
+FROM node:20-alpine AS build
 WORKDIR /app
-
-# Set môi trường dev rõ ràng
-ENV NODE_ENV=development
-
-# Không tự động mở browser khi chạy trong container
-ENV BROWSER=none
-
-# Copy package files
 COPY package*.json ./
-
-# Install dependencies
 RUN npm install
-
-# Copy source code
 COPY . .
+RUN npm run build
 
-# Expose port 3000
-EXPOSE 5173
+# Stage 2: serve với Nginx
+FROM nginx:alpine
+# copy dist từ stage build
+COPY --from=build /app/dist /usr/share/nginx/html
+# mount config từ host
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
 
-
-# Healthcheck (Docker biết container còn sống hay không)
-HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-  CMD wget -q -O - http://localhost:3000 || exit 1
-
-
-# Start development server
-CMD ["npm", "run", "dev", "--", "--host"]
