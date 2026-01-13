@@ -8,7 +8,7 @@ export const movieService = {
    * @param {string} cinemaId - Cinema ID (query param 'c')
    * @returns {Promise<Array>} Mảng các object phim
    */
-  getShowing: async (cinemaId = "") => {
+  getShowing: async (cinemaId = 0) => {
     try {
       // ✅ Chỉ gửi param 'c' nếu cinemaId có giá trị
       const params = cinemaId ? { c: cinemaId } : {};
@@ -26,7 +26,7 @@ export const movieService = {
    * @param {string} cinemaId - Cinema ID (query param 'c')
    * @returns {Promise<Array>} Mảng các object phim
    */
-  getUpcoming: async (cinemaId = "") => {
+  getUpcoming: async (cinemaId = 0) => {
     try {
       // ✅ Chỉ gửi param 'c' nếu cinemaId có giá trị
       const params = cinemaId ? { c: cinemaId } : {};
